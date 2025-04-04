@@ -6,25 +6,25 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 'cristiandeveloper.com',
+                hostname: 'jaimetr.dev',
                 port: '',
                 pathname: '/storage/projects/**',
             },
             {
                 protocol: 'http',
-                hostname: 'api.cristiandeveloper.test',
+                hostname: 'jaimetr.dev',
                 port: '',
                 pathname: '/storage/projects/**',
             },
             {
                 protocol: 'https',
-                hostname: 'api.cristiandeveloper.com',
+                hostname: 'jaimetr.dev',
                 port: '',
                 pathname: '/storage/projects/**',
             },
             {
                 protocol: 'https',
-                hostname: 'api.cristiandeveloper.com',
+                hostname: 'jaimetr.dev',
                 port: '',
                 pathname: '/storage/posts/**',
             },
