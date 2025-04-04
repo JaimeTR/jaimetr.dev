@@ -33,16 +33,16 @@ export const About = () => {
                     Uno de mis principales proyectos es {' '}
                         <span className="text-crusta-800 dark:text-crusta-300 font-bold">
                         <a
-                                href="https://devmark.com/"
+                                href="https://asistente-inoia-tbuk.vercel.app/"
                                 rel="noopener noreferrer"
                                 target="_blank"
                                 className="underline"
                             >
-                                Devmark SAC,
-                            </a> una agencia de desarrollo web, software a medida y aplicaciones móviles, {' '}
+                                InoIA,
+                            </a> un asistente virtual con inteligencia artificial diseñado para mejorar la satisfacción de los pacientes. {' '}
                             
                         </span>{' '}
-                        este proyecto nació de la necesidad y demanda de muchos de mis clientes, con el objetivo de ofrecer soluciones tecnológicas personalizadas y trabajar junto a emprendedores de diversos sectores, ayudándolos a materializar sus ideas y potenciar sus negocios.
+                        Ofrece chat a través de texto, voz y lectura de imágenes, permitiendo una interacción fluida y accesible. Todo el sistema está diseñado para brindar información clara, recomendaciones personalizadas y asistencia en cada etapa de la atención médica, optimizando la comunicación entre pacientes y profesionales de la salud con una experiencia intuitiva y eficiente.
                     </p>
                     <p className="mt-4 text-dark-700 dark:text-dark-200 md:w-11/12 text-pretty text-base">
                         Tambien como proyecto personal comparto{' '}
