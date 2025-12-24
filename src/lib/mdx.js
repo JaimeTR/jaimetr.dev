@@ -1,7 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import { serialize } from 'next-mdx-remote/serialize'
 
 const root = process.cwd()
 export const getPosts = () => {
@@ -10,8 +9,7 @@ export const getPosts = () => {
 
 export const getPostBySlug = async (slug) => {
     const mdxSource = fs.readFileSync(path.join(root, 'src/posts', `${slug}.mdx`), 'utf-8')
-    const { data, content } = await matter(mdxSource)
-    const source = await serialize(content)
+    const { data, content } = matter(mdxSource)
     return {
         content,
         frontmatter: {

@@ -2,6 +2,7 @@ import { AiOutlineFileProtect } from 'react-icons/ai'
 import { Container } from '../Container'
 import { SectionTitle } from '../SectionTitle'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export const About = () => {
     return (
@@ -9,11 +10,13 @@ export const About = () => {
             <SectionTitle>Sobre mí</SectionTitle>
             <div className="pt-12 md:pt-2">
                 <div className="w-full">
-                    <img
+                    <Image
                         src="/images/Jaime_tarazona.webp"
                         alt="Jaime Tarazona - Foto de perfil de ingeniero y fullstack"
-                        className=" object-cover rounded-full size-72 shadow-lg shadow-dark-900/20 dark:shadow-dark-50/10  mx-auto"
-                        loading="lazy"
+                        width={288}
+                        height={288}
+                        className="object-cover rounded-full size-72 shadow-lg shadow-dark-900/20 dark:shadow-dark-50/10 mx-auto"
+                        priority
                     />
 
                     <p className="mt-8 text-dark-700 dark:text-dark-200 md:w-11/12 text-pretty text-base">

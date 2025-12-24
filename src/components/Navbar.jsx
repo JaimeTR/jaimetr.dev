@@ -29,6 +29,7 @@ export const Navbar = () => {
                             <a
                                 href="https://www.linkedin.com/in/jaimetr/"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-dark-700 hover:text-dark-500 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
                                 aria-label="Visita mi perfil de linkedin"
                             >
@@ -39,6 +40,7 @@ export const Navbar = () => {
                             <a
                                 href="https://github.com/JaimeTR"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-dark-700 hover:text-dark-500 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
                                 aria-label="Visita mi perfil de Github"
                             >
@@ -106,6 +108,7 @@ export const Navbar = () => {
                                 href="https://www.linkedin.com/in/jaimetr/"
                                 className="text-dark-700 hover:text-dark-900 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
                                 target="_blank"
+                                rel="noopener noreferrer"
                             >
                                 <FaLinkedinIn />
                             </a>
@@ -115,6 +118,7 @@ export const Navbar = () => {
                                 href="https://github.com/JaimeTR"
                                 className="text-dark-700 hover:text-dark-900 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
                                 target="_blank"
+                                rel="noopener noreferrer"
                             >
                                 <FaGithub />
                             </a>
@@ -123,6 +127,7 @@ export const Navbar = () => {
                             <a
                                 href="#"
                                 className="text-dark-700 hover:text-dark-900 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
+                                aria-label="Canal de YouTube"
                             >
                                 <FaYoutube />
                             </a>

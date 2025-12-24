@@ -1,45 +1,60 @@
 import Image from 'next/image'
 import Link from 'next/link'
+
 export const ProjectCard = ({ project }) => {
     return (
         <Link
             href={`/projects/${project.slug}`}
-            className="group max-w-sm lg:max-w-full min-h-full bg-dark-50  rounded-xl shadow-lg dark:bg-dark-900 dark:border-dark-700"
+            className="group max-w-sm lg:max-w-full w-full min-h-full bg-dark-50 rounded-xl shadow-lg hover:shadow-2xl dark:bg-dark-900 dark:border dark:border-dark-800 hover:scale-[1.02] transition-all duration-300"
         >
-            <div className="relative h-48 w-full overflow-hidden rounded-t-xl ">
-                <span className="absolute top-2 right-2 backdrop-blur-md bg-dark-600/50 py-1 px-2 rounded-lg z-10 text-sm font-semibold text-dark-100 ">
+            <div className="relative h-56 w-full overflow-hidden rounded-t-xl bg-gradient-to-br from-primary-500/10 to-primary-600/5">
+                <span className="absolute top-3 right-3 backdrop-blur-md bg-dark-600/70 dark:bg-dark-800/80 py-1.5 px-3 rounded-lg z-10 text-sm font-semibold text-dark-50 shadow-lg">
                     {project.category}
                 </span>
                 <Image
-                    className=" group-hover:scale-[1.03]  transition-all duration-500 object-cover h-full"
+                    className="group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 object-cover h-full w-full"
                     src={project?.content?.images?.mockup}
                     alt={project.title}
-                    width={500}
-                    height={500}
+                    width={600}
+                    height={400}
                     loading="lazy"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
             </div>
 
-            <div className="p-5">
-                <h5 className="mb-2 text-xl font-bold tracking-tight text-primary-600 dark:text-primary-400">
-                    {project.title}
-                </h5>
-                <p className="mb-3 font-normal text-dark-700 dark:text-dark-200 line-clamp-3">
-                    {project?.content?.description}
+            <div className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                    <h5 className="text-xl font-bold tracking-tight text-primary-600 dark:text-primary-400 group-hover:text-primary-700 dark:group-hover:text-primary-300 transition-colors">
+                        {project.title}
+                    </h5>
+                </div>
+                
+                <p className="mb-4 font-normal text-dark-700 dark:text-dark-300 line-clamp-3 text-sm leading-relaxed">
+                    {project?.content?.abstract || project?.content?.description}
                 </p>
 
-                <ul className="flex gap-1 flex-wrap  text-dark-700 dark:text-dark-200 mb-2 text-sm">
-                    {project?.content?.technologies.map((item, idx) => (
-                        <li
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {project?.content?.technologies.slice(0, 4).map((item, idx) => (
+                        <span
                             key={idx}
-                            className="rounded-md border border-dark-200 dark:border-dark-800 bg-dark-300/60 dark:bg-dark-800 px-2 py-1 font-mono text-xs"
+                            className="rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-950/50 px-3 py-1 font-mono text-xs text-primary-700 dark:text-primary-300"
                         >
-                            {' '}
                             {item.name}
-                        </li>
+                        </span>
                     ))}
-                </ul>
+                    {project?.content?.technologies.length > 4 && (
+                        <span className="text-xs text-dark-500 dark:text-dark-400 px-2 py-1">
+                            +{project?.content?.technologies.length - 4} más
+                        </span>
+                    )}
+                </div>
+
+                <div className="flex items-center text-primary-600 dark:text-primary-400 font-semibold text-sm group-hover:gap-2 gap-1 transition-all">
+                    Ver proyecto
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
             </div>
         </Link>
     )

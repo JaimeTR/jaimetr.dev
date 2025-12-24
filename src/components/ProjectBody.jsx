@@ -91,6 +91,7 @@ export const ProjectBody = ({ data }) => {
                             <a
                                 href={data?.link}
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-primary-600 dark:text-primary-400 font-bold hover:underline transition-all duration-200"
                             >
                                 Ir al sitio{' '}
@@ -114,6 +115,7 @@ export const ProjectBody = ({ data }) => {
                             <a
                                 href={data?.repo}
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-primary-600 dark:text-primary-400 font-bold hover:underline transition-all duration-200"
                             >
                                 Repo{' '}
@@ -145,8 +147,9 @@ export const ProjectBody = ({ data }) => {
                 <img
                     src={data?.content?.images?.screenshot}
                     alt={data.title}
-                    className="rounded-xl overflow-hidden my-6 w-full shadow-md my-6"
+                    className="rounded-xl overflow-hidden my-6 w-full shadow-md"
                     sizes="(max-width: 768px) 100%, (max-width: 1200px) 960px"
+                    loading="lazy"
                 />
 
                 <article className="">
