@@ -3,12 +3,18 @@ import { useRef, useState } from 'react'
 import { NavLink } from './NavLink'
 import { FaLinkedinIn, FaGithub, FaYoutube } from 'react-icons/fa'
 import { ThemeSwitch } from './ThemeSwich'
+import { LanguageSwitch } from './LanguageSwitch'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useTranslation } from '@/helpers/translations'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export const Navbar = () => {
     const navRef = useRef()
     const [isOpen, setIsOpen] = useState(false)
+    const { language } = useLanguage()
+    const t = useTranslation(language)
+    
     const showNavBar = () => {
         navRef.current.classList.toggle('hidden')
         setIsOpen(!isOpen)
@@ -48,11 +54,26 @@ export const Navbar = () => {
                             </a>
                         </li>
                         <li>
+                            <a
+                                href="https://www.youtube.com/c/JaimeTR"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-dark-700 hover:text-dark-500 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
+                                aria-label="Visita mi canal de YouTube"
+                            >
+                                <FaYoutube />
+                            </a>
+                        </li>
+                        <li>
                             <ThemeSwitch />
                         </li>
+                        <li>
+                            <LanguageSwitch />
+                        </li>
                     </ul>
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                         <ThemeSwitch show={false} />
+                        <LanguageSwitch show={false} />
                         <button
                             className="p-2 text-sm text-dark-700 dark:text-dark-200 rounded-lg md:hidden"
                             onClick={showNavBar}
@@ -93,13 +114,13 @@ export const Navbar = () => {
                 >
                     <ul className="flex flex-col gap-6 p-4 md:p-0 mt-4 font-medium  md:flex-row  md:mt-0 md:border-0 ">
                         <li className="text-center">
-                            <NavLink label={'Proyectos'} link={'/projects'} action={showNavBar} />
+                            <NavLink label={t('proyectos')} link={'/projects'} action={showNavBar} />
                         </li>
                         <li className="text-center">
-                            <NavLink label={'Experiencia'} link={'/#experience'} action={showNavBar} />
+                            <NavLink label={t('experiencia')} link={'/#experience'} action={showNavBar} />
                         </li>
                         <li className="text-center">
-                            <NavLink label={'Blog'} link={'/posts'} action={showNavBar} />
+                            <NavLink label={t('blog')} link={'/posts'} action={showNavBar} />
                         </li>
                     </ul>
                     <ul className="flex justify-center space-x-8 my-4 md:hidden">

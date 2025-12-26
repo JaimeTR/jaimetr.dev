@@ -1,6 +1,7 @@
 import '@fontsource-variable/onest';
 import { Navbar } from '@/components/Navbar'
 import { DarkModeProvider } from './providers/DarkModeProvider'
+import { LanguageProvider } from './providers/LanguageProvider'
 import './globals.css'
 import { Footer } from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
@@ -67,11 +68,13 @@ export default function RootLayout({ children }) {
         <html suppressHydrationWarning lang="es" className="scroll-smooth">
             <body className="bg-dark-50 dark:bg-dark-950 ">
                 <JsonLd />
-                <DarkModeProvider>
-                    <Navbar />
-                    {children}
-                    <Footer />
-                </DarkModeProvider>
+                <LanguageProvider>
+                    <DarkModeProvider>
+                        <Navbar />
+                        {children}
+                        <Footer />
+                    </DarkModeProvider>
+                </LanguageProvider>
             </body>
         </html>
     )

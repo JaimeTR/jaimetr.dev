@@ -1,11 +1,24 @@
+'use client'
 import { experienceInfo } from '@/helpers/staticData'
 import { Container } from '../Container'
 import { SectionTitle } from '../SectionTitle'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useTranslation } from '@/helpers/translations'
+import { useEffect, useState } from 'react'
 
 export const Experience = () => {
+    const [mounted, setMounted] = useState(false)
+    const { language } = useLanguage()
+    const t = useTranslation(language)
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    
+    if (!mounted) return null
     return (
         <Container id="experience">
-            <SectionTitle>Experiencia</SectionTitle>
+            <SectionTitle>{t('experienciaSeccion')}</SectionTitle>
             <article className="container px-2 mt-10">
                 <ul className="relative border-l border-dark-400 dark:border-dark-700">
                     {experienceInfo.map((experience) => (

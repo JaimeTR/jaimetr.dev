@@ -1,18 +1,37 @@
+'use client'
 import { Container } from '../Container'
 import { SectionTitle } from '../SectionTitle'
 import { MY_STACK } from '@/helpers/staticData'
 import { SetStack } from '@/components/SetStack'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useEffect, useState } from 'react'
+
 export const Stack = () => {
+    const [mounted, setMounted] = useState(false)
+    const { language } = useLanguage()
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    
+    if (!mounted) return null
+    
     return (
         <Container>
-            <SectionTitle>Tecnologías</SectionTitle>
-            <p class="my-8 text-pretty md:text-lg max-w-[740px] text-dark-700 dark:text-dark-200">
-                En mi viaje por el{' '}
-                <span class=" text-daintree-700 dark:text-daintree-300">mundo del desarrollo web</span>, he cultivado{' '}
-                <span class="text-crusta-700 dark:text-crusta-300">experiencia y habilidades</span> en una variedad de
-                tecnologías.{' '}
-                <span class="text-daintree-700 dark:text-daintree-300 font-semibold">Mi stack tecnológico incluye</span>
-                :
+            <SectionTitle>{language === 'es' ? 'Tecnologías' : 'Technologies'}</SectionTitle>
+            <p className="my-8 text-pretty md:text-lg max-w-[740px] text-dark-700 dark:text-dark-200">
+                {language === 'es'
+                    ? <>En mi viaje por el{' '}
+                        <span className=" text-daintree-700 dark:text-daintree-300">mundo del desarrollo web</span>, he cultivado{' '}
+                        <span className="text-crusta-700 dark:text-crusta-300">experiencia y habilidades</span> en una variedad de
+                        tecnologías.{' '}
+                        <span className="text-daintree-700 dark:text-daintree-300 font-semibold">Mi stack tecnológico incluye</span>:</>
+                    : <>On my journey through the{' '}
+                        <span className=" text-daintree-700 dark:text-daintree-300">world of web development</span>, I have cultivated{' '}
+                        <span className="text-crusta-700 dark:text-crusta-300">experience and skills</span> in a variety of
+                        technologies.{' '}
+                        <span className="text-daintree-700 dark:text-daintree-300 font-semibold">My tech stack includes</span>:</>
+                }
             </p>
             <section className="grid lg:grid-cols-2 lg:grid-rows-2 gap-6 lg:place-content-center">
                 <SetStack>

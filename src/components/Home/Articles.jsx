@@ -1,3 +1,4 @@
+'use client'
 import { ArticleCard } from '../ArticleCard'
 import { SectionTitle } from '../SectionTitle'
 import Link from 'next/link'
@@ -5,6 +6,8 @@ import { AiOutlineArrowRight } from 'react-icons/ai'
 import { Container } from '../Container'
 import { getAllPostsMetadata } from '@/lib/mdx'
 import { ShowDate } from '../ShowDate'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useEffect, useState } from 'react'
 
 export const Articles = async () => {
     const posts = getAllPostsMetadata()
@@ -22,7 +25,24 @@ export const Articles = async () => {
         .slice(0, 3)
     return (
         <Container id="articles">
-            <SectionTitle>Artículos</SectionTitle>
+            <ArticlesContent articles={articles} />
+        </Container>
+    )
+}
+
+function ArticlesContent({ articles }) {
+    const [mounted, setMounted] = useState(false)
+    const { language } = useLanguage()
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    
+    if (!mounted) return null
+    
+    return (
+        <>
+            <SectionTitle>{language === 'es' ? 'Artículos' : 'Articles'}</SectionTitle>
 
             {articles.map((item) => (
                 <ArticleCard key={item.slug} article={item} />
@@ -32,9 +52,9 @@ export const Articles = async () => {
                     className="flex justify-center items-center gap-2 text-dark-800 font-bold dark:text-dark-200 relative overflow-hidden z-10   before:content-[''] before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 before:bg-dark-900 dark:before:bg-dark-50 before:rounded-lg   before:-z-10 before:transition-all before:duration-500 before:hover:w-full  transition-all duration-300  hover:text-dark-900  dark:hover:text-dark-50"
                     href="/posts"
                 >
-                    Más artículos <AiOutlineArrowRight />
+                    {language === 'es' ? 'Más artículos' : 'More articles'} <AiOutlineArrowRight />
                 </Link>
             </div>
-        </Container>
+        </>
     )
 }

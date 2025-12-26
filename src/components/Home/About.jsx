@@ -1,13 +1,26 @@
+'use client'
 import { AiOutlineFileProtect } from 'react-icons/ai'
 import { Container } from '../Container'
 import { SectionTitle } from '../SectionTitle'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useTranslation } from '@/helpers/translations'
+import { useEffect, useState } from 'react'
 
 export const About = () => {
+    const [mounted, setMounted] = useState(false)
+    const { language } = useLanguage()
+    const t = useTranslation(language)
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    
+    if (!mounted) return null
     return (
         <Container id="sobre-mi">
-            <SectionTitle>Sobre mí</SectionTitle>
+            <SectionTitle>{t('sobreMi')}</SectionTitle>
             <div className="pt-12 md:pt-2">
                 <div className="w-full">
                     <Image
@@ -20,20 +33,20 @@ export const About = () => {
                     />
 
                     <p className="mt-8 text-dark-700 dark:text-dark-200 md:w-11/12 text-pretty text-base">
-                        Hola 👋, soy Jaime Tarazona,{' '}
-                        <span className="font-bold text-primary-700 dark:text-primary-400">Ingeniero de Sistemas, Desarrollador Full-Stack</span>{' '}
+                        {t('holaYo')}{' '}
+                        <span className="font-bold text-primary-700 dark:text-primary-400">{t('ingenieroSistemas')}</span>{' '}
                         y{' '}
                         <span className="font-bold text-primary-700 dark:text-primary-400">
-                        Web Developer
+                            {t('webDeveloper')}
                         </span>{' '}
-                        con más de <b> 4 años de experiencia </b>  en el desarrollo de aplicaciones y páginas web. Actualmente, trabajo creando sitios web en WordPress, {' '}
+                        {t('experienciaAnios')} en el desarrollo de aplicaciones y páginas web. Actualmente, trabajo creando sitios web en WordPress, {' '}
                         <span className=" text-crusta-800 dark:text-crusta-300 font-bold">
-                        desarrollando desde páginas informativas y tiendas eCommerce hasta plataformas administrables, 
+                            {t('desarrollando')}
                         </span>{' '}
-                        garantizando soluciones optimizadas y eficientes para distintos sectores y clientes.
+                        {t('garantizando')}
                     </p>
                     <p className="mt-4 text-dark-700 dark:text-dark-200 md:w-11/12 text-pretty text-base">
-                    Uno de mis principales proyectos es {' '}
+                        {t('unoPrincipal')}{' '}
                         <span className="text-crusta-800 dark:text-crusta-300 font-bold">
                         <a
                                 href="https://asistente-inoia-tbuk.vercel.app/"
@@ -41,23 +54,21 @@ export const About = () => {
                                 target="_blank"
                                 className="underline"
                             >
-                                InoIA,
-                            </a> un asistente virtual con inteligencia artificial diseñado para mejorar la satisfacción de los pacientes. {' '}
+                                {t('inoia')},
+                            </a> {t('asistente')}{' '}
                             
                         </span>{' '}
-                        Ofrece chat a través de texto, voz y lectura de imágenes, permitiendo una interacción fluida y accesible. Todo el sistema está diseñado para brindar información clara, recomendaciones personalizadas y asistencia en cada etapa de la atención médica, optimizando la comunicación entre pacientes y profesionales de la salud con una experiencia intuitiva y eficiente.
+                        {t('ofrece')}
                     </p>
                     <p className="mt-4 text-dark-700 dark:text-dark-200 md:w-11/12 text-pretty text-base">
-                        Tambien como proyecto personal comparto{' '}
+                        {t('tambienProyecto')}{' '}
                         <Link href={'/posts'} className="text-crusta-800 dark:text-crusta-300 font-bold underline">
-                            artículos sobre temas de programacion, Inteligencia Artificial, desarrollo web y mucho más.
+                            {t('articulos_desc')}
                         </Link>
-                        Cuando compartes tu conocimiento es cuando más aprendes y mi objetivo además de seguir
-                        mejorando mis habilidades es ayudar a otros con mis experiencias y guias.
+                        {t('compartir')}
                     </p>
                     <p className="mt-4 text-dark-700 dark:text-dark-200 md:w-11/12 text-pretty text-base">
-                        Por último, comparto mi hoja de vida actualizada, donde de manera más detallada específico mi
-                        experiencia laboral, logros y formación académica.
+                        {t('ultimamente')}
                     </p>
                 </div>
             </div>
@@ -68,7 +79,7 @@ export const About = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    VER CURRÍCULUM <AiOutlineFileProtect />
+                    {t('cv')} <AiOutlineFileProtect />
                 </a>
             </div>
         </Container>

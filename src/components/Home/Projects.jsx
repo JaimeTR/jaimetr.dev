@@ -1,3 +1,4 @@
+'use client'
 import Link from 'next/link'
 import { AiOutlineArrowRight } from 'react-icons/ai'
 import { SectionTitle } from '../SectionTitle'
@@ -15,15 +16,27 @@ const sorted = PROJECTS.sort((a, b) => {
     // a must be equal to b
     return 0
 }).slice(0, 3)
-export const Projects = async () => {
+
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useEffect, useState } from 'react'
+
+export const Projects = () => {
+    const [mounted, setMounted] = useState(false)
+    const { language } = useLanguage()
+    
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    
+    if (!mounted) return null
+    
     return (
         <Container id="projects">
-            <SectionTitle>Proyectos</SectionTitle>
+            <SectionTitle>{language === 'es' ? 'Proyectos' : 'Projects'}</SectionTitle>
             <p className="mt-6 text-dark-700 dark:text-dark-200">
-                Mis proyectos más emocionantes y creativos. Cada proyecto es el resultado de mi dedicación y pasión por
-                la programación, y estoy encantado de compartirlos contigo. Descubre cómo transformo ideas en realidades
-                digitales. ¡Explora, inspira y crea con mis proyectos de software!
-            </p>
+                {language === 'es'
+                    ? 'Mis proyectos más emocionantes y creativos. Cada proyecto es el resultado de mi dedicación y pasión por la programación, y estoy encantado de compartirlos contigo. Descubre cómo transformo ideas en realidades digitales. ¡Explora, inspira y crea con mis proyectos de software!'
+                    : 'My most exciting and creative projects. Each project is the result of my dedication and passion for programming, and I\'m delighted to share them with you. Discover how I transform ideas into digital realities. Explore, inspire and create with my software projects!'}
             <div className="grid md:grid-cols-4 gap-4 mt-6">
                 <Link
                     href={`/projects/${sorted[0].slug}`}
@@ -133,7 +146,7 @@ export const Projects = async () => {
                     className="flex justify-center items-center gap-2 text-dark-800 font-bold dark:text-dark-200 relative overflow-hidden z-10   before:content-[''] before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 before:bg-dark-900 dark:before:bg-dark-50 before:rounded-lg   before:-z-10 before:transition-all before:duration-500 before:hover:w-full  transition-all duration-300  hover:text-dark-900  dark:hover:text-dark-50"
                     href="/projects"
                 >
-                    VER MÁS PROYECTOS <AiOutlineArrowRight />
+                    {language === 'es' ? 'VER MÁS PROYECTOS' : 'VIEW MORE PROJECTS'} <AiOutlineArrowRight />
                 </Link>
             </div>
         </Container>
