@@ -1,10 +1,12 @@
 'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AiOutlineArrowRight } from 'react-icons/ai'
 import { SectionTitle } from '../SectionTitle'
 import { ProjectCard } from '../ProjectCard'
 import { Container } from '../Container'
 import { PROJECTS } from '@/helpers/projects'
+import { useLanguage } from '@/app/providers/LanguageProvider'
 
 const sorted = PROJECTS.sort((a, b) => {
     if (a.date < b.date) {
@@ -16,9 +18,6 @@ const sorted = PROJECTS.sort((a, b) => {
     // a must be equal to b
     return 0
 }).slice(0, 3)
-
-import { useLanguage } from '@/app/providers/LanguageProvider'
-import { useEffect, useState } from 'react'
 
 export const Projects = () => {
     const [mounted, setMounted] = useState(false)
@@ -37,6 +36,7 @@ export const Projects = () => {
                 {language === 'es'
                     ? 'Mis proyectos más emocionantes y creativos. Cada proyecto es el resultado de mi dedicación y pasión por la programación, y estoy encantado de compartirlos contigo. Descubre cómo transformo ideas en realidades digitales. ¡Explora, inspira y crea con mis proyectos de software!'
                     : 'My most exciting and creative projects. Each project is the result of my dedication and passion for programming, and I\'m delighted to share them with you. Discover how I transform ideas into digital realities. Explore, inspire and create with my software projects!'}
+            </p>
             <div className="grid md:grid-cols-4 gap-4 mt-6">
                 <Link
                     href={`/projects/${sorted[0].slug}`}
