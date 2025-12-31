@@ -34,14 +34,15 @@ export const metadata = {
     robots: 'index, follow',
     author: 'jaimetrdev',
 }
+
 export default function PostsPage() {
-    const posts = getAllPostsMetadata()
+    const posts = getAllPostsMetadata('es')
 
     return (
         <>
             <Banner title={'Blog de programación'} image={'/images/bloggin.png'} />
             <section className="pt-24 container mx-auto px-2 lg:w-[740px] ">
-                <ListOfPosts posts={posts} />
+                <ListOfPosts posts={posts} basePath="/posts" />
             </section>
         </>
     )

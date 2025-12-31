@@ -3,26 +3,106 @@ import path from 'path'
 import sharp from 'sharp'
 
 const WIDTH = 1200
-const HEIGHT = 630
+const HEIGHT = 800
 
-export async function generateCover({ slug, title, tags = [] }) {
+// Paletas de colores para las 3 variantes
+const COLOR_THEMES = {
+  variant1: {
+    name: 'Clásico',
+    primaryYellow: '#FFD700',
+    accentCyan: '#00D9FF',
+    darkBg: '#0a1628',
+    darkAccent: '#1a2f4a'
+  },
+  variant2: {
+    name: 'Moderno',
+    primaryYellow: '#FF6B35',
+    accentCyan: '#7B68EE',
+    darkBg: '#1a1a2e',
+    darkAccent: '#16213e'
+  },
+  variant3: {
+    name: 'Vibrante',
+    primaryYellow: '#00F5A0',
+    accentCyan: '#FF2E63',
+    darkBg: '#0F2027',
+    darkAccent: '#203A43'
+  }
+}
+
+export async function generateCoverVariants({ slug, title, tags = [] }) {
   const outDir = path.join(process.cwd(), 'public', 'images', 'posts')
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })
-  const outFile = path.join(outDir, `${slug}.webp`)
 
-  const maxLen = 70
+  const variants = []
+  
+  for (const [key, theme] of Object.entries(COLOR_THEMES)) {
+    const variantSlug = `${slug}-${key}`
+    const outFile = path.join(outDir, `${variantSlug}.webp`)
+    const svg = generateSVG({ title, theme, slug })
+    
+    const svgBuffer = Buffer.from(svg)
+    const buffer = await sharp(svgBuffer)
+      .webp({ quality: 90 })
+      .toBuffer()
+
+    fs.writeFileSync(outFile, buffer)
+    
+    variants.push({
+      name: theme.name,
+      url: `/images/posts/${variantSlug}.webp`,
+      filename: `${variantSlug}.webp`
+    })
+  }
+
+  return variants
+}
+
+function generateSVG({ title, theme, slug }) {
   const safeTitle = String(title || slug)
-  const displayTitle = safeTitle.length > maxLen ? safeTitle.slice(0, maxLen - 1) + '…' : safeTitle
   const brand = 'jaimetr.dev'
 
-  // Colores vibrantescontraste alto
-  const primaryYellow = '#FFD700' // Amarillo dorado
-  const accentCyan = '#00D9FF' // Cyan/Turquesa
-  const darkBg = '#0a1628' // Azul muy oscuro
-  const darkAccent = '#1a2f4a' // Azul más claro
+  const { primaryYellow, accentCyan, darkBg, darkAccent } = theme
 
-  // Generar SVG con estilo moderno
-  const svg = `
+  // Función para dividir el texto en líneas que quepan en el ancho disponible
+  function splitTextIntoLines(text, maxCharsPerLine) {
+    const words = text.split(' ')
+    const lines = []
+    let currentLine = ''
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word
+      
+      if (testLine.length <= maxCharsPerLine) {
+        currentLine = testLine
+      } else {
+        if (currentLine) lines.push(currentLine)
+        currentLine = word
+      }
+    }
+    
+    if (currentLine) lines.push(currentLine)
+    return lines
+  }
+
+  // Determinar tamaño de fuente y líneas según longitud del título
+  let fontSize = 68
+  let maxCharsPerLine = 35
+  let lineHeight = 80
+  
+  if (safeTitle.length > 60) {
+    fontSize = 52
+    maxCharsPerLine = 45
+    lineHeight = 65
+  } else if (safeTitle.length > 40) {
+    fontSize = 60
+    maxCharsPerLine = 40
+    lineHeight = 72
+  }
+
+  const titleLines = splitTextIntoLines(safeTitle, maxCharsPerLine).slice(0, 3) // Máximo 3 líneas
+
+  return `
 <svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
@@ -64,38 +144,25 @@ export async function generateCover({ slug, title, tags = [] }) {
   <!-- Rectángulo highlight lateral -->
   <rect x="0" y="220" width="8" height="200" fill="${primaryYellow}" opacity="0.6"/>
 
-  <!-- Título principal en amarillo vibrante -->
+  <!-- Título principal (múltiples líneas si es necesario) -->
+  ${titleLines.map((line, index) => `
   <text 
     x="80" 
-    y="300" 
+    y="${250 + (index * lineHeight)}" 
     font-family="'Onest', 'Arial Black', sans-serif" 
-    font-size="68" 
+    font-size="${fontSize}" 
     font-weight="900" 
     fill="${primaryYellow}"
     filter="url(#glow)"
   >
-    ${escapeXml(displayTitle.substring(0, 40))}
+    ${escapeXml(line)}
   </text>
+  `).join('')}
 
-  <!-- Continuación del título si es muy largo -->
-  ${displayTitle.length > 40 ? `
+  <!-- Subtítulo con brand -->
   <text 
     x="80" 
-    y="380" 
-    font-family="'Onest', 'Arial Black', sans-serif" 
-    font-size="68" 
-    font-weight="900" 
-    fill="${primaryYellow}"
-    filter="url(#glow)"
-  >
-    ${escapeXml(displayTitle.substring(40))}
-  </text>
-  ` : ''}
-
-  <!-- Subtítulo con tags -->
-  <text 
-    x="80" 
-    y="450" 
+    y="${250 + (titleLines.length * lineHeight) + 50}" 
     font-family="'Onest', 'Arial', sans-serif" 
     font-size="18" 
     fill="${accentCyan}"
@@ -121,6 +188,16 @@ export async function generateCover({ slug, title, tags = [] }) {
   <circle cx="1130" cy="120" r="3" fill="${accentCyan}" opacity="0.5"/>
   <circle cx="1070" cy="140" r="3" fill="${primaryYellow}" opacity="0.4"/>
 </svg>`
+}
+
+export async function generateCover({ slug, title, tags = [] }) {
+  const outDir = path.join(process.cwd(), 'public', 'images', 'posts')
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })
+  const outFile = path.join(outDir, `${slug}.webp`)
+
+  // Usar el tema clásico por defecto
+  const theme = COLOR_THEMES.variant1
+  const svg = generateSVG({ title, theme, slug })
 
   // Convertir SVG a imagen con sharp
   const svgBuffer = Buffer.from(svg)

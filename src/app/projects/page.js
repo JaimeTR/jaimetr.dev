@@ -56,7 +56,7 @@ export default function ProjectsPage() {
                             <p className="mt-4 text-dark-600 dark:text-dark-300">Cargando proyectos...</p>
                         </div>
                     }>
-                        <ListOfProjects />
+                        <ListOfProjects basePath="/projects" />
                     </Suspense>
                 </section>
             </Container>

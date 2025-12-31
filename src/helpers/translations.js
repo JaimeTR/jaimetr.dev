@@ -46,6 +46,16 @@ export const translations = {
         // Projects
         misPro: 'Mis Proyectos',
         verProyecto: 'Ver Proyecto',
+        mas: 'más',
+        resumen: 'Resumen',
+        descripcionProyecto: 'Descripción del proyecto',
+        tecnologiasUsadas: 'Tecnologías usadas',
+        tecnologia: 'Tecnología',
+        uso: 'Uso',
+        caracteristicasPrincipales: 'Características principales',
+        galeria: 'Galería',
+        irAlSitio: 'Ir al sitio',
+        repo: 'Repo',
         
         // Blog
         misArticulos: 'Mis Artículos',
@@ -112,6 +122,16 @@ export const translations = {
         // Projects
         misPro: 'My Projects',
         verProyecto: 'View Project',
+        mas: 'more',
+        resumen: 'Summary',
+        descripcionProyecto: 'Project description',
+        tecnologiasUsadas: 'Technologies used',
+        tecnologia: 'Technology',
+        uso: 'Use',
+        caracteristicasPrincipales: 'Main features',
+        galeria: 'Gallery',
+        irAlSitio: 'Go to site',
+        repo: 'Repo',
         
         // Blog
         misArticulos: 'My Articles',

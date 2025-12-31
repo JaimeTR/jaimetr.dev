@@ -16,6 +16,14 @@ export const Experience = () => {
     }, [])
     
     if (!mounted) return null
+    const formatRange = (start, end) => {
+        const locale = language === 'es' ? 'es-ES' : 'en-US'
+        const fmt = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
+        const present = language === 'es' ? 'Actualidad' : 'Present'
+        if (start && !end) return `${fmt.format(new Date(start))} - ${present}`
+        if (start && end) return `${fmt.format(new Date(start))} - ${fmt.format(new Date(end))}`
+        return language === 'es' ? 'Experiencia' : 'Experience'
+    }
     return (
         <Container id="experience">
             <SectionTitle>{t('experienciaSeccion')}</SectionTitle>
@@ -39,16 +47,17 @@ export const Experience = () => {
                                 </svg>
                             </span>
                             <h3 className="flex items-center gap-2 mb-1 text-lg font-semibold text-primary-700 dark:text-primary-400">
-                                {experience.role} <span class="dark:text-white text-dark-700 font-normal">-</span>
+                                {language === 'es' ? experience.role : experience.role_en}{' '}
+                                <span className="dark:text-white text-dark-700 font-normal">-</span>
                                 <span className="text-sm text-crusta-800 dark:text-crusta-300/90">
-                                    {experience.company}
+                                    {language === 'es' ? experience.company : experience.company_en}
                                 </span>
                             </h3>
                             <time className="block mb-2 text-sm font-normal leading-none text-primary-950/80 dark:text-primary-200/90">
-                                {experience.date}
+                                {formatRange(experience.start, experience.end)}
                             </time>
                             <p className="mb-4 font-normal text-dark-700 dark:text-dark-200 text-base text-pretty">
-                                {experience.description}
+                                {language === 'es' ? experience.description : experience.description_en}
                             </p>
                         </li>
                     ))}

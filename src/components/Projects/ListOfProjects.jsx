@@ -1,7 +1,7 @@
 import { ProjectCard } from '../ProjectCard'
 import { PROJECTS } from '@/helpers/projects'
 
-export const ListOfProjects = async () => {
+export const ListOfProjects = async ({ basePath = '/projects' } = {}) => {
     return PROJECTS.sort((a, b) => {
         if (a.date < b.date) {
             return 1
@@ -11,5 +11,5 @@ export const ListOfProjects = async () => {
         }
         // a must be equal to b
         return 0
-    }).map((project) => <ProjectCard key={project.id} project={project} />)
+    }).map((project) => <ProjectCard key={project.slug} project={project} basePath={basePath} />)
 }

@@ -22,6 +22,10 @@ class LocalDate {
 
     relativeTime(substractingDate) {
         const diffToToday = this.diff(substractingDate)
+        // Fallback si la fecha es inválida o no finita
+        if (!Number.isFinite(diffToToday)) {
+            return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(0, 'day')
+        }
         if (diffToToday > 7 && diffToToday < 30) {
             return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(
                 -Math.floor(this.diff(substractingDate, 'week')),
@@ -44,7 +48,13 @@ class LocalDate {
     }
 
     diff(date, diffType = 'day') {
-        return (new Date(Date.now()) - new Date(date)) / this.TIMES_FOR_CONVERT[diffType]
+        const unit = this.TIMES_FOR_CONVERT[diffType] || this.TIMES_FOR_CONVERT['day']
+        const d = new Date(date)
+        const time = d.getTime()
+        if (!Number.isFinite(time)) {
+            return 0
+        }
+        return (Date.now() - time) / unit
     }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import { NavLink } from './NavLink'
-import { FaLinkedinIn, FaGithub, FaYoutube } from 'react-icons/fa'
+import { FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { ThemeSwitch } from './ThemeSwich'
 import { LanguageSwitch } from './LanguageSwitch'
 import { useLanguage } from '@/app/providers/LanguageProvider'
@@ -51,17 +51,6 @@ export const Navbar = () => {
                                 aria-label="Visita mi perfil de Github"
                             >
                                 <FaGithub />
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="https://www.youtube.com/c/JaimeTR"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-dark-700 hover:text-dark-500 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
-                                aria-label="Visita mi canal de YouTube"
-                            >
-                                <FaYoutube />
                             </a>
                         </li>
                         <li>
@@ -142,15 +131,6 @@ export const Navbar = () => {
                                 rel="noopener noreferrer"
                             >
                                 <FaGithub />
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-dark-700 hover:text-dark-900 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300"
-                                aria-label="Canal de YouTube"
-                            >
-                                <FaYoutube />
                             </a>
                         </li>
                     </ul>

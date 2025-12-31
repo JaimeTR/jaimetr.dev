@@ -5,8 +5,18 @@ import '@/helpers/prism.css'
 import Image from 'next/image'
 import { BASE_API_URL } from '@/config'
 import { FaGithub } from 'react-icons/fa'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useTranslation } from '@/helpers/translations'
 
 export const ProjectBody = ({ data }) => {
+    const { language } = useLanguage()
+    const t = useTranslation(language)
+    const title = language === 'en' && data?.title_en ? data.title_en : data.title
+    const category = language === 'en' && data?.category_en ? data.category_en : data.category
+    const abstract = language === 'en' && data?.content?.abstract_en ? data.content.abstract_en : data?.content?.abstract
+    const description = language === 'en' && data?.content?.description_en ? data.content.description_en : data?.content?.description
+    const featuresIntro = language === 'en' && data?.content?.features?.intro_en ? data.content.features.intro_en : data?.content?.features?.intro
+    const featuresList = language === 'en' && data?.content?.features?.list_en ? data.content.features.list_en : data?.content?.features?.list
     const {
         content: { images },
     } = data
@@ -19,13 +29,13 @@ export const ProjectBody = ({ data }) => {
             <header className="mt-24 lg:mt-28 mb-8 lg:mb-12 max-w-[800px] mx-auto lg:flex lg:items-center lg:gap-6">
                 <img
                     src={data?.content?.images?.cover}
-                    alt={data.title}
+                    alt={title}
                     className="rounded-lg h-auto w-full lg:w-1/3"
                     sizes="(max-width: 768px) 600px, (max-width: 1200px) 800px, 960px"
                 />
                 <div>
                     <h1 className="text-4xl font-bold text-primary-600 dark:text-primary-400 my-4 lg:my-0 lg:mb-4">
-                        {data.title}
+                        {title}
                     </h1>
                     <ul className="list-none md:flex md:gap-8 mb-4">
                         <li className="flex gap-1 items-center text-dark-700 dark:text-dark-200 text-sm">
@@ -61,7 +71,7 @@ export const ProjectBody = ({ data }) => {
                                 />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                             </svg>
-                            {data.category}
+                            {category}
                         </li>
                         <li className="flex gap-1  text-dark-700 dark:text-dark-200 text-sm">
                             <svg
@@ -94,7 +104,7 @@ export const ProjectBody = ({ data }) => {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-primary-600 dark:text-primary-400 font-bold hover:underline transition-all duration-200"
                             >
-                                Ir al sitio{' '}
+                                {t('irAlSitio')}{' '}
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
@@ -118,7 +128,7 @@ export const ProjectBody = ({ data }) => {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-primary-600 dark:text-primary-400 font-bold hover:underline transition-all duration-200"
                             >
-                                Repo{' '}
+                                {t('repo')}{' '}
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
@@ -141,57 +151,57 @@ export const ProjectBody = ({ data }) => {
 
             <main id="article-body" className="max-w-[800px] mx-auto">
                 <article className="">
-                    <h2>Resumen</h2>
-                    <p>{data?.content?.abstract}</p>
+                    <h2>{t('resumen')}</h2>
+                    <p>{abstract}</p>
                 </article>
                 <img
                     src={data?.content?.images?.screenshot}
-                    alt={data.title}
+                    alt={title}
                     className="rounded-xl overflow-hidden my-6 w-full shadow-md"
                     sizes="(max-width: 768px) 100%, (max-width: 1200px) 960px"
                     loading="lazy"
                 />
 
                 <article className="">
-                    <h2>Descripción del proyecto</h2>
-                    <p className="whitespace-pre-line">{data?.content?.description}</p>
+                    <h2>{t('descripcionProyecto')}</h2>
+                    <p className="whitespace-pre-line">{description}</p>
                 </article>
 
                 <figure className="table">
-                    <h2>Tecnologías usadas</h2>
+                    <h2>{t('tecnologiasUsadas')}</h2>
                     <table>
                         <tbody>
                             <tr>
-                                <td>Tecnología</td>
-                                <td>Uso</td>
+                                <td>{t('tecnologia')}</td>
+                                <td>{t('uso')}</td>
                             </tr>
                             {data?.content?.technologies.map((item) => (
                                 <tr key={item.name}>
                                     <td>{item.name}</td>
-                                    <td>{item.use}</td>
+                                    <td>{language === 'en' && item?.use_en ? item.use_en : item.use}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </figure>
                 <section className="mb-6">
-                    <h2>Características principales</h2>
-                    <p>{data?.content?.features?.intro}</p>
+                    <h2>{t('caracteristicasPrincipales')}</h2>
+                    <p>{featuresIntro}</p>
                     <ul>
-                        {data?.content?.features?.list.map((item, idx) => (
+                        {featuresList?.map((item, idx) => (
                             <li key={idx}>{item}</li>
                         ))}
                     </ul>
                 </section>
 
-                <h2>Galeria</h2>
+                <h2>{t('galeria')}</h2>
                 <section className="grid md:grid-cols-2 md:grid-rows-2 gap-4">
                     {Object.values(images).map((image, idx) => (
                         <img
                             key={idx}
                             className="w-full rounded-lg object-cover shadow-md my-0"
                             src={image}
-                            alt={data.title}
+                            alt={title}
                             sizes="(max-width: 768px) 600px, (max-width: 1200px) 800px, 960px"
                         />
                     ))}
