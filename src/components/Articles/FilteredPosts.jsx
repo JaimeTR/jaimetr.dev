@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ArticleCard } from '../ArticleCard'
 import { FiSearch, FiChevronLeft, FiChevronRight, FiFilter, FiX } from 'react-icons/fi'
 
@@ -87,7 +87,7 @@ export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
     }, [filteredPosts, currentPage])
 
     // Reset page when filters change
-    useMemo(() => {
+    useEffect(() => {
         setCurrentPage(1)
     }, [search, selectedTags])
 

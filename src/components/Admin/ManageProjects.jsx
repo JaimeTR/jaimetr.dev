@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 import { useState, useEffect } from 'react'
 import { FiEdit2, FiTrash2, FiPlus, FiStar, FiEye, FiEyeOff, FiMenu } from 'react-icons/fi'
@@ -248,7 +249,7 @@ export function ManageProjects() {
       <div className="bg-white dark:bg-dark-900 border border-dark-200 dark:border-dark-800 rounded-xl p-6 flex flex-col gap-4">
         <div className="flex justify-between items-center mb-2">
           <div>
-            <h3 className="font-bold text-lg text-dark-900 dark:text-white">Configuración de Tarjeta "Ver Proyectos"</h3>
+            <h3 className="font-bold text-lg text-dark-900 dark:text-white">Configuración de Tarjeta &quot;Ver Proyectos&quot;</h3>
             <p className="text-sm text-dark-500">Personaliza el texto e imagen de fondo de la tarjeta animada final.</p>
           </div>
           <button 

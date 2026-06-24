@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
@@ -322,7 +323,7 @@ export function ManageAboutMe() {
                 
                 {(!profile?.about_me_paragraphs || profile.about_me_paragraphs.length === 0) && (
                   <div className="text-center p-8 bg-dark-50 dark:bg-dark-950 border border-dashed border-dark-300 dark:border-dark-700 rounded-xl">
-                    <p className="text-dark-500 dark:text-dark-400">No hay párrafos agregados. Haz clic en "Añadir Párrafo" para empezar.</p>
+                    <p className="text-dark-500 dark:text-dark-400">No hay párrafos agregados. Haz clic en &quot;Añadir Párrafo&quot; para empezar.</p>
                   </div>
                 )}
               </div>

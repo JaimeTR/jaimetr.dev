@@ -10,7 +10,8 @@ export interface Project {
   id: number;
   title: string;
   description: string;
-  image: string;
+  image?: string;
+  image_url?: string;
   category: string;
   rubro?: string;
   technologies: string[];

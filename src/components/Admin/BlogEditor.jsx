@@ -28,6 +28,7 @@ export function BlogEditor({ slug, onBack }) {
 
   useEffect(() => {
     fetchBlog()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
   const fetchBlog = async () => {
