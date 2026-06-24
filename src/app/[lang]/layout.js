@@ -6,6 +6,7 @@ import '@/app/globals.css'
 import { Footer } from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/react'
+import ChatbotUI from '@/components/Chatbot/ChatbotUI'
 
 export async function generateMetadata({ params }) {
     const { lang } = await params;
@@ -77,6 +78,7 @@ export default async function RootLayout({ children, params }) {
                     <DarkModeProvider>
                         <Navbar />
                         {children}
+                        <ChatbotUI />
                         <Footer />
                         <Analytics />
                     </DarkModeProvider>
