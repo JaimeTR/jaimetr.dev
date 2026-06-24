@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -21,7 +22,8 @@ export function BlogEditor({ slug, onBack }) {
     excerpt: '',
     description: '',
     tags: '',
-    content: ''
+    content: '',
+    is_featured: false
   })
 
   useEffect(() => {
@@ -43,12 +45,13 @@ export function BlogEditor({ slug, onBack }) {
 
       setBlog(data.data)
       setFormData({
-        title: data.data.title,
-        date: data.data.date,
-        excerpt: data.data.excerpt,
-        description: data.data.description,
-        tags: data.data.tags.join(', '),
-        content: data.data.content
+        title: data.data.title || '',
+        date: data.data.date || '',
+        excerpt: data.data.excerpt || '',
+        description: data.data.description || '',
+        tags: data.data.tags ? data.data.tags.join(', ') : '',
+        content: data.data.content || '',
+        is_featured: data.data.is_featured || false
       })
       if (data.data.hasCoverImage) {
         setPreviewImage(data.data.coverImage)
@@ -167,18 +170,18 @@ export function BlogEditor({ slug, onBack }) {
     setSuccess(null)
 
     try {
-      const formDataToSend = new FormData()
-      formDataToSend.append('title', formData.title)
-      formDataToSend.append('date', formData.date)
-      formDataToSend.append('excerpt', formData.excerpt)
-      formDataToSend.append('description', formData.description)
-      formDataToSend.append('tags', JSON.stringify(
-        formData.tags.split(',').map(t => t.trim()).filter(t => t)
-      ))
-      formDataToSend.append('content', formData.content)
+      const apiData = new FormData()
+      apiData.append('title', formData.title)
+      apiData.append('date', formData.date)
+      apiData.append('excerpt', formData.excerpt)
+      apiData.append('description', formData.description)
+      const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t)
+      apiData.append('tags', JSON.stringify(tagsArray))
+      apiData.append('content', formData.content)
+      apiData.append('is_featured', formData.is_featured)
       
       if (newImage) {
-        formDataToSend.append('coverImage', newImage)
+        apiData.append('coverImage', newImage)
       }
 
       const response = await fetch(`/api/admin/blog/${slug}`, {
@@ -280,6 +283,20 @@ export function BlogEditor({ slug, onBack }) {
               disabled={saving}
               className="w-full px-4 py-2 bg-white dark:bg-dark-800 border border-dark-300 dark:border-dark-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             />
+          </div>
+          <div className="col-span-1 md:col-span-2 flex items-center gap-3 mt-2">
+            <input
+              type="checkbox"
+              id="is_featured"
+              name="is_featured"
+              checked={formData.is_featured}
+              onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
+              disabled={saving}
+              className="w-5 h-5 text-blue-600 bg-white border-dark-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="is_featured" className="text-sm font-medium text-dark-700 dark:text-dark-300">
+              Destacar en la página principal (Home)
+            </label>
           </div>
         </div>
 

@@ -75,8 +75,37 @@ export async function POST(request) {
       }
     }
 
-    // Aquí se añadiría la lógica para guardar en BD o archivo
-    // Por ahora retornamos éxito
+    // Aquí guardamos en el archivo
+    if (type === 'project') {
+      const projectsPath = path.join(process.cwd(), 'src/data/projects.json')
+      let projects = []
+      
+      try {
+        if (fs.existsSync(projectsPath)) {
+          const fileData = fs.readFileSync(projectsPath, 'utf8')
+          projects = JSON.parse(fileData)
+        }
+      } catch (e) {
+        console.error("Error leyendo projects.json", e)
+      }
+
+      const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id || 0)) + 1 : 1
+      
+      const newProject = {
+        id: newId,
+        title: data.name,
+        description: data.description,
+        image: data.image || "/developer.gif",
+        category: "Webs", // Categoría por defecto
+        rubro: "Otros",
+        technologies: data.technologies || [],
+        url: data.link || data.github || "",
+        allowIframe: false
+      }
+
+      projects.unshift(newProject) // Agregar al inicio
+      fs.writeFileSync(projectsPath, JSON.stringify(projects, null, 2))
+    }
 
     return NextResponse.json({
       success: true,

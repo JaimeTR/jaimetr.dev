@@ -27,11 +27,14 @@ export const ProjectBody = ({ data }) => {
     return (
         <section className="container mx-auto px-2 lg:px-22 xl:px-28 2xl:max-w-[1200px] mt-10">
             <header className="mt-24 lg:mt-28 mb-8 lg:mb-12 max-w-[800px] mx-auto lg:flex lg:items-center lg:gap-6">
-                <img
-                    src={data?.content?.images?.cover}
+                <Image
+                    src={data?.content?.images?.cover || '/images/default.webp'}
                     alt={title}
-                    className="rounded-lg h-auto w-full lg:w-1/3"
-                    sizes="(max-width: 768px) 600px, (max-width: 1200px) 800px, 960px"
+                    width={800}
+                    height={450}
+                    className="rounded-lg h-auto w-full lg:w-1/3 object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
                 />
                 <div>
                     <h1 className="text-4xl font-bold text-primary-600 dark:text-primary-400 my-4 lg:my-0 lg:mb-4">
@@ -154,13 +157,16 @@ export const ProjectBody = ({ data }) => {
                     <h2>{t('resumen')}</h2>
                     <p>{abstract}</p>
                 </article>
-                <img
-                    src={data?.content?.images?.screenshot}
-                    alt={title}
-                    className="rounded-xl overflow-hidden my-6 w-full shadow-md"
-                    sizes="(max-width: 768px) 100%, (max-width: 1200px) 960px"
-                    loading="lazy"
-                />
+                {data?.content?.images?.screenshot && (
+                    <Image
+                        src={data.content.images.screenshot}
+                        alt={title}
+                        width={1200}
+                        height={675}
+                        className="rounded-xl overflow-hidden my-6 w-full shadow-md object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+                    />
+                )}
 
                 <article className="">
                     <h2>{t('descripcionProyecto')}</h2>
@@ -197,12 +203,14 @@ export const ProjectBody = ({ data }) => {
                 <h2>{t('galeria')}</h2>
                 <section className="grid md:grid-cols-2 md:grid-rows-2 gap-4">
                     {Object.values(images).map((image, idx) => (
-                        <img
+                        <Image
                             key={idx}
-                            className="w-full rounded-lg object-cover shadow-md my-0"
                             src={image}
-                            alt={title}
-                            sizes="(max-width: 768px) 600px, (max-width: 1200px) 800px, 960px"
+                            alt={`${title} - image ${idx + 1}`}
+                            width={800}
+                            height={450}
+                            className="w-full rounded-lg object-cover shadow-md my-0"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
                         />
                     ))}
                 </section>

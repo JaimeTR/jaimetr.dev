@@ -5,6 +5,9 @@ export const translations = {
         experiencia: 'Experiencia',
         blog: 'Blog',
         contacto: 'Contacto',
+        servicios: 'Servicios',
+        rutaProyectos: 'proyectos',
+        rutaArticulos: 'articulos',
         
         // Home Banner
         hola: 'Hola',
@@ -45,7 +48,8 @@ export const translations = {
         
         // Projects
         misPro: 'Mis Proyectos',
-        verProyecto: 'Ver Proyecto',
+        verTodosProyectos: 'Ver todos mis proyectos',
+        verProyecto: 'VER PROYECTO',
         mas: 'más',
         resumen: 'Resumen',
         descripcionProyecto: 'Descripción del proyecto',
@@ -56,6 +60,23 @@ export const translations = {
         galeria: 'Galería',
         irAlSitio: 'Ir al sitio',
         repo: 'Repo',
+
+        // Animated Portfolio Categories & Strings
+        todos: 'Todos',
+        webs: 'Webs',
+        sistemasWeb: 'Sistemas Web',
+        softwareAMedida: 'Software a Medida',
+        ecommerce: 'Ecommerce',
+        ia: 'Inteligencia Artificial',
+        landingPages: 'Landing Pages',
+        automatizaciones: 'Automatizaciones',
+        categoria: 'Categoría:',
+        noProyectos: 'Aún no hay proyectos en esta categoría',
+        desarrolladoPor: 'Desarrollado por Jaime Tarazona',
+        proyectosCompletados: '+350 Proyectos entregados',
+        clientesSatisfechos: '+120 Clientes satisfechos',
+        codigoEficiente: 'Código eficiente y escalable',
+        experienciaContinua: 'Experiencia continua en proyectos personales, agencias y como desarrollador autónomo.',
         
         // Blog
         misArticulos: 'Mis Artículos',
@@ -81,6 +102,9 @@ export const translations = {
         experiencia: 'Experience',
         blog: 'Blog',
         contacto: 'Contact',
+        servicios: 'Services',
+        rutaProyectos: 'projects',
+        rutaArticulos: 'posts',
         
         // Home Banner
         hola: 'Hello',
@@ -121,7 +145,8 @@ export const translations = {
         
         // Projects
         misPro: 'My Projects',
-        verProyecto: 'View Project',
+        verTodosProyectos: 'View all my projects',
+        verProyecto: 'VIEW PROJECT',
         mas: 'more',
         resumen: 'Summary',
         descripcionProyecto: 'Project description',
@@ -132,6 +157,23 @@ export const translations = {
         galeria: 'Gallery',
         irAlSitio: 'Go to site',
         repo: 'Repo',
+
+        // Animated Portfolio Categories & Strings
+        todos: 'All',
+        webs: 'Websites',
+        sistemasWeb: 'Web Systems',
+        softwareAMedida: 'Custom Software',
+        ecommerce: 'Ecommerce',
+        ia: 'Artificial Intelligence',
+        landingPages: 'Landing Pages',
+        automatizaciones: 'Automations',
+        categoria: 'Category:',
+        noProyectos: 'No projects found in this category',
+        desarrolladoPor: 'Developed by Jaime Tarazona',
+        proyectosCompletados: '350+ Delivered Projects',
+        clientesSatisfechos: '120+ Happy Clients',
+        codigoEficiente: 'Efficient & Scalable Code',
+        experienciaContinua: 'Continuous experience in personal projects, agencies and as a freelance developer.',
         
         // Blog
         misArticulos: 'My Articles',

@@ -6,16 +6,34 @@ import { AdminHeader } from '@/components/Admin/AdminHeader'
 import { BlogGeneratorForm } from '@/components/Admin/BlogGeneratorForm'
 import { BlogsList } from '@/components/Admin/BlogsList'
 import { BlogEditor } from '@/components/Admin/BlogEditor'
-import { ProjectForm } from '@/components/Admin/ProjectForm'
-import { ExperienceForm } from '@/components/Admin/ExperienceForm'
-import { FiFileText, FiPackage, FiBriefcase, FiEdit3 } from 'react-icons/fi'
+import { ManageProjects } from '@/components/Admin/ManageProjects'
+import { ManageHeader } from '@/components/Admin/ManageHeader'
+import { ManageProfile } from '@/components/Admin/ManageProfile'
+import { ManageAboutMe } from '@/components/Admin/ManageAboutMe'
+import { ManageExperience } from '@/components/Admin/ManageExperience'
+import { ManageSkills } from '@/components/Admin/ManageSkills'
+import { ManageSectionsModal } from '@/components/Admin/ManageSectionsModal'
+import { FiFileText, FiPackage, FiBriefcase, FiEdit3, FiUser, FiCode, FiLayout, FiSmile, FiEdit2 } from 'react-icons/fi'
+
+const baseComponents = {
+  'header': { icon: FiLayout, component: ManageHeader },
+  'profile': { icon: FiUser, component: ManageProfile },
+  'aboutme': { icon: FiSmile, component: ManageAboutMe },
+  'experience': { icon: FiBriefcase, component: ManageExperience },
+  'project': { icon: FiPackage, component: ManageProjects },
+  'manage-blog': { icon: FiEdit3, component: null }, // Manejo especial
+  'skills': { icon: FiCode, component: ManageSkills }
+}
 
 export default function AdminDashboard() {
   const router = useRouter()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeTab, setActiveTab] = useState('blog')
+  const [activeTab, setActiveTab] = useState('header')
   const [editingSlug, setEditingSlug] = useState(null)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [sectionsConfig, setSectionsConfig] = useState([])
+  const [isEditingSections, setIsEditingSections] = useState(false)
 
   useEffect(() => {
     // Verificar autenticación
@@ -25,8 +43,22 @@ export default function AdminDashboard() {
       return
     }
     setIsAuthenticated(true)
-    setLoading(false)
+    fetchSections()
   }, [router])
+
+  const fetchSections = async () => {
+    try {
+      const res = await fetch('/api/admin/sections')
+      const data = await res.json()
+      if (data.success && data.data) {
+        setSectionsConfig(data.data)
+      }
+    } catch (e) {
+      console.error('Error fetching sections:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -41,33 +73,21 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) return null
 
-  const tabs = [
-    {
-      id: 'blog',
-      label: 'Generar Blogs',
-      icon: FiFileText,
-      component: BlogGeneratorForm
-    },
-    {
-      id: 'manage-blog',
-      label: 'Gestionar Blogs',
-      icon: FiEdit3,
-      component: null // Manejo especial
-    },
-    {
-      id: 'project',
-      label: 'Agregar Proyecto',
-      icon: FiPackage,
-      component: ProjectForm
-    },
-    {
-      id: 'experience',
-      label: 'Agregar Experiencia',
-      icon: FiBriefcase,
-      component: ExperienceForm
-    }
-  ]
+  // Construir las tabs basándonos en sectionsConfig
+  // Siempre ponemos "header" al principio ya que no es una sección de la landing page arrastrable
+  const headerTab = {
+    id: 'header',
+    label: 'Encabezado',
+    is_hidden: false,
+    ...baseComponents['header']
+  }
 
+  const dynamicTabs = sectionsConfig.map(s => ({
+    ...s,
+    ...baseComponents[s.id]
+  }))
+
+  const tabs = [headerTab, ...dynamicTabs]
   const ActiveComponent = tabs.find(t => t.id === activeTab)?.component
 
   return (
@@ -75,75 +95,88 @@ export default function AdminDashboard() {
       <AdminHeader onLogout={() => setIsAuthenticated(false)} />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Tabs */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-12 overflow-x-auto pb-2">
-          {tabs.map(tab => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id)
-                  setEditingSlug(null)
-                }}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-dark-100 dark:bg-dark-900 text-dark-700 dark:text-dark-300 hover:bg-dark-200 dark:hover:bg-dark-800'
-                }`}
-              >
-                <Icon size={18} />
-                {tab.label}
-              </button>
-            )
-          })}
+        {/* Tabs Wrapper */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12">
+          <div className="flex flex-row gap-4 overflow-x-auto pb-2 flex-1 w-full">
+            {tabs.map(tab => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id)
+                    setEditingSlug(null)
+                    setIsGenerating(false)
+                  }}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'bg-white dark:bg-dark-900 border border-dark-200 dark:border-dark-800 text-dark-700 dark:text-dark-300 hover:bg-dark-50 dark:hover:bg-dark-800'
+                  } ${tab.is_hidden ? 'opacity-60' : ''}`}
+                  title={tab.is_hidden ? 'Esta sección está oculta en la Landing Page' : ''}
+                >
+                  <Icon size={18} />
+                  <span className={tab.is_hidden ? 'line-through' : ''}>{tab.label}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <button
+            onClick={() => setIsEditingSections(true)}
+            className="flex items-center justify-center p-3 bg-dark-100 hover:bg-dark-200 dark:bg-dark-800 dark:hover:bg-dark-700 border border-dark-200 dark:border-dark-700 text-dark-700 dark:text-dark-300 rounded-lg transition shadow-sm"
+            title="Ordenar secciones"
+          >
+            <FiEdit2 size={20} />
+          </button>
         </div>
 
         {/* Content */}
         <div className="grid gap-8">
           {activeTab === 'manage-blog' ? (
-            editingSlug ? (
+            isGenerating ? (
+              <div className="space-y-4">
+                <button 
+                  onClick={() => setIsGenerating(false)} 
+                  className="text-sm px-4 py-2 bg-dark-200 dark:bg-dark-800 hover:bg-dark-300 dark:hover:bg-dark-700 rounded text-dark-700 dark:text-dark-300 transition flex items-center gap-2 w-fit"
+                >
+                  &larr; Volver a la lista de Blogs
+                </button>
+                <BlogGeneratorForm />
+              </div>
+            ) : editingSlug ? (
               <>
                 <BlogEditor
                   slug={editingSlug}
                   onBack={() => setEditingSlug(null)}
                 />
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">📝 Editor de Blogs</h3>
-                  <p className="text-sm text-blue-800 dark:text-blue-400">
-                    Modifica el contenido, título, tags e imagen de portada de tu blog.
-                  </p>
-                </div>
               </>
             ) : (
               <>
-                <BlogsList onSelectEdit={setEditingSlug} />
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">📚 Gestión de Blogs</h3>
-                  <p className="text-sm text-blue-800 dark:text-blue-400">
-                    Visualiza todos tus blogs, edita su contenido, imagen de portada o elimina los que ya no necesites.
-                  </p>
-                </div>
+                <BlogsList 
+                  onSelectEdit={setEditingSlug} 
+                  onGenerateNew={() => setIsGenerating(true)} 
+                />
               </>
             )
           ) : (
             <>
               {ActiveComponent && <ActiveComponent />}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">💡 Información</h3>
-                <p className="text-sm text-blue-800 dark:text-blue-400">
-                  {activeTab === 'blog' &&
-                    'Los artículos se generan automáticamente usando IA. Se crearán los archivos MDX en src/posts/ y se generará una portada.'}
-                  {activeTab === 'project' &&
-                    'Los proyectos se agregan a tu portafolio y aparecerán en la sección de Proyectos.'}
-                  {activeTab === 'experience' &&
-                    'La experiencia laboral se añadirá a tu CV y aparecerá en la sección de Experiencia.'}
-                </p>
-              </div>
             </>
           )}
         </div>
       </main>
+
+      {isEditingSections && (
+        <ManageSectionsModal 
+          sections={sectionsConfig}
+          onClose={() => setIsEditingSections(false)}
+          onSave={(newSections) => {
+            setSectionsConfig(newSections)
+            setIsEditingSections(false)
+          }}
+        />
+      )}
     </div>
   )
 }

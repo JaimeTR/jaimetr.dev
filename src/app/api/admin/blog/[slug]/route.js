@@ -55,7 +55,8 @@ export async function GET(request, { params }) {
         tags: data.tags || [],
         content: body,
         hasCoverImage,
-        coverImage: `/images/posts/${slug}.webp`
+        coverImage: `/images/posts/${slug}.webp`,
+        is_featured: data.is_featured || false
       }
     })
   } catch (error) {
@@ -87,6 +88,7 @@ export async function PUT(request, { params }) {
     const tags = formData.get('tags') ? JSON.parse(formData.get('tags')) : []
     const content = formData.get('content')
     const coverImageFile = formData.get('coverImage')
+    const is_featured = formData.get('is_featured') === 'true'
 
     if (!title || !content) {
       return NextResponse.json(
@@ -118,7 +120,8 @@ export async function PUT(request, { params }) {
       description: description || '',
       tags: tags || [],
       cover: `/images/posts/${slug}.webp`,
-      author: 'jaimetrdev'
+      author: 'jaimetrdev',
+      is_featured
     }
 
     const newContent = `---

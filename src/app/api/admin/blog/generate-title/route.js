@@ -1,4 +1,7 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
+import { getAllPostsMetadata } from '@/lib/mdx'
 
 // Validar token de administrador
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
@@ -9,7 +12,23 @@ function validateAdminToken(request) {
   return token === ADMIN_TOKEN
 }
 
-async function generateTitlesWithGemini(topic) {
+function getExistingTitlesContext() {
+  try {
+    const posts = getAllPostsMetadata('es')
+    const titles = posts.map(p => p.title).filter(Boolean)
+    return titles.length > 0 
+      ? `\nIMPORTANTE - EVITA CUALQUIER SIMILITUD CON ESTOS TÍTULOS EXISTENTES:\n${titles.map(t => `- ${t}`).join('\n')}` 
+      : ''
+  } catch (e) {
+    return ''
+  }
+}
+
+const SYSTEM_PROMPT = `Eres Jaime Tarazona, un Ingeniero de Software experto. Escribes para un blog técnico de alto nivel.
+Tus áreas de especialidad son: Arquitectura de Software, Next.js, React, Node.js, Inteligencia Artificial (LLMs, GenAI), Performance Web (Core Web Vitals) y DevOps.
+Los títulos que generas deben reflejar innovación, casos de uso del mundo real, tutoriales avanzados y tendencias tecnológicas actuales.`
+
+async function generateTitlesWithGemini(topic, existingTitlesContext) {
   const { GoogleGenerativeAI } = await import('@google/generative-ai')
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
@@ -20,13 +39,16 @@ async function generateTitlesWithGemini(topic) {
   const client = new GoogleGenerativeAI(apiKey)
   const model = client.getGenerativeModel({ model: 'gemini-pro' })
 
-  const prompt = `Genera 3 títulos diferentes, profesionales y en español para un artículo sobre: "${topic}"
+  const prompt = `${SYSTEM_PROMPT}
+
+Genera 3 títulos diferentes, hiper-profesionales y atractivos (en español) para un artículo sobre: "${topic}"
 
 Cada título debe:
 - Ser conciso (máximo 60 caracteres)
-- Ser descriptivo y llamativo
-- Incluir palabras clave relevantes
-- Ser único y diferente a los otros dos
+- Ser extremadamente descriptivo y llamar la atención de desarrolladores Senior o Tech Leads.
+- Incluir palabras clave relevantes (SEO).
+- Ser único, novedoso y diferente a los otros dos.
+${existingTitlesContext}
 
 Devuelve exactamente 3 títulos, uno por línea, sin numeración ni puntos. Solo los títulos.`
 
@@ -36,7 +58,7 @@ Devuelve exactamente 3 títulos, uno por línea, sin numeración ni puntos. Solo
   return titles.map(t => t.trim())
 }
 
-async function generateTitlesWithOpenAI(topic) {
+async function generateTitlesWithOpenAI(topic, existingTitlesContext) {
   const OpenAI = (await import('openai')).default
   const apiKey = process.env.OPENAI_API_KEY
 
@@ -51,17 +73,18 @@ async function generateTitlesWithOpenAI(topic) {
     messages: [
       {
         role: 'system',
-        content: 'Eres un experto en SEO y redacción de títulos para artículos técnicos.'
+        content: SYSTEM_PROMPT
       },
       {
         role: 'user',
-        content: `Genera 3 títulos diferentes, profesionales y en español para un artículo sobre: "${topic}"
+        content: `Genera 3 títulos diferentes, hiper-profesionales y atractivos (en español) para un artículo sobre: "${topic}"
 
 Cada título debe:
 - Ser conciso (máximo 60 caracteres)
-- Ser descriptivo y llamativo
-- Incluir palabras clave relevantes
-- Ser único y diferente a los otros dos
+- Ser extremadamente descriptivo y llamar la atención de desarrolladores Senior o Tech Leads.
+- Incluir palabras clave relevantes (SEO).
+- Ser único, novedoso y diferente a los otros dos.
+${existingTitlesContext}
 
 Devuelve exactamente 3 títulos, uno por línea, sin numeración ni puntos. Solo los títulos.`
       }
@@ -80,9 +103,9 @@ function generateTitlesFallback(topic) {
   const t = (s) => s.length > 60 ? s.slice(0, 57).trim() + '…' : s
   const clean = String(topic).trim()
   const variants = [
-    `${clean}: mejores prácticas en 2025`,
-    `Cómo dominar ${clean} paso a paso`,
-    `${clean} para desarrolladores: guía rápida`
+    `Arquitectura de ${clean}: Guía Definitiva 2025`,
+    `${clean} y Next.js: Optimizando el Performance`,
+    `Dominando ${clean} en Desarrollo de Software Moderno`
   ]
   return variants.map(t)
 }
@@ -107,12 +130,13 @@ export async function POST(request) {
     }
 
     let titles
+    const existingTitlesContext = getExistingTitlesContext()
 
     try {
       if (provider === 'openai') {
-        titles = await generateTitlesWithOpenAI(topic)
+        titles = await generateTitlesWithOpenAI(topic, existingTitlesContext)
       } else {
-        titles = await generateTitlesWithGemini(topic)
+        titles = await generateTitlesWithGemini(topic, existingTitlesContext)
       }
     } catch (e) {
       // Si falta API key u ocurre un error del proveedor, usar fallback local

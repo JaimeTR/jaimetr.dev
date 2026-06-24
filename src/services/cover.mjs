@@ -5,28 +5,28 @@ import sharp from 'sharp'
 const WIDTH = 1200
 const HEIGHT = 800
 
-// Paletas de colores para las 3 variantes
+// Paletas de colores para las 3 variantes premium
 const COLOR_THEMES = {
   variant1: {
-    name: 'Clásico',
-    primaryYellow: '#FFD700',
-    accentCyan: '#00D9FF',
-    darkBg: '#0a1628',
-    darkAccent: '#1a2f4a'
+    name: 'Cyber Neon',
+    primary: '#00FFA3', // Verde neón
+    accent: '#00B8FF', // Azul cyber
+    bg1: '#0A0A0F',
+    bg2: '#12121A'
   },
   variant2: {
-    name: 'Moderno',
-    primaryYellow: '#FF6B35',
-    accentCyan: '#7B68EE',
-    darkBg: '#1a1a2e',
-    darkAccent: '#16213e'
+    name: 'Dark Glass',
+    primary: '#F0F0F0', // Blanco humo
+    accent: '#FF3366', // Rosa vibrante
+    bg1: '#09090E',
+    bg2: '#1A1A24'
   },
   variant3: {
-    name: 'Vibrante',
-    primaryYellow: '#00F5A0',
-    accentCyan: '#FF2E63',
-    darkBg: '#0F2027',
-    darkAccent: '#203A43'
+    name: 'Tech Gold',
+    primary: '#FFD700', // Dorado
+    accent: '#8A2BE2', // Púrpura eléctrico
+    bg1: '#050505',
+    bg2: '#161616'
   }
 }
 
@@ -39,7 +39,7 @@ export async function generateCoverVariants({ slug, title, tags = [] }) {
   for (const [key, theme] of Object.entries(COLOR_THEMES)) {
     const variantSlug = `${slug}-${key}`
     const outFile = path.join(outDir, `${variantSlug}.webp`)
-    const svg = generateSVG({ title, theme, slug })
+    const svg = generateSVG({ title, theme, slug, tags })
     
     const svgBuffer = Buffer.from(svg)
     const buffer = await sharp(svgBuffer)
@@ -58,13 +58,12 @@ export async function generateCoverVariants({ slug, title, tags = [] }) {
   return variants
 }
 
-function generateSVG({ title, theme, slug }) {
+function generateSVG({ title, theme, slug, tags = [] }) {
   const safeTitle = String(title || slug)
   const brand = 'jaimetr.dev'
 
-  const { primaryYellow, accentCyan, darkBg, darkAccent } = theme
+  const { primary, accent, bg1, bg2 } = theme
 
-  // Función para dividir el texto en líneas que quepan en el ancho disponible
   function splitTextIntoLines(text, maxCharsPerLine) {
     const words = text.split(' ')
     const lines = []
@@ -72,7 +71,6 @@ function generateSVG({ title, theme, slug }) {
 
     for (const word of words) {
       const testLine = currentLine ? `${currentLine} ${word}` : word
-      
       if (testLine.length <= maxCharsPerLine) {
         currentLine = testLine
       } else {
@@ -85,32 +83,42 @@ function generateSVG({ title, theme, slug }) {
     return lines
   }
 
-  // Determinar tamaño de fuente y líneas según longitud del título
-  let fontSize = 68
-  let maxCharsPerLine = 35
-  let lineHeight = 80
+  let fontSize = 72
+  let maxCharsPerLine = 28
+  let lineHeight = 85
   
-  if (safeTitle.length > 60) {
-    fontSize = 52
-    maxCharsPerLine = 45
+  if (safeTitle.length > 70) {
+    fontSize = 54
+    maxCharsPerLine = 38
     lineHeight = 65
   } else if (safeTitle.length > 40) {
-    fontSize = 60
-    maxCharsPerLine = 40
-    lineHeight = 72
+    fontSize = 64
+    maxCharsPerLine = 32
+    lineHeight = 75
   }
 
-  const titleLines = splitTextIntoLines(safeTitle, maxCharsPerLine).slice(0, 3) // Máximo 3 líneas
+  const titleLines = splitTextIntoLines(safeTitle, maxCharsPerLine).slice(0, 4)
+
+  const tagsString = tags && tags.length > 0 
+    ? tags.slice(0,3).map(t => `#${String(t).toUpperCase()}`).join('  ') 
+    : '#SOFTWARE  #ENGINEERING'
 
   return `
 <svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${darkBg}"/>
-      <stop offset="100%" stop-color="${darkAccent}"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+    <radialGradient id="bgGrad" cx="50%" cy="0%" r="100%" fx="50%" fy="0%">
+      <stop offset="0%" stop-color="${bg2}"/>
+      <stop offset="100%" stop-color="${bg1}"/>
+    </radialGradient>
+    
+    <!-- Pattern de Grid -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="${accent}" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+
+    <!-- Filtro de resplandor neón -->
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
       <feMerge>
         <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -118,75 +126,77 @@ function generateSVG({ title, theme, slug }) {
     </filter>
   </defs>
 
-  <!-- Fondo base con gradiente -->
+  <!-- Fondo base con gradiente radial y Grid -->
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bgGrad)"/>
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#grid)"/>
 
-  <!-- Patrón de código de fondo (simulado) -->
-  <text x="50" y="100" font-family="monospace" font-size="12" fill="#1a4d6d" opacity="0.3">
-    const handler = () =&gt; console.log('event');
-  </text>
-  <text x="800" y="500" font-family="monospace" font-size="11" fill="#1a4d6d" opacity="0.25">
-    export function optimize() { return true; }
-  </text>
+  <!-- Orbes de luz decorativos -->
+  <circle cx="1000" cy="150" r="250" fill="${accent}" opacity="0.08" filter="blur(80px)"/>
+  <circle cx="150" cy="700" r="300" fill="${primary}" opacity="0.05" filter="blur(100px)"/>
 
-  <!-- Elementos decorativos geométricos -->
-  <!-- Círculos decorativos -->
-  <circle cx="150" cy="120" r="60" fill="none" stroke="${accentCyan}" stroke-width="2" opacity="0.4"/>
-  <circle cx="150" cy="120" r="40" fill="none" stroke="${accentCyan}" stroke-width="1" opacity="0.2"/>
+  <!-- Elementos de interfaz HUD -->
+  <path d="M 1100 50 L 1150 50 L 1150 100" fill="none" stroke="${primary}" stroke-width="3" opacity="0.5"/>
+  <path d="M 50 750 L 50 700 L 100 700" fill="none" stroke="${accent}" stroke-width="3" opacity="0.5"/>
   
-  <circle cx="1050" cy="500" r="80" fill="none" stroke="${primaryYellow}" stroke-width="2" opacity="0.3"/>
-  <circle cx="1050" cy="500" r="55" fill="none" stroke="${primaryYellow}" stroke-width="1" opacity="0.15"/>
+  <text x="1050" y="70" font-family="monospace" font-size="12" fill="${accent}" opacity="0.6">
+    SYS_ID: ${slug.substring(0, 8).toUpperCase()}
+  </text>
+  <text x="1050" y="90" font-family="monospace" font-size="12" fill="${accent}" opacity="0.6">
+    v2.0.4 // OK
+  </text>
 
-  <!-- Líneas decorativas -->
-  <line x1="0" y1="0" x2="200" y2="100" stroke="${accentCyan}" stroke-width="2" opacity="0.2"/>
-  <line x1="${WIDTH}" y1="${HEIGHT}" x2="${WIDTH - 250}" y2="${HEIGHT - 120}" stroke="${primaryYellow}" stroke-width="2" opacity="0.2"/>
-
-  <!-- Rectángulo highlight lateral -->
-  <rect x="0" y="220" width="8" height="200" fill="${primaryYellow}" opacity="0.6"/>
-
-  <!-- Título principal (múltiples líneas si es necesario) -->
+  <!-- Título principal -->
   ${titleLines.map((line, index) => `
   <text 
-    x="80" 
-    y="${250 + (index * lineHeight)}" 
-    font-family="'Onest', 'Arial Black', sans-serif" 
+    x="100" 
+    y="${280 + (index * lineHeight)}" 
+    font-family="'Inter', 'Arial Black', sans-serif" 
     font-size="${fontSize}" 
     font-weight="900" 
-    fill="${primaryYellow}"
-    filter="url(#glow)"
+    fill="${primary}"
+    letter-spacing="-1.5"
   >
     ${escapeXml(line)}
   </text>
   `).join('')}
 
-  <!-- Subtítulo con brand -->
+  <!-- Tags -->
   <text 
-    x="80" 
-    y="${250 + (titleLines.length * lineHeight) + 50}" 
-    font-family="'Onest', 'Arial', sans-serif" 
-    font-size="18" 
-    fill="${accentCyan}"
+    x="100" 
+    y="${280 + (titleLines.length * lineHeight) + 20}" 
+    font-family="monospace" 
+    font-size="16" 
+    fill="${accent}"
+    letter-spacing="2"
+    opacity="0.8"
+  >
+    ${escapeXml(tagsString)}
+  </text>
+
+  <!-- Branding Footer -->
+  <rect x="100" y="${HEIGHT - 120}" width="60" height="4" fill="${primary}"/>
+  
+  <text 
+    x="100" 
+    y="${HEIGHT - 80}" 
+    font-family="'Inter', 'Arial', sans-serif" 
+    font-size="24" 
+    font-weight="700"
+    fill="#FFFFFF"
     opacity="0.9"
   >
     ${escapeXml(brand)}
   </text>
-
-  <!-- Branding en esquina inferior -->
+  
   <text 
-    x="80" 
-    y="580" 
-    font-family="'Onest', 'Arial', sans-serif" 
+    x="100" 
+    y="${HEIGHT - 55}" 
+    font-family="'Inter', 'Arial', sans-serif" 
     font-size="16" 
-    fill="#ffffff"
-    opacity="0.7"
+    fill="#A0A0A0"
   >
-    📝 Artículo de ${brand}
+    INGENIERÍA DE SOFTWARE Y DESARROLLO WEB
   </text>
-
-  <!-- Pequeños acentos de puntos -->
-  <circle cx="1100" cy="100" r="4" fill="${primaryYellow}" opacity="0.6"/>
-  <circle cx="1130" cy="120" r="3" fill="${accentCyan}" opacity="0.5"/>
-  <circle cx="1070" cy="140" r="3" fill="${primaryYellow}" opacity="0.4"/>
 </svg>`
 }
 
@@ -197,7 +207,7 @@ export async function generateCover({ slug, title, tags = [] }) {
 
   // Usar el tema clásico por defecto
   const theme = COLOR_THEMES.variant1
-  const svg = generateSVG({ title, theme, slug })
+  const svg = generateSVG({ title, theme, slug, tags })
 
   // Convertir SVG a imagen con sharp
   const svgBuffer = Buffer.from(svg)

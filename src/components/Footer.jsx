@@ -1,33 +1,54 @@
 'use client'
 import Link from 'next/link'
 import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export const Footer = () => {
     const { language } = useLanguage()
+    const [profile, setProfile] = useState(null)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+        fetchProfile()
+    }, [])
+
+    const fetchProfile = async () => {
+        const { data, error } = await supabase.from('profile').select('footer_text_es, footer_text_en, footer_links').limit(1).single()
+        if (!error && data) {
+            setProfile(data)
+        }
+    }
+
+    if (!mounted) return null
+
+    const defaultLinks = [
+        { id: 'l1', url_es: '/', url_en: '/', label_es: 'Inicio', label_en: 'Home', visible: true },
+        { id: 'l2', url_es: '/#experience', url_en: '/#experience', label_es: 'Experiencia', label_en: 'Experience', visible: true },
+        { id: 'l3', url_es: '/projects', url_en: '/projects', label_es: 'Proyectos', label_en: 'Projects', visible: true }
+    ]
+
+    const links = profile?.footer_links || defaultLinks
+    const textEs = profile?.footer_text_es || 'Portafolio'
+    const textEn = profile?.footer_text_en || 'Portfolio'
+
     return (
-        <footer className="container mx-auto px-2 lg:px-28 2xl:px-52 mt-14 mb-8">
+        <footer id="contacto" className="container mx-auto px-2 lg:px-28 2xl:px-52 mt-14 mb-8">
             <div className="rounded-lg border-dark-100 dark:border-dark-700 shadow dark:shadow-dark-700 mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between ">
                 <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">
-                    <a href="https://www.jaimetr.dev/" className="hover:underline">
-                        {language === 'es' ? 'Portafolio' : 'Portfolio'}
-                    </a>
+                    <Link href="/" className="hover:underline">
+                        {language === 'es' ? textEs : textEn}
+                    </Link>
                 </span>
                 <ul className="flex flex-wrap items-center mt-3 text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
-                    <li>
-                        <Link href="/" className="mr-4 hover:underline md:mr-6 ">
-                            {language === 'es' ? 'Inicio' : 'Home'}
-                        </Link>
-                    </li>
-                    <li>
-                        <Link href="/#experience" className="mr-4 hover:underline md:mr-6">
-                            {language === 'es' ? 'Experiencia' : 'Experience'}
-                        </Link>
-                    </li>
-                    <li>
-                        <Link href="/projects" className="mr-4 hover:underline md:mr-6">
-                            {language === 'es' ? 'Proyectos' : 'Projects'}
-                        </Link>
-                    </li>
+                    {links.filter(l => l.visible !== false).map(link => (
+                        <li key={link.id}>
+                            <Link href={language === 'es' ? link.url_es : link.url_en} className="mr-4 hover:underline md:mr-6">
+                                {language === 'es' ? link.label_es : link.label_en}
+                            </Link>
+                        </li>
+                    ))}
                 </ul>
             </div>
         </footer>

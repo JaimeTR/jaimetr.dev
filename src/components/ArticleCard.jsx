@@ -25,31 +25,51 @@ export const ArticleCard = ({ article, basePath = '/posts' }) => {
     }
     
     return (
-        <Link href={`${basePath}/${article.slug}`} className="w-full">
+        <Link href={`${basePath}/${article.slug}`} className="w-full block group">
             <article
                 key={article.slug}
-                className="relative mt-4 flex gap-x-6 px-4 py-6 rounded-xl shadow-lg items-center hover:scale-[1.02] transition-transform dark:shadow-dark-900"
+                className={`relative mt-4 flex flex-col md:flex-row gap-4 md:gap-x-6 px-4 py-5 md:py-6 rounded-2xl shadow-sm border border-transparent 
+                transition-all duration-300 ease-out items-center
+                hover:shadow-xl hover:-translate-y-1 hover:border-primary-500/30
+                bg-white/80 dark:bg-dark-800/80 backdrop-blur-md 
+                ${article.is_featured ? 'ring-1 ring-primary-500/50 shadow-primary-500/10' : ''}`}
             >
-                <picture className="w-1/4 min-w-[160px] h-[110px] md:h-[130px] rounded-lg overflow-hidden shadow-md">
-                    <img src={article?.cover} alt={article?.title} className="w-full h-full object-cover" loading="lazy" />
+                <picture className="w-full md:w-1/4 md:min-w-[180px] h-[180px] md:h-[130px] rounded-xl overflow-hidden shadow-md shrink-0">
+                    <img 
+                        src={article?.cover} 
+                        alt={article?.title} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        loading="lazy" 
+                    />
                 </picture>
-                <section className="w-3/4">
+                <section className="w-full md:w-3/4 flex flex-col justify-between">
                     <header>
-                        <ShowDate date={article?.date} />
-                        <h1 className="text-primary-700 dark:text-primary-400 font-bold text-lg">{article?.title}</h1>
+                        <div className="flex items-center gap-3 mb-1">
+                            <ShowDate date={article?.date} className="text-sm font-medium text-dark-500 dark:text-dark-300" />
+                            {article.is_featured && (
+                                <span className="inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 ring-1 ring-inset ring-primary-700/10">
+                                    ⭐ Destacado
+                                </span>
+                            )}
+                        </div>
+                        <h1 className="text-dark-900 dark:text-gray-100 font-bold text-xl md:text-2xl leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                            {article?.title}
+                        </h1>
                     </header>
-                    <div>
-                        <p className="hidden lg:visible lg:line-clamp-1 text-dark-700 dark:text-dark-200 ">
+                    <div className="mt-2">
+                        <p className="text-dark-600 dark:text-dark-300 line-clamp-2 text-sm md:text-base leading-relaxed">
                             {article?.description}
                         </p>
-                        <ul className="flex flex-wrap gap-2 mt-3">
+                        <ul className="flex flex-wrap gap-2 mt-4">
                             {tagsList.map((tag) => (
-                                <li key={tag} className={`rounded-full text-xs px-2 py-1 ${tagStyle(tag)}`}>{tag}</li>
+                                <li key={tag} className={`rounded-md font-medium text-[11px] px-2.5 py-1 uppercase tracking-wider ${tagStyle(tag)}`}>
+                                    {tag}
+                                </li>
                             ))}
                         </ul>
                     </div>
                 </section>
-                <span className="absolute top-2 right-3 rounded-full bg-dark-200 dark:bg-dark-700 text-xs px-2 py-1 text-dark-700 dark:text-dark-200">
+                <span className="hidden md:flex absolute top-4 right-4 rounded-full bg-dark-100 dark:bg-dark-900/50 text-[10px] font-semibold px-2 py-1 text-dark-500 dark:text-dark-400 uppercase tracking-widest border border-dark-200 dark:border-dark-700">
                     {article?.author || 'JaimeTR'}
                 </span>
             </article>

@@ -6,6 +6,18 @@ module.exports = {
         './src/components/**/*.{js,ts,jsx,tsx,mdx}',
         './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     ],
+    safelist: [
+        'text-primary-700',
+        'dark:text-primary-400',
+        'text-crusta-800',
+        'dark:text-crusta-300',
+        'font-bold',
+        'underline',
+        'text-left',
+        'text-center',
+        'text-right',
+        'text-justify'
+    ],
     theme: {
         extend: {
             animation: {
@@ -25,7 +37,17 @@ module.exports = {
                 'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
                 'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
             },
+            fontFamily: {
+                sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+                heading: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
             colors: {
+                background: '#050505',
+                card: '#111111',
+                foreground: '#FFFFFF',
+                muted: '#A1A1AA',
+                accent: '#00a8e8', // Using the primary-500 from the current site instead of the old accent
+
                 primary: {
                     50: '#effaff',
                     100: '#def3ff',

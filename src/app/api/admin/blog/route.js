@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { writePost } from '@/services/ai.mjs'
 import { generateBlogMdx } from '@/services/ai.mjs'
 import { generateCover } from '@/services/cover.mjs'
@@ -50,9 +52,18 @@ export async function GET(request) {
         excerpt: data.excerpt || body.substring(0, 100).replace(/\n/g, ' '),
         tags: data.tags || [],
         coverImage: `/images/posts/${slug}.webp`,
-        file: file
+        file: file,
+        is_hidden: data.is_hidden || false,
+        is_featured: data.is_featured || false,
+        featured_order: data.featured_order || 999
       }
-    }).sort((a, b) => new Date(b.date) - new Date(a.date))
+    }).sort((a, b) => {
+      // First sort by featured_order if both are featured, then by date
+      if (a.is_featured && b.is_featured) {
+        if (a.featured_order !== b.featured_order) return a.featured_order - b.featured_order;
+      }
+      return new Date(b.date) - new Date(a.date);
+    })
 
     return NextResponse.json({
       success: true,
