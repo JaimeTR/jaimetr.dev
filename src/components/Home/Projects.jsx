@@ -31,7 +31,7 @@ export const Projects = () => {
     if (!mounted) return null
     
     return (
-        <section className="pt-24 container mx-auto px-4 lg:px-8 max-w-[1200px]" id="projects">
+        <Container id="projects" className="lg:max-w-[1200px]">
             <SectionTitle>{language === 'es' ? 'Proyectos' : 'Projects'}</SectionTitle>
             <p className="mt-6 text-dark-700 dark:text-dark-200">
                 {language === 'es'
@@ -41,6 +41,6 @@ export const Projects = () => {
             <div className="mt-8">
                 <ProjectGallery isEmbedded={true} />
             </div>
-        </section>
+        </Container>
     )
 }
