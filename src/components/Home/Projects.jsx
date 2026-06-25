@@ -33,7 +33,7 @@ export const Projects = () => {
     return (
         <Container id="projects" className="lg:max-w-[1200px]">
             <SectionTitle>{language === 'es' ? 'Proyectos' : 'Projects'}</SectionTitle>
-            <p className="mt-6 text-dark-700 dark:text-dark-200">
+            <p className="mt-6 text-justify text-dark-700 dark:text-dark-200">
                 {language === 'es'
                     ? 'Mis proyectos más emocionantes y creativos. Cada proyecto es el resultado de mi dedicación y pasión por la programación, y estoy encantado de compartirlos contigo. Descubre cómo transformo ideas en realidades digitales. ¡Explora, inspira y crea con mis proyectos de software!'
                     : 'My most exciting and creative projects. Each project is the result of my dedication and passion for programming, and I\'m delighted to share them with you. Discover how I transform ideas into digital realities. Explore, inspire and create with my software projects!'}

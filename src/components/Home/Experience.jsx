@@ -49,8 +49,8 @@ export const Experience = () => {
             <article className="container px-2 mt-10">
                 <ul className="relative border-l border-dark-400 dark:border-dark-700">
                     {experiences.map((experience) => (
-                        <li key={experience.id} className="mb-8 md:mb-6 ml-6 ">
-                            <span className="absolute flex items-center justify-center w-6 h-6 bg-dark-600 rounded-full -left-3 ring-8 ring-dark-50 dark:ring-dark-950 dark:bg-dark-600">
+                        <li key={experience.id} className="mb-8 md:mb-6 ml-6">
+                            <span className="absolute flex items-center justify-center w-6 h-6 bg-dark-600 rounded-full -left-3 ring-8 ring-white dark:ring-dark-950 dark:bg-dark-600 z-20">
                                 <svg
                                     aria-hidden="true"
                                     className="w-4 h-4 text-primary-100 dark:text-primary-100"
@@ -65,17 +65,24 @@ export const Experience = () => {
                                     ></path>
                                 </svg>
                             </span>
-                            <h3 className="flex items-center gap-2 mb-1 text-lg font-semibold text-primary-700 dark:text-primary-400">
-                                {language === 'es' ? (experience.role || experience.role_en) : (experience.role_en || experience.role)}{' '}
-                                <span className="dark:text-white text-dark-700 font-normal">-</span>
-                                <span className="text-sm text-crusta-800 dark:text-crusta-300/90">
-                                    {language === 'es' ? (experience.company || experience.company_en) : (experience.company_en || experience.company)}
-                                </span>
+                            <h3 className="flex flex-col md:flex-row items-start md:items-center md:gap-2 mb-1 text-lg font-semibold text-primary-700 dark:text-primary-400">
+                                <span>{language === 'es' ? (experience.role || experience.role_en) : (experience.role_en || experience.role)}</span>
+                                <span className="hidden md:inline dark:text-white text-dark-700 font-normal">-</span>
+                                
+                                <div className="flex items-center gap-2 mt-1 md:mt-0 flex-wrap">
+                                    <span className="text-sm text-crusta-800 dark:text-crusta-300/90">
+                                        {language === 'es' ? (experience.company || experience.company_en) : (experience.company_en || experience.company)}
+                                    </span>
+                                    <span className="md:hidden dark:text-white text-dark-700 font-normal text-sm">-</span>
+                                    <time className="md:hidden text-sm font-normal leading-none text-primary-950/80 dark:text-primary-200/90">
+                                        {formatRange(experience.start_date, experience.end_date, experience.date_string, experience.date_en_string)}
+                                    </time>
+                                </div>
                             </h3>
-                            <time className="block mb-2 text-sm font-normal leading-none text-primary-950/80 dark:text-primary-200/90">
+                            <time className="hidden md:block mb-2 text-sm font-normal leading-none text-primary-950/80 dark:text-primary-200/90">
                                 {formatRange(experience.start_date, experience.end_date, experience.date_string, experience.date_en_string)}
                             </time>
-                            <p className="mb-4 font-normal text-dark-700 dark:text-dark-200 text-base text-pretty whitespace-pre-line">
+                            <p className="mb-4 font-normal text-dark-700 dark:text-dark-200 text-base text-justify whitespace-pre-line">
                                 {language === 'es' ? (experience.description || experience.description_en) : (experience.description_en || experience.description)}
                             </p>
                         </li>

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ICONS_MAP } from '@/helpers/iconsMap'
 import { FiCode } from 'react-icons/fi'
+import { FaBrain } from 'react-icons/fa'
 
 export const Stack = () => {
     const [mounted, setMounted] = useState(false)
@@ -56,8 +57,8 @@ export const Stack = () => {
 
     return (
         <Container>
-            <SectionTitle>{language === 'es' ? 'Tecnologías' : 'Technologies'}</SectionTitle>
-            <p className="my-8 text-pretty md:text-lg max-w-[740px] text-dark-700 dark:text-dark-200">
+            <SectionTitle className="text-center">{language === 'es' ? 'Tecnologías' : 'Technologies'}</SectionTitle>
+            <p className="my-8 text-center mx-auto text-pretty md:text-lg max-w-[740px] text-dark-700 dark:text-dark-200">
                 {language === 'es'
                     ? <>En mi viaje por el{' '}
                         <span className=" text-daintree-700 dark:text-daintree-300">mundo del desarrollo web</span>, he cultivado{' '}
@@ -106,6 +107,20 @@ export const Stack = () => {
                     </ul>
                 </SetStack>
             </section>
+            
+            <div className="mt-12 md:mt-16 max-w-4xl mx-auto">
+                <SetStack>
+                    <div className="w-full py-4 md:py-2 flex flex-col md:flex-row items-center justify-center gap-4">
+                        <FaBrain className="w-8 h-8 text-primary-500 dark:text-primary-400 shrink-0 animate-pulse" />
+                        <p className="inline animate-background-shine bg-[linear-gradient(110deg,#0ea5e9,45%,#0284c7,55%,#0ea5e9)] dark:bg-[linear-gradient(110deg,#7dd3fc,45%,#0284c7,55%,#7dd3fc)] bg-[length:250%_100%] bg-clip-text text-transparent text-sm md:text-base font-medium max-w-[700px] text-center md:text-left text-pretty leading-relaxed">
+                            {language === 'es' 
+                                ? "Siempre en constante aprendizaje, integrando activamente herramientas de Inteligencia Artificial para optimizar procesos, elevar la calidad del código y agilizar mi flujo de trabajo diario."
+                                : "Always in constant learning, actively integrating Artificial Intelligence tools to optimize processes, elevate code quality, and streamline my daily workflow."
+                            }
+                        </p>
+                    </div>
+                </SetStack>
+            </div>
         </Container>
     )
 }

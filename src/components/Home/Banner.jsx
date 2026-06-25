@@ -47,10 +47,10 @@ export const Banner = () => {
 
     if (!mounted) return null
     return (
-        <section className="relative mx-auto container px-4 pt-44 lg:h-screen overflow-hidden lg:pt-0 lg:max-w-5xl lg:flex lg:flex-col lg:justify-center" id="inicio">
+        <section className="relative mx-auto container px-4 pt-24 pb-10 min-h-[100dvh] flex flex-col justify-center lg:min-h-0 lg:h-screen overflow-hidden lg:pt-0 lg:pb-0 lg:max-w-5xl" id="inicio">
             {profile?.is_particles_visible !== false && <ParticlesBackground />}
-            <div className="text-left lg:flex lg:flex-row-reverse lg:justify-between lg:items-center md:gap-x-12 z-10 relative">
-                <div className="Hero-image flex justify-center mb-8 lg:mb-0 w-40 md:w-56 lg:w-[320px] shrink-0 relative group">
+            <div className="text-center lg:text-left lg:flex lg:flex-row-reverse lg:justify-between lg:items-center md:gap-x-12 z-10 relative">
+                <div className="Hero-image mx-auto lg:mx-0 flex justify-center mb-6 lg:mb-0 w-32 md:w-48 lg:w-[320px] shrink-0 relative group">
                     {/* Glassmorphism Background Blob */}
                     <motion.div 
                         animate={{ rotate: [0, 5, -5, 0] }}
@@ -81,7 +81,7 @@ export const Banner = () => {
                             {language === 'es' ? (profile?.name_es || 'soy Jaime T.R') : (profile?.name_en || 'I am Jaime T.R')}
                         </span>
                     </h1>
-                    <span className="font-semibold inline-flex animate-background-shine bg-[linear-gradient(110deg,#64748b,45%,#0f172a,55%,#64748b)] dark:bg-[linear-gradient(110deg,#b6eaff,45%,#065074,55%,#b6eaff)] bg-[length:250%_100%] bg-clip-text text-xl mt-2 text-transparent">
+                    <span className="font-semibold inline-flex animate-background-shine bg-[linear-gradient(110deg,#64748b,45%,#0f172a,55%,#64748b)] dark:bg-[linear-gradient(110deg,#b6eaff,45%,#065074,55%,#b6eaff)] bg-[length:250%_100%] bg-clip-text text-sm sm:text-base md:text-xl mt-2 text-transparent">
                         {language === 'es' ? (profile?.hero_title_es || t('profesion1')) : (profile?.hero_title_en || t('profesion1'))}
                     </span>
                     <h2 className="lg:text-2xl mt-6 md:mt-10 text-dark-700 dark:text-dark-200 text-pretty">
@@ -97,7 +97,7 @@ export const Banner = () => {
                     </h2>
                 </header>
             </div>
-            <ul className="mt-10 flex flex-wrap gap-4 justify-start relative z-10">
+            <ul className="mt-8 lg:mt-10 flex flex-wrap gap-4 justify-center lg:justify-start relative z-10">
                 {(profile?.hero_buttons_order || ["cv", "linkedin", "github", "email", "facebook", "tiktok", "instagram", "button1", "button2"]).map((btnId) => {
                     switch (btnId) {
                         case 'cv':

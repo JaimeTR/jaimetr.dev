@@ -8,7 +8,7 @@ import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-
+import { motion } from 'framer-motion'
 export const About = () => {
     const [mounted, setMounted] = useState(false)
     const [profile, setProfile] = useState(null)
@@ -36,14 +36,30 @@ export const About = () => {
             <SectionTitle className="text-center md:text-center">{t('sobreMi')}</SectionTitle>
             <div className="pt-12 md:pt-2">
                 <div className="w-full">
-                    <Image
-                        src={profile?.about_image_url || "/images/Jaime_tarazona.webp"}
-                        alt="Jaime Tarazona - Foto de perfil de ingeniero y fullstack"
-                        width={288}
-                        height={288}
-                        className="object-cover rounded-full size-72 shadow-lg shadow-dark-900/20 dark:shadow-dark-50/10 mx-auto"
-                        priority
-                    />
+                    <div className="relative mx-auto flex justify-center w-56 md:w-72 aspect-square group">
+                        {/* Glassmorphism Background Blob */}
+                        <motion.div 
+                            animate={{ rotate: [0, 5, -5, 0] }}
+                            transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                            className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-blue-500/20 dark:from-primary-500/10 dark:to-teal-500/10 backdrop-blur-3xl rounded-full -z-10 scale-105 transform translate-y-2 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]"
+                        />
+                        {/* Floating Image */}
+                        <motion.div 
+                            animate={{ y: [-8, 8, -8] }}
+                            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                            whileHover={{ scale: 1.05 }}
+                            className="relative w-full h-full"
+                        >
+                            <Image
+                                src={profile?.about_image_url || "/images/Jaime_tarazona.webp"}
+                                alt="Jaime Tarazona - Foto de perfil de ingeniero y fullstack"
+                                width={288}
+                                height={288}
+                                className="drop-shadow-2xl w-full h-full object-cover rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.05)] border-[6px] border-white/40 dark:border-white/10 backdrop-blur-sm transition-all duration-300"
+                                priority
+                            />
+                        </motion.div>
+                    </div>
 
                     {(profile?.about_me_paragraphs && profile.about_me_paragraphs.length > 0) ? (
                         <div className={`mt-8 text-dark-700 dark:text-dark-200 md:w-11/12 text-base leading-relaxed space-y-4 text-${profile.about_me_alignment || 'left'}`}>

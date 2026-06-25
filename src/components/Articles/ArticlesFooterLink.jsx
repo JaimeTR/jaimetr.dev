@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import ArticleIcon from '@/components/icons/Article'
 
+import { FaBlog } from 'react-icons/fa'
+
 export default function ArticlesFooterLink() {
     const { language } = useLanguage()
     
@@ -15,9 +17,7 @@ export default function ArticlesFooterLink() {
                 
                 <div className="flex items-center gap-4 text-left w-full sm:w-auto">
                     <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5L18.5 7H20a2 2 0 012 2v1m-2 13v-1" />
-                        </svg>
+                        <FaBlog className="w-6 h-6" />
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-dark-800 dark:text-dark-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">

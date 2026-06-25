@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiMessageSquare, FiX, FiSend, FiVolume2, FiVolumeX, FiLoader } from 'react-icons/fi'
+import { FiX, FiSend, FiVolume2, FiVolumeX, FiLoader } from 'react-icons/fi'
+import { FaRobot } from 'react-icons/fa'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import Markdown from 'markdown-to-jsx'
 
@@ -15,6 +16,7 @@ export default function ChatbotUI() {
   const [voiceEnabled, setVoiceEnabled] = useState(false) // Deshabilitado por defecto
   const [showVoicePrompt, setShowVoicePrompt] = useState(false)
   const [hasPromptedVoice, setHasPromptedVoice] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(false)
   const { language } = useLanguage()
   
   const messagesEndRef = useRef(null)
@@ -24,6 +26,18 @@ export default function ChatbotUI() {
     if (isOpen && !hasPromptedVoice) {
       setShowVoicePrompt(true)
     }
+    if (isOpen) {
+      setShowTooltip(false)
+    }
+  }, [isOpen, hasPromptedVoice])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isOpen && !hasPromptedVoice) {
+        setShowTooltip(true)
+      }
+    }, 5000)
+    return () => clearTimeout(timer)
   }, [isOpen, hasPromptedVoice])
 
   const handleVoiceChoice = (choice) => {
@@ -36,30 +50,50 @@ export default function ChatbotUI() {
     }
   }
 
-  // Cargar historial inicial desde localStorage
+  // Cargar historial inicial desde localStorage y manejar cambios de idioma
   useEffect(() => {
-    const savedMessages = localStorage.getItem('jaimeai_chat_history');
-    if (savedMessages) {
-      try {
-        setMessages(JSON.parse(savedMessages));
-        return; // Salimos para no agregar el saludo de nuevo
-      } catch (e) {
-        console.error("Error parsing chat history", e);
+    setMessages(prev => {
+      if (prev.length === 0) {
+        const savedMessages = localStorage.getItem('jaimeai_chat_history');
+        if (savedMessages) {
+          try {
+            const parsed = JSON.parse(savedMessages);
+            if (parsed && parsed.length > 1) {
+              const hasWelcomedBack = sessionStorage.getItem('jaimeai_welcomed_back');
+              if (!hasWelcomedBack) {
+                const welcomeBackMsg = language === 'es' 
+                  ? '¡Qué gusto tenerte de vuelta! 👋 ¿Tienes alguna nueva consulta o en qué te puedo ayudar?' 
+                  : 'Great to have you back! 👋 Do you have any new questions or how can I help you?';
+                
+                const lastMsg = parsed[parsed.length - 1];
+                if (lastMsg.content !== welcomeBackMsg) {
+                  parsed.push({
+                    role: 'assistant',
+                    content: welcomeBackMsg
+                  });
+                }
+                sessionStorage.setItem('jaimeai_welcomed_back', 'true');
+              }
+              return parsed;
+            }
+          } catch (e) {
+            console.error("Error parsing chat history", e);
+          }
+        }
+      } else if (prev.length > 1) {
+        return prev;
       }
-    }
-    
-    // Si no hay historial, agregamos el saludo inicial
-    if (messages.length === 0) {
-      setMessages([
+      
+      return [
         {
           role: 'assistant',
           content: language === 'es' 
             ? '¡Hola! 👋 Soy JaimeAI, el asistente virtual de Jaime. ¿En qué te puedo ayudar hoy? ¿Buscas ver proyectos o agendar una cita?' 
             : 'Hello! 👋 I am JaimeAI, Jaime\'s virtual assistant. How can I help you today? Looking to see projects or schedule a meeting?'
         }
-      ])
-    }
-  }, [language, messages.length])
+      ];
+    });
+  }, [language])
 
   // Guardar historial en localStorage cada vez que cambie
   useEffect(() => {
@@ -69,8 +103,13 @@ export default function ChatbotUI() {
   }, [messages])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isTyping])
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [messages, isTyping, isOpen])
 
   const playAudio = async (text, forcePlay = false) => {
     if (!voiceEnabled && !forcePlay) return;
@@ -160,6 +199,29 @@ export default function ChatbotUI() {
       {/* Elemento de Audio Oculto */}
       <audio ref={audioRef} className="hidden" />
 
+      {/* Ventana de Tooltip flotante */}
+      <AnimatePresence>
+        {!isOpen && showTooltip && (
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20, scale: 0.9 }}
+            className="fixed bottom-[1.875rem] right-[5.5rem] z-40 bg-dark-900/70 dark:bg-dark-900/80 backdrop-blur-md border border-white/10 text-white pl-4 pr-2 py-2 rounded-2xl shadow-xl flex items-center gap-2 cursor-pointer hover:bg-dark-900/90 transition-colors"
+            onClick={() => setIsOpen(true)}
+          >
+            <span className="text-sm font-medium whitespace-nowrap">
+                {language === 'es' ? '👋 ¿Necesitas ayuda?' : '👋 Need help?'}
+            </span>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowTooltip(false); }}
+              className="p-1 hover:bg-white/20 rounded-full transition-colors ml-1 text-white/70 hover:text-white"
+            >
+              <FiX size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Botón Flotante */}
       <motion.button
         onClick={() => setIsOpen(true)}
@@ -167,9 +229,10 @@ export default function ChatbotUI() {
         animate={{ scale: isOpen ? 0 : 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl bg-gradient-to-r from-primary-600 to-blue-600 text-white flex items-center justify-center ${isOpen ? 'pointer-events-none' : ''}`}
+        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-[0_0_15px_rgba(2,132,199,0.5)] bg-dark-900/70 dark:bg-dark-900/80 backdrop-blur-md border border-primary-500/30 text-white flex items-center justify-center group ${isOpen ? 'pointer-events-none' : ''}`}
       >
-        <FiMessageSquare size={24} />
+        <span className="absolute inset-0 rounded-full bg-primary-600/50 dark:bg-primary-500/40 animate-ping -z-10"></span>
+        <FaRobot size={24} className="relative z-10" />
       </motion.button>
 
       {/* Ventana de Chat */}
