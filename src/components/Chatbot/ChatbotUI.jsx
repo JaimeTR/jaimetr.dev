@@ -296,48 +296,49 @@ export default function ChatbotUI() {
               </div>
             </div>
 
+            {/* Voice Prompt Overlay */}
+            <AnimatePresence>
+              {showVoicePrompt && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-white/80 dark:bg-dark-900/80 backdrop-blur-sm"
+                >
+                  <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl shadow-xl border border-dark-200 dark:border-dark-700 max-w-[280px] text-center">
+                    <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FiVolume2 size={24} />
+                    </div>
+                    <h4 className="font-bold text-dark-900 dark:text-white mb-2">
+                      {language === 'es' ? '¿Activar voz?' : 'Enable voice?'}
+                    </h4>
+                    <p className="text-sm text-dark-600 dark:text-dark-400 mb-4">
+                      {language === 'es' 
+                        ? '¿Quieres escuchar mi voz mientras chateas conmigo?' 
+                        : 'Do you want to hear my voice while chatting with me?'}
+                    </p>
+                    <div className="flex gap-2 w-full">
+                      <button 
+                        onClick={() => handleVoiceChoice(false)}
+                        className="flex-1 py-2 rounded-xl text-sm font-semibold bg-dark-100 dark:bg-dark-700 text-dark-700 dark:text-dark-200 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors"
+                      >
+                        {language === 'es' ? 'No, gracias' : 'No thanks'}
+                      </button>
+                      <button 
+                        onClick={() => handleVoiceChoice(true)}
+                        className="flex-1 py-2 rounded-xl text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                      >
+                        {language === 'es' ? 'Sí, activar' : 'Yes, enable'}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Chat Area & Overlay */}
             <div className="flex-1 relative overflow-y-auto p-4 space-y-4 bg-dark-50/50 dark:bg-dark-950/50 scroll-smooth">
               
-              <AnimatePresence>
-                {showVoicePrompt && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-white/80 dark:bg-dark-900/80 backdrop-blur-sm"
-                  >
-                    <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl shadow-xl border border-dark-200 dark:border-dark-700 max-w-[280px] text-center">
-                      <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <FiVolume2 size={24} />
-                      </div>
-                      <h4 className="font-bold text-dark-900 dark:text-white mb-2">
-                        {language === 'es' ? '¿Activar voz?' : 'Enable voice?'}
-                      </h4>
-                      <p className="text-sm text-dark-600 dark:text-dark-400 mb-4">
-                        {language === 'es' 
-                          ? '¿Quieres escuchar mi voz mientras chateas conmigo?' 
-                          : 'Do you want to hear my voice while chatting with me?'}
-                      </p>
-                      <div className="flex gap-2 w-full">
-                        <button 
-                          onClick={() => handleVoiceChoice(false)}
-                          className="flex-1 py-2 rounded-xl text-sm font-semibold bg-dark-100 dark:bg-dark-700 text-dark-700 dark:text-dark-200 hover:bg-dark-200 dark:hover:bg-dark-600 transition-colors"
-                        >
-                          {language === 'es' ? 'No, gracias' : 'No thanks'}
-                        </button>
-                        <button 
-                          onClick={() => handleVoiceChoice(true)}
-                          className="flex-1 py-2 rounded-xl text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors"
-                        >
-                          {language === 'es' ? 'Sí, activar' : 'Yes, enable'}
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {messages.map((msg, idx) => (
                 <div 
                   key={idx} 
