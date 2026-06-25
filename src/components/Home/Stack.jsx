@@ -4,6 +4,7 @@ import { SectionTitle } from '../SectionTitle'
 import { SetStack } from '@/components/SetStack'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { ICONS_MAP } from '@/helpers/iconsMap'
 import { FiCode } from 'react-icons/fi'
@@ -72,7 +73,13 @@ export const Stack = () => {
                         <span className="text-daintree-700 dark:text-daintree-300 font-semibold">My tech stack includes</span>:</>
                 }
             </p>
-            <section className="grid lg:grid-cols-2 lg:grid-rows-2 gap-6 lg:place-content-center">
+            <motion.section 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+                className="grid lg:grid-cols-2 lg:grid-rows-2 gap-6 lg:place-content-center"
+            >
                 <SetStack>
                     <h3 className="text-center mb-8 text-xl font-bold  lg:text-4xl lg:break-words bg-gradient-to-t from-[#54fbff] to-[#00a4c9] dark:from-[#c9fffe] dark:to-[#00cfef] bg-clip-text text-transparent">
                         Frontend
@@ -106,9 +113,15 @@ export const Stack = () => {
                         {skills.tools.map(renderSkill)}
                     </ul>
                 </SetStack>
-            </section>
+            </motion.section>
             
-            <div className="mt-12 md:mt-16 max-w-4xl mx-auto">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-12 md:mt-16 max-w-4xl mx-auto"
+            >
                 <SetStack>
                     <div className="w-full py-4 md:py-2 flex flex-col md:flex-row items-center justify-center gap-4">
                         <FaBrain className="w-8 h-8 text-primary-500 dark:text-primary-400 shrink-0 animate-pulse" />
@@ -120,7 +133,7 @@ export const Stack = () => {
                         </p>
                     </div>
                 </SetStack>
-            </div>
+            </motion.div>
         </Container>
     )
 }

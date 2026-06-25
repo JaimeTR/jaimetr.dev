@@ -7,7 +7,11 @@ function getLocale(request) {
   const acceptLanguage = request.headers.get('accept-language')
   if (!acceptLanguage) return defaultLocale
   
-  if (acceptLanguage.includes('en')) return 'en'
+  // El header suele ser "es-ES,es;q=0.9,en;q=0.8"
+  // Extraemos el primer idioma de la lista que es la principal preferencia
+  const firstPreference = acceptLanguage.split(',')[0].trim().toLowerCase()
+  
+  if (firstPreference.startsWith('en')) return 'en'
   return 'es'
 }
 

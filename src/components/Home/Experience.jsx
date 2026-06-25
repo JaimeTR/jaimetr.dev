@@ -4,6 +4,7 @@ import { SectionTitle } from '../SectionTitle'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 
 export const Experience = () => {
@@ -48,8 +49,15 @@ export const Experience = () => {
             <SectionTitle>{t('experienciaSeccion')}</SectionTitle>
             <article className="container px-2 mt-10">
                 <ul className="relative border-l border-dark-400 dark:border-dark-700">
-                    {experiences.map((experience) => (
-                        <li key={experience.id} className="mb-8 md:mb-6 ml-6">
+                    {experiences.map((experience, index) => (
+                        <motion.li 
+                            key={experience.id} 
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true, margin: "-50px" }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className="mb-8 md:mb-6 ml-6"
+                        >
                             <span className="absolute flex items-center justify-center w-6 h-6 bg-dark-600 rounded-full -left-3 ring-8 ring-white dark:ring-dark-950 dark:bg-dark-600 z-20">
                                 <svg
                                     aria-hidden="true"
@@ -85,7 +93,7 @@ export const Experience = () => {
                             <p className="mb-4 font-normal text-dark-700 dark:text-dark-200 text-base text-justify whitespace-pre-line">
                                 {language === 'es' ? (experience.description || experience.description_en) : (experience.description_en || experience.description)}
                             </p>
-                        </li>
+                        </motion.li>
                     ))}
                 </ul>
             </article>

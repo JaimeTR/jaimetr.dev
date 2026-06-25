@@ -18,6 +18,18 @@ export default function ChatbotUI() {
   const [hasPromptedVoice, setHasPromptedVoice] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
   const { language } = useLanguage()
+
+  const quickActions = language === 'es' ? [
+    "Experiencia laboral",
+    "Proyectos destacados",
+    "Descargar CV",
+    "Contacto"
+  ] : [
+    "Work experience",
+    "Featured projects",
+    "Download CV",
+    "Contact"
+  ];
   
   const messagesEndRef = useRef(null)
   const audioRef = useRef(null)
@@ -149,13 +161,16 @@ export default function ChatbotUI() {
     }
   };
 
-  const handleSend = async (e) => {
+  const handleSend = async (e, customText = null) => {
     e?.preventDefault()
-    if (!input.trim()) return
+    const textToSend = customText !== null ? customText : input
+    if (!textToSend.trim()) return
 
-    const userMessage = { role: 'user', content: input.trim() }
+    const userMessage = { role: 'user', content: textToSend.trim() }
     setMessages(prev => [...prev, userMessage])
-    setInput('')
+    if (customText === null) {
+      setInput('')
+    }
     setIsTyping(true)
 
     try {
@@ -368,8 +383,23 @@ export default function ChatbotUI() {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSend} className="p-3 bg-white dark:bg-dark-900 border-t border-dark-200 dark:border-dark-700">
-              <div className="relative flex items-center">
+            <form onSubmit={handleSend} className="bg-white dark:bg-dark-900 border-t border-dark-200 dark:border-dark-700">
+              {/* Quick Actions */}
+              {messages.length < 6 && !isTyping && (
+                <div className="px-3 pt-3 flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {quickActions.map((action, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSend(null, action)}
+                      className="shrink-0 px-3 py-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-700/50 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900/50 hover:border-primary-300 dark:hover:border-primary-600 transition-colors shadow-sm"
+                    >
+                      {action}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="relative flex items-center p-3">
                 <input
                   type="text"
                   value={input}
