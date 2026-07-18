@@ -64,7 +64,15 @@ export const Banner = () => {
         }
     }
 
-    if (!mounted) return null
+    if (!mounted) {
+        return (
+            <section className="relative mx-auto container px-4 pt-24 pb-10 min-h-[100dvh] lg:min-h-0 lg:h-screen lg:pt-0 lg:pb-0 lg:max-w-5xl" id="inicio">
+                <div className="flex items-center justify-center h-full">
+                    <div className="animate-pulse w-32 md:w-48 lg:w-[320px] aspect-square rounded-[2rem] bg-dark-200 dark:bg-dark-800" />
+                </div>
+            </section>
+        )
+    }
     return (
         <section className="relative mx-auto container px-4 pt-24 pb-10 min-h-[100dvh] flex flex-col justify-center lg:min-h-0 lg:h-screen overflow-hidden lg:pt-0 lg:pb-0 lg:max-w-5xl" id="inicio">
             {profile?.is_particles_visible !== false && <ParticlesBackground />}
