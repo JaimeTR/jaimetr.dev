@@ -260,6 +260,7 @@ export default function ChatbotUI() {
             <button 
               onClick={(e) => { e.stopPropagation(); setShowTooltip(false); }}
               className="p-1 hover:bg-white/20 rounded-full transition-colors ml-1 text-white/70 hover:text-white"
+              aria-label="Cerrar"
             >
               <FiX size={14} />
             </button>
@@ -267,13 +268,14 @@ export default function ChatbotUI() {
         )}
       </AnimatePresence>
 
-      {/* Botón Flotante */}
+      {/* Boton Flotante */}
       <motion.button
         onClick={() => setIsOpen(true)}
         initial={{ scale: 0 }}
         animate={{ scale: isOpen ? 0 : 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        aria-label="Abrir chat de ayuda"
         className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-[0_0_15px_rgba(2,132,199,0.5)] bg-dark-900/70 dark:bg-dark-900/80 backdrop-blur-md border border-primary-500/30 text-white flex items-center justify-center group ${isOpen ? 'pointer-events-none' : ''}`}
       >
         <span className="absolute inset-0 rounded-full bg-primary-600/50 dark:bg-primary-500/40 animate-ping -z-10"></span>
