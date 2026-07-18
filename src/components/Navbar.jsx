@@ -140,6 +140,8 @@ export const Navbar = () => {
                         <button
                             className="p-2 text-sm text-dark-700 dark:text-dark-200 rounded-lg"
                             onClick={showNavBar}
+                            aria-label={isOpen ? 'Cerrar menu' : 'Abrir menu'}
+                            aria-expanded={isOpen}
                         >
                             {isOpen ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">

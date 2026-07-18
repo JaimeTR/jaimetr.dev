@@ -1,0 +1,24 @@
+# jaimetr.dev - Portfolio & Blog
+
+## About
+Professional portfolio and technical blog of Jaime Tarazona Rodriguez, Systems Engineer and Full-Stack Developer with 5+ years of experience in React, Next.js, WordPress, and AI.
+
+## Key Pages
+- [Home](https://jaimetr.dev): Portfolio landing page with experience, projects, and skills
+- [Blog](https://jaimetr.dev/es/posts): Technical articles about web development, React, Next.js, JavaScript, AI
+- [Projects](https://jaimetr.dev/es/projects): Web development project showcase
+- [RSS Feed](https://jaimetr.dev/feed.xml): Blog RSS feed
+
+## Tech Stack
+- Framework: Next.js 15 (App Router)
+- Styling: Tailwind CSS
+- Database: Supabase (PostgreSQL)
+- AI/ML: Groq, OpenAI, Google Gemini
+- Deployment: Vercel
+
+## Crawl Instructions
+- Sitemap: https://jaimetr.dev/sitemap.xml
+- robots.txt: https://jaimetr.dev/robots.txt
+- All blog posts are in /es/posts/ and /en/posts/
+- Admin pages are in /admin/ (do not crawl)
+- API routes are in /api/ (do not crawl)

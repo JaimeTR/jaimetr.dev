@@ -1,5 +1,11 @@
-import '@fontsource-variable/onest';
+import { Onest } from 'next/font/google'
 import { Navbar } from '@/components/Navbar'
+
+const onest = Onest({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-onest',
+})
 import { DarkModeProvider } from '@/app/providers/DarkModeProvider'
 import { LanguageProvider } from '@/app/providers/LanguageProvider'
 import '@/app/globals.css'
@@ -84,11 +90,9 @@ export default async function RootLayout({ children, params }) {
                 <link rel="icon" type="image/webp" href="/images/jaimetrdev.webp" />
                 <link rel="apple-touch-icon" sizes="180x180" href="/images/jaimetrdev.webp" />
                 <link rel="preconnect" href="https://epmdauwektgtwujsisdh.supabase.co" crossOrigin="anonymous" />
-                <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://api.groq.com" crossOrigin="anonymous" />
             </head>
-            <body className="bg-dark-50 dark:bg-dark-950">
+            <body className={`${onest.variable} bg-dark-50 dark:bg-dark-950`}>
                 <JsonLd />
                 <LanguageProvider initialLang={lang}>
                     <DarkModeProvider>

@@ -25,12 +25,8 @@ module.exports = {
             },
             keyframes: {
                 'background-shine': {
-                    from: {
-                        backgroundPosition: '0 0',
-                    },
-                    to: {
-                        backgroundPosition: '-200% 0',
-                    },
+                    from: { backgroundPosition: '0 0' },
+                    to: { backgroundPosition: '-200% 0' },
                 },
             },
             backgroundImage: {
@@ -38,8 +34,8 @@ module.exports = {
                 'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
             },
             fontFamily: {
-                sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-                heading: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                sans: ['var(--font-onest)', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+                heading: ['var(--font-onest)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
             },
             colors: {
                 background: '#050505',

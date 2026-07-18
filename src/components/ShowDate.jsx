@@ -1,12 +1,24 @@
 'use client'
-import { LocalDate } from '@/lib/local-date'
+import { useEffect, useState } from 'react'
 
-export const ShowDate = ({ date }) => {
-    const isValid = Number.isFinite(new Date(date).getTime())
-    const safeDate = isValid ? date : Date.now()
-    return (
-        <span className="text-xs text-crusta-700/90 dark:text-crusta-300">
-            {new LocalDate().relativeTime(safeDate)}
-        </span>
-    )
+function formatDate(date) {
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+export const ShowDate = ({ date, className }) => {
+  const [mounted, setMounted] = useState(false)
+  const isValid = Number.isFinite(new Date(date).getTime())
+  const safeDate = isValid ? date : null
+
+  useEffect(() => { setMounted(true) }, [])
+
+  if (!safeDate) return null
+
+  return (
+    <span className={className || 'text-sm font-medium text-dark-500 dark:text-dark-300'} suppressHydrationWarning>
+      {formatDate(safeDate)}
+    </span>
+  )
 }
