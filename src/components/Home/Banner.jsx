@@ -97,6 +97,7 @@ export const Banner = () => {
                             width={400}
                             height={400}
                             priority
+                            fetchPriority="high"
                             onError={handleImgError}
                             unoptimized={imgSrc !== FALLBACK_IMAGE && !imgSrc.startsWith('/')}
                             className="drop-shadow-2xl w-full h-full aspect-square rounded-[2rem] object-cover shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.05)] border-[6px] border-white/40 dark:border-white/10 backdrop-blur-sm transition-all duration-300"
