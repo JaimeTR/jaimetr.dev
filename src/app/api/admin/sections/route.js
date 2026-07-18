@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
+export const dynamic = 'force-dynamic';
 
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
-}
+
 
 const getSectionsPath = () => path.join(process.cwd(), 'src', 'data', 'sections.json')
 
-export async function GET() {
+export async function GET(request) {
   try {
+    if (!validateAdminRequest(request)) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
     const filePath = getSectionsPath()
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ success: true, data: [] })
@@ -27,7 +28,7 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

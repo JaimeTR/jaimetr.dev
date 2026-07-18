@@ -4,7 +4,7 @@ import { Banner } from '@/components/Home/Banner'
 import { Experience } from '@/components/Home/Experience'
 import { Projects } from '@/components/Home/Projects'
 import { Stack } from '@/components/Home/Stack'
-import fs from 'fs'
+import { promises as fsp } from 'fs'
 import path from 'path'
 
 const componentMap = {
@@ -16,28 +16,61 @@ const componentMap = {
     'skills': Stack
 }
 
-function getSections() {
+const fallbackSections = [
+    { id: 'profile', is_hidden: false },
+    { id: 'experience', is_hidden: false },
+    { id: 'project', is_hidden: false },
+    { id: 'aboutme', is_hidden: false },
+    { id: 'manage-blog', is_hidden: false },
+    { id: 'skills', is_hidden: false }
+]
+
+async function getSections() {
     try {
         const filePath = path.join(process.cwd(), 'src', 'data', 'sections.json')
-        if (fs.existsSync(filePath)) {
-            return JSON.parse(fs.readFileSync(filePath, 'utf8'))
-        }
+        const data = await fsp.readFile(filePath, 'utf8')
+        return JSON.parse(data)
     } catch (e) {
-        console.error('Error reading sections:', e)
+        return fallbackSections
     }
-    // Fallback order
-    return [
-        { id: 'profile', is_hidden: false },
-        { id: 'experience', is_hidden: false },
-        { id: 'project', is_hidden: false },
-        { id: 'aboutme', is_hidden: false },
-        { id: 'manage-blog', is_hidden: false },
-        { id: 'skills', is_hidden: false }
-    ]
 }
 
-export default function Home() {
-    const sections = getSections()
+export async function generateMetadata({ params }) {
+    const { lang } = await params
+    const title = lang === 'es'
+        ? 'Jaime Tarazona Rodriguez | Full-Stack Developer'
+        : 'Jaime Tarazona Rodriguez | Full-Stack Developer'
+    const desc = lang === 'es'
+        ? 'Ingeniero de Sistemas y Desarrollador FullStack con mas de 5 anos de experiencia. Especializado en React, Next.js, WordPress e Inteligencia Artificial.'
+        : 'Systems Engineer and FullStack Developer with 5+ years of experience. Specialized in React, Next.js, WordPress and Artificial Intelligence.'
+
+    return {
+        title,
+        description: desc,
+        keywords: ['Jaime Tarazona', 'Full-Stack', 'React', 'Next.js', 'WordPress', 'IA', 'Desarrollador Web', 'Portafolio'],
+        alternates: {
+            canonical: `https://jaimetr.dev/${lang}`,
+        },
+        openGraph: {
+            title: `${title} | Portfolio`,
+            description: desc,
+            url: `https://jaimetr.dev/${lang}`,
+            type: 'website',
+            images: [{ url: '/images/og.webp', width: 1200, height: 630, alt: 'Jaime Tarazona Portfolio' }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description: desc,
+            images: ['/images/og.webp'],
+            creator: '@jaimetrdev',
+        },
+        robots: 'index, follow',
+    }
+}
+
+export default async function Home() {
+    const sections = await getSections()
 
     return (
         <>

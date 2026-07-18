@@ -7,10 +7,8 @@ import { supabase } from '@/lib/supabase'
 export const Footer = () => {
     const { language } = useLanguage()
     const [profile, setProfile] = useState(null)
-    const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
-        setMounted(true)
         fetchProfile()
     }, [])
 
@@ -20,8 +18,6 @@ export const Footer = () => {
             setProfile(data)
         }
     }
-
-    if (!mounted) return null
 
     const defaultLinks = [
         { id: 'l1', url_es: '/', url_en: '/', label_es: 'Inicio', label_en: 'Home', visible: true },

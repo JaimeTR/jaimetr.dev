@@ -10,26 +10,29 @@ export async function generateMetadata({ params }, parent) {
 
     return {
         metadataBase: new URL('https://jaimetr.dev'),
-        title: `${project?.title} | Jaime Tarazona Rodriguez 👨‍💻`,
-        description: project?.content?.abstract,
+        title: `${project?.title} | Jaime Tarazona Rodriguez`,
+        description: project?.content?.abstract || fallbackDesc,
         keywords: project?.stack?.join(', ') || fallbackDesc,
         authors: [{ name: 'Jaime Tarazona Rodriguez', url: 'https://jaimetr.dev' }],
         alternates: {
             canonical: `https://jaimetr.dev/${lang}/projects/${slug}`,
+            languages: {
+                es: `https://jaimetr.dev/es/projects/${slug}`,
+                en: `https://jaimetr.dev/en/projects/${slug}`,
+            },
         },
         openGraph: {
-            type: 'website',
+            type: 'article',
             title: project?.title,
-            description: project?.content?.abstract,
-            url: `https://jaimetr.dev/projects/${slug}`,
-            images: [project?.content?.images?.cover, ...previousImages],
-            creator: 'Jaime Tarazona Rodriguez',
+            description: project?.content?.abstract || fallbackDesc,
+            url: `https://jaimetr.dev/${lang}/projects/${slug}`,
+            images: project?.content?.images?.cover ? [project.content.images.cover, ...previousImages] : previousImages,
         },
         twitter: {
             card: 'summary_large_image',
             title: project?.title,
-            description: project?.content?.abstract,
-            images: [project?.content?.images?.cover],
+            description: project?.content?.abstract || fallbackDesc,
+            images: project?.content?.images?.cover ? [project.content.images.cover] : [],
             creator: '@jaimetrdev',
         },
         robots: 'index, follow',

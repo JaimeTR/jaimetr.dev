@@ -1,3 +1,4 @@
+'use client'
 import { useState, useEffect } from 'react'
 import { Reorder } from 'framer-motion'
 import { FiX, FiMenu, FiEye, FiEyeOff, FiSave } from 'react-icons/fi'
@@ -18,7 +19,7 @@ export function ManageSectionsModal({ sections, onClose, onSave }) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': "Bearer " + (process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123')
+                    'Authorization': "Bearer " + (localStorage.getItem('adminToken'))
                 },
                 body: JSON.stringify({ sections: localSections })
             })

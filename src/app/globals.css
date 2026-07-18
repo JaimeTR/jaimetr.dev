@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Optimizacion de fuentes para evitar FOIT/FOUT */
+@font-face {
+  font-family: 'Onest Variable';
+  font-display: swap;
+}
+
+/* Reducir CLS - reservar espacio para imagenes */
+img:not([width]):not([height]) {
+  aspect-ratio: auto;
+}
+
 html {
     scroll-behavior: smooth;
 }

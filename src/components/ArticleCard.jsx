@@ -38,6 +38,8 @@ export const ArticleCard = ({ article, basePath = '/posts' }) => {
                     <img 
                         src={article?.cover} 
                         alt={article?.title} 
+                        width={300}
+                        height={180}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                         loading="lazy" 
                     />

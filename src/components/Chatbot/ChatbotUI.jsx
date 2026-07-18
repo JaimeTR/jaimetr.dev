@@ -7,6 +7,27 @@ import { FaRobot } from 'react-icons/fa'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import Markdown from 'markdown-to-jsx'
 
+function getOrCreateSessionId() {
+  let sessionId = sessionStorage.getItem('jaimeai_session_id')
+  if (!sessionId) {
+    sessionId = localStorage.getItem('jaimeai_session_id')
+  }
+  if (!sessionId) {
+    sessionId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+  }
+  sessionStorage.setItem('jaimeai_session_id', sessionId)
+  localStorage.setItem('jaimeai_session_id', sessionId)
+  return sessionId
+}
+
+function saveChatToServer(sessionId, messages, language) {
+  fetch('/api/chat/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId, messages, language })
+  }).catch(() => {})
+}
+
 export default function ChatbotUI() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([])
@@ -18,6 +39,7 @@ export default function ChatbotUI() {
   const [hasPromptedVoice, setHasPromptedVoice] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
   const { language } = useLanguage()
+  const sessionIdRef = useRef(null)
 
   const quickActions = language === 'es' ? [
     "Experiencia laboral",
@@ -62,49 +84,29 @@ export default function ChatbotUI() {
     }
   }
 
-  // Cargar historial inicial desde localStorage y manejar cambios de idioma
+  // Cargar historial desde localStorage o mostrar saludo inicial
   useEffect(() => {
-    setMessages(prev => {
-      if (prev.length === 0) {
-        const savedMessages = localStorage.getItem('jaimeai_chat_history');
-        if (savedMessages) {
-          try {
-            const parsed = JSON.parse(savedMessages);
-            if (parsed && parsed.length > 1) {
-              const hasWelcomedBack = sessionStorage.getItem('jaimeai_welcomed_back');
-              if (!hasWelcomedBack) {
-                const welcomeBackMsg = language === 'es' 
-                  ? '¡Qué gusto tenerte de vuelta! 👋 ¿Tienes alguna nueva consulta o en qué te puedo ayudar?' 
-                  : 'Great to have you back! 👋 Do you have any new questions or how can I help you?';
-                
-                const lastMsg = parsed[parsed.length - 1];
-                if (lastMsg.content !== welcomeBackMsg) {
-                  parsed.push({
-                    role: 'assistant',
-                    content: welcomeBackMsg
-                  });
-                }
-                sessionStorage.setItem('jaimeai_welcomed_back', 'true');
-              }
-              return parsed;
-            }
-          } catch (e) {
-            console.error("Error parsing chat history", e);
-          }
+    const savedMessages = localStorage.getItem('jaimeai_chat_history')
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages)
+        if (parsed && parsed.length > 0) {
+          setMessages(parsed)
+          return
         }
-      } else if (prev.length > 1) {
-        return prev;
+      } catch (e) {
+        console.error('Error parsing chat history', e)
       }
-      
-      return [
-        {
-          role: 'assistant',
-          content: language === 'es' 
-            ? '¡Hola! 👋 Soy JaimeAI, el asistente virtual de Jaime. ¿En qué te puedo ayudar hoy? ¿Buscas ver proyectos o agendar una cita?' 
-            : 'Hello! 👋 I am JaimeAI, Jaime\'s virtual assistant. How can I help you today? Looking to see projects or schedule a meeting?'
-        }
-      ];
-    });
+    }
+    // Solo mostrar saludo si no hay historial guardado
+    setMessages([
+      {
+        role: 'assistant',
+        content: language === 'es'
+          ? '¡Hola! 👋 Soy JaimeAI, el asistente virtual de Jaime. ¿En qué te puedo ayudar hoy?'
+          : 'Hello! 👋 I am JaimeAI, Jaime\'s virtual assistant. How can I help you today?'
+      }
+    ])
   }, [language])
 
   // Guardar historial en localStorage cada vez que cambie
@@ -126,8 +128,8 @@ export default function ChatbotUI() {
   const playAudio = async (text, forcePlay = false) => {
     if (!voiceEnabled && !forcePlay) return;
     
-    // Eliminar emojis del texto para que no sean leídos por TTS
-    const textWithoutEmojis = text.replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, '');
+    const textWithoutEmojis = text.replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, '').trim();
+    if (!textWithoutEmojis) return;
     
     try {
       setIsSpeaking(true);
@@ -138,25 +140,42 @@ export default function ChatbotUI() {
       });
 
       if (!res.ok) {
-        const textErr = await res.text();
-        console.error("TTS Backend Status:", res.status);
-        console.error("TTS Backend Raw Error:", textErr);
+        console.warn('TTS API error:', res.status);
         throw new Error('TTS Failed');
       }
 
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('audio')) {
+        console.warn('TTS response is not audio:', contentType);
+        throw new Error('TTS bad response');
+      }
+
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      
+      if (!blob || blob.size < 200) {
+        console.warn('TTS audio too small:', blob?.size);
+        throw new Error('TTS audio vacio');
+      }
+
       if (audioRef.current) {
+        const url = URL.createObjectURL(blob);
         audioRef.current.src = url;
-        audioRef.current.play();
-        audioRef.current.onended = () => {
-          setIsSpeaking(false);
+        audioRef.current.onerror = (e) => {
+          console.warn('Audio element error:', audioRef.current?.error?.message);
           URL.revokeObjectURL(url);
+          setIsSpeaking(false);
         };
+        audioRef.current.onended = () => {
+          URL.revokeObjectURL(url);
+          setIsSpeaking(false);
+        };
+        await audioRef.current.play().catch((e) => {
+          console.warn('Audio play rejected:', e.message);
+          URL.revokeObjectURL(url);
+          setIsSpeaking(false);
+        });
       }
     } catch (error) {
-      console.error('Audio Error:', error);
+      console.warn('TTS Error:', error.message);
       setIsSpeaking(false);
     }
   };
@@ -166,6 +185,11 @@ export default function ChatbotUI() {
     const textToSend = customText !== null ? customText : input
     if (!textToSend.trim()) return
 
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = getOrCreateSessionId()
+    }
+    const sessionId = sessionIdRef.current
+
     const userMessage = { role: 'user', content: textToSend.trim() }
     setMessages(prev => [...prev, userMessage])
     if (customText === null) {
@@ -174,8 +198,8 @@ export default function ChatbotUI() {
     setIsTyping(true)
 
     try {
-      // Preparamos el historial para enviar (limitado a los últimos 6 mensajes para contexto)
-      const chatHistory = [...messages, userMessage].slice(-6).map(m => ({
+      // Enviar historial completo para mantener contexto de la conversacion
+      const chatHistory = [...messages, userMessage].slice(-20).map(m => ({
         role: m.role,
         content: m.content
       }));
@@ -192,9 +216,15 @@ export default function ChatbotUI() {
       const data = await response.json()
 
       if (response.ok && data.reply) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
+        const assistantMessage = { role: 'assistant', content: data.reply }
+        setMessages(prev => [...prev, assistantMessage])
         // Reproducir el audio
         playAudio(data.reply)
+
+        saveChatToServer(sessionId, [
+          { ...userMessage, language },
+          { ...assistantMessage, language }
+        ], language)
       } else {
         throw new Error(data.error || 'Error en la respuesta');
       }

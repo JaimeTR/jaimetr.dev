@@ -7,18 +7,23 @@ import GitHubIcon from '../icons/GitHub'
 import LinkedInIcon from '../icons/LinkedIn'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { SiTiktok } from 'react-icons/si'
 import { FaInstagram, FaFacebook } from 'react-icons/fa'
 import { FiFileText, FiLink, FiCode, FiBriefcase, FiLayers, FiUser } from 'react-icons/fi'
 import { motion } from 'framer-motion'
-import ParticlesBackground from '@/components/portfolio/ParticlesBackground'
+import dynamic from 'next/dynamic'
+
+const ParticlesBackground = dynamic(() => import('@/components/portfolio/ParticlesBackground'), { ssr: false })
+
+const FALLBACK_IMAGE = '/images/Jaime_tarazona.webp'
 
 export const Banner = () => {
     const [mounted, setMounted] = useState(false)
     const [profile, setProfile] = useState(null)
+    const [imgSrc, setImgSrc] = useState(FALLBACK_IMAGE)
     const { language } = useLanguage()
     const t = useTranslation(language)
     
@@ -29,10 +34,24 @@ export const Banner = () => {
 
     const fetchProfile = async () => {
         const { data, error } = await supabase.from('profile').select('*').limit(1).single()
-        if (!error && data) {
+        if (error) {
+            console.warn('Banner: Error fetching profile from Supabase:', error.message)
+            return
+        }
+        if (data) {
             setProfile(data)
+            if (data.hero_image_url) {
+                setImgSrc(data.hero_image_url)
+            }
         }
     }
+
+    const handleImgError = useCallback(() => {
+        if (imgSrc !== FALLBACK_IMAGE) {
+            console.warn('Banner: Failed to load hero image, using fallback')
+            setImgSrc(FALLBACK_IMAGE)
+        }
+    }, [imgSrc])
     
     const getIcon = (iconName) => {
         switch (iconName) {
@@ -65,11 +84,13 @@ export const Banner = () => {
                         className="relative w-full"
                     >
                         <Image
-                            src={profile?.hero_image_url || "/images/Jaime_tarazona.webp"}
+                            src={imgSrc}
                             alt={language === 'es' ? (profile?.name_es || "Jaime Tarazona Rodriguez") : (profile?.name_en || "Jaime Tarazona Rodriguez")}
                             width={400}
                             height={400}
                             priority
+                            onError={handleImgError}
+                            unoptimized={imgSrc !== FALLBACK_IMAGE && !imgSrc.startsWith('/')}
                             className="drop-shadow-2xl w-full h-full aspect-square rounded-[2rem] object-cover shadow-[0_20px_50px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.05)] border-[6px] border-white/40 dark:border-white/10 backdrop-blur-sm transition-all duration-300"
                         />
                     </motion.div>

@@ -1,27 +1,17 @@
 export const dynamic = 'force-dynamic';
 
-import { writePost } from '@/services/ai.mjs'
-import { generateBlogMdx } from '@/services/ai.mjs'
+import { writePost, generateBlogMdx } from '@/services/ai.mjs'
 import { generateCover } from '@/services/cover.mjs'
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
-import sharp from 'sharp'
 import matter from 'gray-matter'
-
-// Validar token de administrador
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
-
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
-}
 
 // GET: Obtener lista de blogs
 export async function GET(request) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -80,6 +70,7 @@ export async function GET(request) {
 
 async function saveUploadedImage(file, slug) {
   try {
+    const sharp = (await import('sharp')).default
     const buffer = await file.arrayBuffer()
     const outDir = path.join(process.cwd(), 'public', 'images', 'posts')
     
@@ -89,7 +80,6 @@ async function saveUploadedImage(file, slug) {
 
     const outFile = path.join(outDir, `${slug}.webp`)
 
-    // Convertir a WebP y optimizar
     await sharp(buffer)
       .webp({ quality: 80 })
       .toFile(outFile)
@@ -121,7 +111,7 @@ function updateFrontmatterCover(filePath, coverPath) {
 export async function POST(request) {
   try {
     // Validar autenticación
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -131,8 +121,9 @@ export async function POST(request) {
     const formData = await request.formData()
     const topic = formData.get('topic')
     const customTitle = formData.get('title')
-    const provider = formData.get('provider') || 'gemini'
+    const provider = formData.get('provider') || 'groq'
     const coverImageFile = formData.get('coverImage')
+    const customContent = formData.get('content')
 
     if (!topic) {
       return NextResponse.json(
@@ -141,11 +132,12 @@ export async function POST(request) {
       )
     }
 
-    // Generar blog con IA
+    // Generar blog con IA (respeta contenido editado por el usuario)
     const { slug, mdx, title: generatedTitle, tags } = await generateBlogMdx({ 
       topic, 
       provider,
-      titleOverride: customTitle
+      titleOverride: customTitle,
+      customContent: customContent || undefined,
     })
 
     // Usar título personalizado si se proporcionó, si no usar el generado

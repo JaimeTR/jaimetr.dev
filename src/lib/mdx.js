@@ -7,38 +7,52 @@ const root = process.cwd()
 // List all files in posts directory
 export const getPostsFiles = () => fs.readdirSync(path.join(root, 'src/posts'))
 
-// Get slugs (without extension) for a language. For 'en', we map files ending in .en.mdx to base slug.
+// Get slugs (without extension) for a language. Returns clean slugs without file extensions.
 export const getPosts = (lang = 'es') => {
     const files = getPostsFiles()
+    const slugs = new Set()
     if (lang === 'en') {
-        // Use English files if present; map slug.en.mdx -> slug
-        const enFiles = files.filter((f) => f.endsWith('.en.mdx'))
-        // Fallback: if no en files exist, use ES files to ensure routes build
-        if (enFiles.length === 0) {
-            return files.filter((f) => f.endsWith('.mdx') && !f.endsWith('.en.mdx'))
+        files.forEach((f) => {
+            if (f.endsWith('.en.mdx')) {
+                slugs.add(f.replace('.en.mdx', ''))
+            }
+        })
+        if (slugs.size === 0) {
+            files.forEach((f) => {
+                if (f.endsWith('.mdx') && !f.endsWith('.en.mdx')) {
+                    slugs.add(f.replace('.mdx', ''))
+                }
+            })
         }
-        return enFiles.map((f) => f.replace('.en.mdx', '.mdx'))
+    } else {
+        files.forEach((f) => {
+            if (f.endsWith('.mdx') && !f.endsWith('.en.mdx')) {
+                slugs.add(f.replace('.mdx', ''))
+            }
+        })
     }
-    // Spanish default: ignore .en.mdx
-    return files.filter((f) => f.endsWith('.mdx') && !f.endsWith('.en.mdx'))
+    return Array.from(slugs)
 }
 
 // Read a post by slug in requested language; fallback to Spanish if EN not found
 export const getPostBySlug = async (slug, lang = 'es') => {
     const basePath = path.join(root, 'src/posts')
-    const enPath = path.join(basePath, `${slug}.en.mdx`)
-    const esPath = path.join(basePath, `${slug}.mdx`)
+    const cleanSlug = slug.replace(/\.(mdx?|webp)$/, '').replace(/\.en$/, '')
+    const enPath = path.join(basePath, `${cleanSlug}.en.mdx`)
+    const esPath = path.join(basePath, `${cleanSlug}.mdx`)
     let mdxSource = ''
     if (lang === 'en' && fs.existsSync(enPath)) {
         mdxSource = fs.readFileSync(enPath, 'utf-8')
-    } else {
+    } else if (fs.existsSync(esPath)) {
         mdxSource = fs.readFileSync(esPath, 'utf-8')
+    } else {
+        return { content: '', frontmatter: { slug: cleanSlug, title: cleanSlug, date: '', tags: [] } }
     }
     const { data, content } = matter(mdxSource)
     return {
         content,
         frontmatter: {
-            slug,
+            slug: cleanSlug,
             ...data,
         },
     }

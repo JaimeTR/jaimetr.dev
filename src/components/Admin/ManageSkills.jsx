@@ -21,7 +21,7 @@ export function ManageSkills() {
     })
     const json = await res.json()
     if (json.success) {
-      setSkills(json.data.sort((a, b) => a.sort_order - b.sort_order))
+      setSkills(json.data.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)))
     }
     setLoading(false)
   }

@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 'use client'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { NavLink } from './NavLink'
 import { FaLinkedinIn, FaGithub, FaFacebook, FaInstagram } from 'react-icons/fa'
 import { SiTiktok } from 'react-icons/si'
-import { ThemeSwitch } from './ThemeSwich'
+import { ThemeSwitch } from './ThemeSwitch'
 import { LanguageSwitch } from './LanguageSwitch'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
@@ -58,7 +58,7 @@ export const Navbar = () => {
         return (url || '').replace('{lang}', language);
     }
 
-    const renderSocialIcon = (network) => {
+    const renderSocialIcon = useCallback((network) => {
         const iconClass = "text-dark-700 hover:text-dark-500 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300";
         switch (network) {
             case 'linkedin':
@@ -104,7 +104,7 @@ export const Navbar = () => {
             default:
                 return null;
         }
-    }
+    }, [profile])
 
     return (
         <header className={headerClass}>

@@ -15,26 +15,24 @@ export async function generateMetadata({ params }) {
       : 'programming blog, JavaScript, React, Next.js, web development, tutorial, PHP, Laravel, coding'
 
     return {
-        title: `${t.blogProgramacion} | Jaime Tarazona Rodriguez 👨‍💻`,
+        title: `${t.blogProgramacion} | Jaime Tarazona Rodriguez`,
         description: desc,
         keywords: keywords,
         metadataBase: new URL('https://jaimetr.dev'),
+        authors: [{ name: 'Jaime Tarazona Rodriguez', url: 'https://jaimetr.dev' }],
         alternates: {
             canonical: `https://jaimetr.dev/${lang}/posts`,
+            languages: {
+                es: 'https://jaimetr.dev/es/posts',
+                en: 'https://jaimetr.dev/en/posts',
+            },
         },
         openGraph: {
             title: `${t.blogProgramacion} | Jaime Tarazona Rodriguez`,
             description: desc,
             url: `https://jaimetr.dev/${lang}/posts`,
             type: 'website',
-            images: [
-                {
-                    url: 'https://jaimetr.dev/og-image.jpg',
-                    width: 1200,
-                    height: 630,
-                    alt: t.blogProgramacion,
-                },
-            ],
+            images: [{ url: '/images/og.webp', width: 1200, height: 630, alt: t.blogProgramacion }],
         },
         twitter: {
             card: 'summary_large_image',
@@ -43,7 +41,6 @@ export async function generateMetadata({ params }) {
             creator: '@jaimetrdev',
         },
         robots: 'index, follow',
-        author: 'jaimetrdev',
     }
 }
 

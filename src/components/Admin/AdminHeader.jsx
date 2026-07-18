@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { FiLogOut, FiMenu, FiX, FiSettings } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 
-import { ThemeSwitch } from '@/components/ThemeSwich'
+import { ThemeSwitch } from '@/components/ThemeSwitch'
 
 export function AdminHeader({ onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

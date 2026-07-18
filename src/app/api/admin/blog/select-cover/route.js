@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 
+export const dynamic = 'force-dynamic';
+
+
+
 export async function POST(request) {
   try {
-    // Verificar autenticación
-    const authHeader = request.headers.get('Authorization')
-    const expectedToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'
-    
-    if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

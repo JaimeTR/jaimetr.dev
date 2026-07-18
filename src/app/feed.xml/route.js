@@ -1,40 +1,36 @@
 import { getAllPostsMetadata } from '@/lib/mdx'
 
-export async function GET() {
-    // Generate feed for the Spanish (default) posts
-    let posts = getAllPostsMetadata('es')
-    posts = posts.filter(post => !post.is_hidden)
-    const SITE_URL = 'https://jaimetr.dev'
+export const dynamic = 'force-dynamic'
 
-    const feedXml = `<?xml version="1.0" encoding="UTF-8" ?>
+export async function GET() {
+  const posts = getAllPostsMetadata('es').filter(p => !p.is_hidden)
+  const baseUrl = 'https://jaimetr.dev'
+
+  const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Blog de Programación | Jaime Tarazona Rodriguez</title>
-    <link>${SITE_URL}</link>
-    <description>Aprende desarrollo web con JavaScript, React, Next.js, PHP, Laravel y más. Guías, tutoriales y trucos para desarrolladores.</description>
+    <title>Jaime Tarazona Rodriguez - Blog</title>
+    <link>${baseUrl}</link>
+    <description>Blog de desarrollo web, React, Next.js, JavaScript y mas</description>
     <language>es</language>
-    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>
-    ${posts
-        .map((post) => {
-            const postUrl = `${SITE_URL}/es/posts/${post.slug}`
-            return `
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml"/>
+    ${posts.map(post => `
     <item>
-      <title><![CDATA[${post.title}]]></title>
-      <link>${postUrl}</link>
-      <guid isPermaLink="true">${postUrl}</guid>
-      <pubDate>${new Date(post.date).toUTCString()}</pubDate>
-      <description><![CDATA[${post.description || post.excerpt}]]></description>
-      ${post.tags ? (Array.isArray(post.tags) ? post.tags : post.tags.split(',')).map(tag => `<category><![CDATA[${tag.trim()}]]></category>`).join('') : ''}
-    </item>`
-        })
-        .join('')}
+      <title><![CDATA[${post.title || ''}]]></title>
+      <link>${baseUrl}/es/posts/${post.slug}</link>
+      <guid isPermaLink="true">${baseUrl}/es/posts/${post.slug}</guid>
+      <description><![CDATA[${post.description || post.excerpt || ''}]]></description>
+      <pubDate>${new Date(post.date || Date.now()).toUTCString()}</pubDate>
+      ${(post.tags || []).map(tag => `<category>${tag}</category>`).join('\n      ')}
+    </item>`).join('')}
   </channel>
 </rss>`
 
-    return new Response(feedXml, {
-        headers: {
-            'Content-Type': 'application/xml',
-            'Cache-Control': 's-maxage=86400, stale-while-revalidate',
-        },
-    })
+  return new Response(rss, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 's-maxage=3600, stale-while-revalidate',
+    },
+  })
 }

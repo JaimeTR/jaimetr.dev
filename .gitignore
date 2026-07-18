@@ -33,3 +33,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp files
+*.mp3
+extracted_strings.txt
+index-*.css
+index-*.js
+keynote_source*.html

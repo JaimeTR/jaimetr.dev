@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import matter from 'gray-matter'
 import { generateBlogMdx } from '@/services/ai.mjs'
 
-// Validar token de administrador
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
+export const dynamic = 'force-dynamic';
 
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
-}
+
 
 export async function POST(request) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }

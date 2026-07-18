@@ -1,20 +1,14 @@
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 
-// Validar token de administrador
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
-
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
-}
+export const dynamic = 'force-dynamic';
 
 // GET: Obtener datos de proyectos y experiencia
 export async function GET(request) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -39,7 +33,7 @@ export async function GET(request) {
 // POST: Agregar proyecto o experiencia
 export async function POST(request) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }

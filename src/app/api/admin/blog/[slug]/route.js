@@ -1,29 +1,24 @@
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
-import sharp from 'sharp'
 import matter from 'gray-matter'
 
-// Validar token de administrador
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
+export const dynamic = 'force-dynamic';
 
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
-}
+
 
 // GET: Obtener un blog específico
 export async function GET(request, { params }) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       )
     }
 
-    const { slug } = params
+    const { slug } = await params
     const postsDir = path.join(process.cwd(), 'src', 'posts')
     
     // Buscar el archivo
@@ -71,14 +66,14 @@ export async function GET(request, { params }) {
 // PUT: Actualizar un blog
 export async function PUT(request, { params }) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       )
     }
 
-    const { slug } = params
+    const { slug } = await params
     const formData = await request.formData()
     
     const title = formData.get('title')
@@ -151,6 +146,7 @@ ${content}`
     // Si se subió una imagen, procesarla
     if (coverImageFile) {
       try {
+        const sharp = (await import('sharp')).default
         const buffer = await coverImageFile.arrayBuffer()
         const outDir = path.join(process.cwd(), 'public', 'images', 'posts')
         
@@ -160,7 +156,6 @@ ${content}`
 
         const outFile = path.join(outDir, `${slug}.webp`)
 
-        // Convertir a WebP y optimizar
         await sharp(buffer)
           .webp({ quality: 80 })
           .toFile(outFile)
@@ -193,14 +188,14 @@ ${content}`
 // DELETE: Eliminar un blog
 export async function DELETE(request, { params }) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       )
     }
 
-    const { slug } = params
+    const { slug } = await params
     const postsDir = path.join(process.cwd(), 'src', 'posts')
     
     // Buscar y eliminar el archivo

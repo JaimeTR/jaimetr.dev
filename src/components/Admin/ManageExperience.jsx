@@ -108,22 +108,22 @@ export function ManageExperience() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-dark-900 dark:text-white">Gestión de Experiencia</h2>
+          <h2 className="text-2xl font-bold text-dark-900 dark:text-white">Gestion de Experiencia</h2>
           <p className="text-sm text-dark-500 mt-1">Arrastra las experiencias para cambiar su orden y haz clic en Guardar Orden.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
           <button 
             onClick={handleSaveChanges}
             disabled={isReordering}
-            className="bg-dark-200 dark:bg-dark-800 hover:bg-dark-300 dark:hover:bg-dark-700 text-dark-800 dark:text-dark-200 px-4 py-2 rounded-lg font-medium transition disabled:opacity-50"
+            className="bg-dark-200 dark:bg-dark-800 hover:bg-dark-300 dark:hover:bg-dark-700 text-dark-800 dark:text-dark-200 px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 whitespace-nowrap"
           >
             {isReordering ? 'Guardando...' : 'Guardar Orden'}
           </button>
           <button 
             onClick={() => setIsCreating(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 whitespace-nowrap"
           >
             <FiPlus /> Nueva Experiencia
           </button>
@@ -165,7 +165,7 @@ export function ManageExperience() {
               stiffness: 300,
               damping: 25
             }}
-            className="bg-white dark:bg-dark-900 border border-dark-200 dark:border-dark-800 rounded-xl p-4 flex items-center justify-between cursor-grab hover:border-blue-400 dark:hover:border-blue-600 transition-colors shadow-sm relative"
+            className="bg-white dark:bg-dark-900 border border-dark-200 dark:border-dark-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between cursor-grab hover:border-blue-400 dark:hover:border-blue-600 transition-colors shadow-sm relative"
           >
             <div className="flex items-center gap-4">
               <div className="text-dark-400 cursor-grab px-2">

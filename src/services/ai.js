@@ -16,7 +16,7 @@ export async function generateBlogMdx({
   const date = new Date().toISOString().slice(0, 10)
   const slug = slugify(topic)
   // Usamos un cover seguro existente (puedes cambiarlo a una imagen específica por post)
-  const cover = `/images/og.png`
+  const cover = `/images/og.webp`
   const tagsList = keywords.length ? keywords : inferTagsFromTopic(topic)
 
   const system = [

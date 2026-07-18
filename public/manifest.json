@@ -1,51 +1,20 @@
 {
-  "name": "Jaime Tarazona Dev - Ingeniero de Sistemas",
+  "name": "Jaime Tarazona Dev - Full-Stack Developer",
   "short_name": "jaimetr.dev",
-  "description": "Portafolio de Jaime Tarazona, Ingeniero de Sistemas y Desarrollador Full-Stack con más de 4 años de experiencia",
+  "description": "Portafolio de Jaime Tarazona, Ingeniero de Sistemas y Desarrollador Full-Stack",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#050505",
+  "theme_color": "#00a8e8",
   "scope": "/",
+  "lang": "es",
   "icons": [
     {
-      "src": "/images/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/images/jaimetrdev.webp",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/images/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/images/icon-192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/images/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ],
-  "categories": ["productivity", "developer tools"],
-  "screenshots": [
-    {
-      "src": "/images/screenshot-narrow.png",
-      "sizes": "540x720",
-      "form_factor": "narrow",
-      "type": "image/png"
-    },
-    {
-      "src": "/images/screenshot-wide.png",
-      "sizes": "1280x720",
-      "form_factor": "wide",
-      "type": "image/png"
-    }
-  ]
+  "categories": ["productivity", "developer tools"]
 }

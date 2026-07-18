@@ -5,22 +5,26 @@ import { useState } from 'react'
 import { FiAlertCircle, FiCheck, FiCheckCircle, FiDownload, FiEdit2, FiEye, FiImage, FiLoader, FiSend, FiZap } from 'react-icons/fi'
 
 const TEMAS_ALEATORIOS = [
-  'Optimización de base de datos',
-  'Mejores prácticas en API REST',
-  'Seguridad en aplicaciones web',
-  'Performance en React',
-  'Docker y containerización',
-  'Testing automático',
-  'GraphQL vs REST',
-  'Arquitectura de microservicios',
-  'Caching estratégico',
-  'SEO técnico para desarrolladores',
-  'Web Components en 2025',
-  'Inteligencia artificial en desarrollo'
+  'Next.js 15 App Router: Server Components y Server Actions en produccion',
+  'Arquitectura de RAG con LLMs para aplicaciones empresariales',
+  'Optimizacion de Core Web Vitals en React 19',
+  'TypeScript avanzado: tipos condicionales, infer y template literals',
+  'Automatizaciones con IA: agentes, n8n y workflows inteligentes',
+  'Supabase en produccion: RLS, Edge Functions y escalabilidad',
+  'WordPress headless con Next.js como frontend',
+  'Microservicios vs Monolito Modular: decision de arquitectura en 2025',
+  'Docker multi-stage builds para aplicaciones Node.js y Python',
+  'SEO tecnico avanzado: structured data, sitemaps dinamicos y Core Web Vitals',
+  'Testing end-to-end con Playwright y CI/CD en GitHub Actions',
+  'APIs con Hono.js y Edge Computing: la alternativa ligera a Express',
+  'Patrones de caching: Redis, SWR, ISR y estrategias hibridas',
+  'Autenticacion moderna: NextAuth, JWT, OAuth y magic links',
+  'WebSockets vs SSE vs Polling: comunicacion en tiempo real',
+  'Prisma ORM avanzado: migraciones, relaciones y optimizacion de queries'
 ]
 
 export function BlogGeneratorForm() {
-  const [provider, setProvider] = useState('gemini')
+  const [provider, setProvider] = useState('groq')
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
@@ -101,7 +105,7 @@ export function BlogGeneratorForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify({ topic: currentTopic, provider })
       })
@@ -134,7 +138,7 @@ export function BlogGeneratorForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify({ topic: currentTopic, title: selectedTitle, provider })
       })
@@ -162,7 +166,7 @@ export function BlogGeneratorForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify({ title: selectedTitle || currentTopic, tags: [] })
       })
@@ -199,6 +203,17 @@ export function BlogGeneratorForm() {
     }
   }
 
+  const dataURLtoBlob = (dataurl) => {
+    const arr = dataurl.split(',')
+    const mimeMatch = arr[0]?.match(/:(.*?);/)
+    const mime = mimeMatch ? mimeMatch[1] : 'image/webp'
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) u8arr[n] = bstr.charCodeAt(n)
+    return new Blob([u8arr], { type: mime })
+  }
+
   const handlePublish = async (e) => {
     e.preventDefault()
     if (!currentTopic || !selectedTitle || !content || !selectedCover) {
@@ -210,8 +225,7 @@ export function BlogGeneratorForm() {
     clearError()
 
     try {
-      const res = await fetch(selectedCover.image)
-      const blob = await res.blob()
+      const blob = dataURLtoBlob(selectedCover.image)
 
       const formData = new FormData()
       formData.append('topic', currentTopic)
@@ -223,7 +237,7 @@ export function BlogGeneratorForm() {
       const response = await fetch('/api/admin/blog', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: formData
       })
@@ -262,6 +276,7 @@ export function BlogGeneratorForm() {
           onChange={(e) => setProvider(e.target.value)}
           className="w-full px-4 py-2 bg-white dark:bg-dark-800 border border-dark-300 dark:border-dark-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
+          <option value="groq">Groq (Llama 3.3 70B) - Recomendado</option>
           <option value="gemini">Google Gemini</option>
           <option value="openai">OpenAI</option>
         </select>

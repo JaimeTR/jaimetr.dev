@@ -37,7 +37,7 @@ export function BlogEditor({ slug, onBack }) {
     try {
       const response = await fetch(`/api/admin/blog/${slug}`, {
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       })
 
@@ -103,7 +103,7 @@ export function BlogEditor({ slug, onBack }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify({
           slug: slug,
@@ -138,7 +138,7 @@ export function BlogEditor({ slug, onBack }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify({
           slug: slug,
@@ -188,9 +188,9 @@ export function BlogEditor({ slug, onBack }) {
       const response = await fetch(`/api/admin/blog/${slug}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123'}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
-        body: formDataToSend
+        body: apiData
       })
 
       const data = await response.json()

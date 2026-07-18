@@ -5,7 +5,7 @@ export function ProjectJsonLd({ project, slug }) {
         name: project.title,
         description: project.description,
         url: `https://jaimetr.dev/projects/${slug}`,
-        image: project.cover || 'https://jaimetr.dev/og.png',
+        image: project.cover || 'https://jaimetr.dev/og.webp',
         applicationCategory: 'WebApplication',
         offers: {
             '@type': 'Offer',

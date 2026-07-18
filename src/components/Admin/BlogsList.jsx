@@ -21,7 +21,7 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
     try {
       const response = await fetch('/api/admin/blog', {
         headers: {
-          'Authorization': "Bearer " + (process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123')
+          'Authorization': "Bearer " + (localStorage.getItem('adminToken'))
         }
       })
 
@@ -43,7 +43,7 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
       const response = await fetch(`/api/admin/blog/${slug}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': "Bearer " + (process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123')
+          'Authorization': "Bearer " + (localStorage.getItem('adminToken'))
         }
       })
 
@@ -67,7 +67,7 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': "Bearer " + (process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123')
+          'Authorization': "Bearer " + (localStorage.getItem('adminToken'))
         },
         body: JSON.stringify({
           updates: [{ slug, ...changes }]
@@ -91,7 +91,7 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': "Bearer " + (process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'admin123')
+          'Authorization': "Bearer " + (localStorage.getItem('adminToken'))
         },
         body: JSON.stringify({ updates })
       })
@@ -114,6 +114,18 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative flex items-center gap-2">
           <FiAlertCircle />
           <span>{error}</span>
+        </div>
+      )}
+
+      {blogs.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            onClick={onGenerateNew}
+            className="inline-flex items-center gap-2 text-sm px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 rounded-lg text-white transition font-medium shadow-md shadow-blue-500/20"
+          >
+            <FiEdit2 size={14} />
+            Generar blog con IA
+          </button>
         </div>
       )}
 
@@ -148,7 +160,7 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
               }}
               className="bg-dark-100 dark:bg-dark-900 rounded-lg border border-dark-200 dark:border-dark-800 overflow-hidden hover:border-blue-400 dark:hover:border-blue-600 transition cursor-grab relative"
             >
-              <div className="flex gap-4 p-4 items-center">
+              <div className="flex flex-col sm:flex-row gap-4 p-4 sm:items-center">
                 {/* Drag Handle */}
                 <div className="flex-shrink-0 p-2 text-dark-400">
                   <FiMenu size={20} />
@@ -195,7 +207,7 @@ export function BlogsList({ onSelectEdit, onGenerateNew }) {
                 </div>
 
                 {/* Todas las Acciones Alineadas Horizontalmente */}
-                <div className="flex items-center gap-3 flex-shrink-0 border-l border-dark-200 dark:border-dark-800 pl-4">
+                <div className="flex items-center gap-3 sm:flex-shrink-0 border-t sm:border-t-0 sm:border-l border-dark-200 dark:border-dark-800 pt-3 sm:pt-0 sm:pl-4 mt-2 sm:mt-0">
                   
                   {/* Estado (Ocultar/Destacar) */}
                   <div className="flex gap-2">

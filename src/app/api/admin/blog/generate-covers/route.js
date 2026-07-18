@@ -1,259 +1,256 @@
 import { NextResponse } from 'next/server'
-import sharp from 'sharp'
-import path from 'path'
-import fs from 'fs'
+import { validateAdminRequest } from '@/lib/auth'
 
-// Validar token de administrador
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
-
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
+let _sharp
+async function getSharpModule() {
+  if (!_sharp) _sharp = (await import('sharp')).default
+  return _sharp
 }
+
+export const dynamic = 'force-dynamic'
+
+
 
 const WIDTH = 1200
 const HEIGHT = 630
 
-// Utilidad: elegir logos según tema/tags
-function pickStackIcons(title, tags = []) {
-  const key = `${title} ${tags.join(' ')}`.toLowerCase()
-  const map = [
-    { re: /(react|next)/, file: 'reactjs.png' },
-    { re: /(next)/, file: 'next-js.png' },
-    { re: /(node|express)/, file: 'nodejs.png' },
-    { re: /(php|laravel)/, file: 'php.png' },
-    { re: /(mysql)/, file: 'mysql.png' },
-    { re: /(mongo)/, file: 'mongodb.png' },
-    { re: /(css|sass|scss|tailwind)/, file: 'tailwind.png' },
-    { re: /(git)/, file: 'git.png' },
-    { re: /(html)/, file: 'html-5.png' },
-    { re: /(javascript|js)/, file: 'js.png' },
-    { re: /(nginx)/, file: 'nginx.svg' },
-    { re: /(figma)/, file: 'figma.png' },
-  ]
-  const stackDir = path.join(process.cwd(), 'public', 'images', 'stack')
-  const found = []
-  for (const m of map) {
-    if (m.re.test(key)) {
-      const p = path.join(stackDir, m.file)
-      if (fs.existsSync(p)) found.push(p)
-    }
+function buildPrompt(title, tags, style) {
+  const topic = `${title} ${tags.join(' ')}`
+  const keywords = extractKeywords(topic)
+
+  const styles = {
+    neon: `${keywords}, cyberpunk neon coding setup, vibrant purple cyan pink neon glow, dark background, dual monitors with glowing code, mechanical keyboard RGB, synthwave aesthetic, volumetric lighting, no text no watermark no letters`,
+    dark: `${keywords}, dark futuristic developer workspace, holographic code projections, deep blue and teal ambient lighting, sleek modern desk, ultra detailed 8k, professional tech aesthetic, wide composition with negative space on sides, no text no watermark no letters`,
+    abstract: `${keywords}, abstract futuristic technology network, glowing data streams, neon grid perspective, purple blue orange gradient, geometric low poly shapes, dark tech background, clean centered composition with border space, no text no watermark no letters`,
   }
-  if (!found.length) {
-    // Default set
-    ['reactjs.png', 'nodejs.png', 'mysql.png'].forEach(f => {
-      const p = path.join(stackDir, f)
-      if (fs.existsSync(p)) found.push(p)
-    })
-  }
-  // limitar a 3
-  return found.slice(0, 3)
+
+  return styles[style] || styles.neon
 }
 
-// Fondo base SVG tecnológico (sin texto)
-function baseTechSvg() {
+function extractKeywords(text) {
+  const lower = text.toLowerCase()
+  const k = []
+
+  if (/react|next\.?js|nextjs/i.test(lower)) k.push('React development')
+  if (/node\.?js|nodejs/i.test(lower)) k.push('Node.js server')
+  if (/typescript|ts\b/i.test(lower)) k.push('TypeScript programming')
+  if (/python/i.test(lower)) k.push('Python coding')
+  if (/docker/i.test(lower)) k.push('Docker containers')
+  if (/kubernetes/i.test(lower)) k.push('Kubernetes orchestration')
+  if (/ia|inteligencia artificial|llm|rag|agente/i.test(lower)) k.push('artificial intelligence')
+  if (/api|rest|graphql/i.test(lower)) k.push('API backend')
+  if (/performance|rendimiento|core web vitals|optimizacion/i.test(lower)) k.push('web performance')
+  if (/seo/i.test(lower)) k.push('SEO optimization')
+  if (/seguridad|security/i.test(lower)) k.push('cybersecurity')
+  if (/devops|ci.cd|deploy/i.test(lower)) k.push('DevOps pipeline')
+  if (/wordpress/i.test(lower)) k.push('WordPress development')
+  if (/base de datos|database|sql|postgres|mysql|supabase/i.test(lower)) k.push('database architecture')
+  if (/testing|test|pruebas/i.test(lower)) k.push('software testing')
+  if (/microservicios|microservices|arquitectura/i.test(lower)) k.push('microservices')
+  if (/automatizacion|n8n|workflow/i.test(lower)) k.push('automation')
+  if (/ecommerce|e-commerce/i.test(lower)) k.push('ecommerce platform')
+  if (/tailwind|css|sass|scss/i.test(lower)) k.push('web design')
+  if (/webpack|vite|esbuild/i.test(lower)) k.push('build tools')
+  if (/responsive|mobile|movil/i.test(lower)) k.push('mobile development')
+  if (/animacion|animation|gsap|framer/i.test(lower)) k.push('motion design')
+
+  return k.length ? k.join(', ') : 'software engineering coding'
+}
+
+function renderTitleOverlay(title, style) {
+  const safeTitle = String(title).slice(0, 100)
+  const fontSize = safeTitle.length > 60 ? 36 : safeTitle.length > 40 ? 42 : 48
+  const lineHeight = fontSize + 12
+  const words = safeTitle.split(' ')
+  let line1 = ''
+  let line2 = ''
+  let currentLine = ''
+
+  for (const word of words) {
+    if ((currentLine + ' ' + word).length > 40 && line1) {
+      line2 = line2 ? line2 + ' ' + word : word
+    } else if ((currentLine + ' ' + word).length > 40) {
+      line2 = word
+    } else {
+      line1 = line1 ? line1 + ' ' + word : word
+    }
+  }
+
+  const hasSubtitle = !!line2
+  const startY = hasSubtitle ? HEIGHT / 2 - lineHeight / 2 - 8 : HEIGHT / 2 + 8
+
+  const themes = {
+    neon: { primary: '#ff00ff', secondary: '#00ffff', glow: '#ff00ff', bgStart: 'rgba(10,5,30,0.8)', bgEnd: 'rgba(5,2,15,0.9)' },
+    dark: { primary: '#00d4ff', secondary: '#60a5fa', glow: '#00d4ff', bgStart: 'rgba(5,15,30,0.8)', bgEnd: 'rgba(2,8,18,0.9)' },
+    abstract: { primary: '#a855f7', secondary: '#fb923c', glow: '#a855f7', bgStart: 'rgba(15,5,25,0.8)', bgEnd: 'rgba(8,2,15,0.9)' },
+  }
+
+  const t = themes[style] || themes.neon
+
+  return `
+<svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur2"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur3"/>
+      <feMerge>
+        <feMergeNode in="blur3"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="textGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="${t.primary}"/>
+      <stop offset="50%" stop-color="${t.secondary}"/>
+      <stop offset="100%" stop-color="${t.primary}"/>
+    </linearGradient>
+    <linearGradient id="bgOverlay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${t.bgStart}"/>
+      <stop offset="100%" stop-color="${t.bgEnd}"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background overlay for readability -->
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bgOverlay)"/>
+
+  <!-- Left decorative bar -->
+  <rect x="60" y="${startY - 30}" width="4" height="${hasSubtitle ? 100 : 70}" rx="2" fill="${t.primary}" opacity="0.6"/>
+  <rect x="60" y="${startY - 30}" width="4" height="${hasSubtitle ? 100 : 70}" rx="2" fill="${t.primary}" filter="url(#neonGlow)" opacity="0.4"/>
+
+  <!-- Right decorative bar -->
+  <rect x="${WIDTH - 64}" y="${startY - 30}" width="4" height="${hasSubtitle ? 100 : 70}" rx="2" fill="${t.primary}" opacity="0.6"/>
+  <rect x="${WIDTH - 64}" y="${startY - 30}" width="4" height="${hasSubtitle ? 100 : 70}" rx="2" fill="${t.primary}" filter="url(#neonGlow)" opacity="0.4"/>
+
+  <!-- Title line 1 -->
+  <text x="${WIDTH / 2}" y="${startY}" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="${fontSize}" font-weight="800" fill="url(#textGrad)" filter="url(#neonGlow)" letter-spacing="-1">${line1}</text>
+
+  ${line2 ? `<text x="${WIDTH / 2}" y="${startY + lineHeight}" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="${fontSize}" font-weight="800" fill="url(#textGrad)" filter="url(#neonGlow)" letter-spacing="-1">${line2}</text>` : ''}
+
+  <!-- Branding line -->
+  <text x="${WIDTH / 2}" y="${HEIGHT - 50}" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" fill="${t.secondary}" opacity="0.7" letter-spacing="3" font-weight="600">JAIMETR.DEV</text>
+
+  <!-- Top decorative dots -->
+  <circle cx="${WIDTH / 2}" cy="30" r="3" fill="${t.primary}" opacity="0.5"/>
+  <circle cx="${WIDTH / 2 - 80}" cy="30" r="2" fill="${t.primary}" opacity="0.3"/>
+  <circle cx="${WIDTH / 2 + 80}" cy="30" r="2" fill="${t.primary}" opacity="0.3"/>
+</svg>`
+}
+
+async function fetchAIImage(prompt, seed) {
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${WIDTH}&height=${HEIGHT}&seed=${seed}&nologo=true&enhance=true`
+  const response = await fetch(url, { signal: AbortSignal.timeout(15000) })
+  if (!response.ok) throw new Error(`Pollinations API error: ${response.status}`)
+  const arrayBuffer = await response.arrayBuffer()
+  return (await getSharpModule())(Buffer.from(arrayBuffer))
+    .resize(WIDTH, HEIGHT, { fit: 'cover', position: 'center' })
+    .webp({ quality: 88 })
+    .toBuffer()
+}
+
+function generateFallbackBg(title, styleIndex) {
+  const palettes = [
+    { bg1: '#0a0020', bg2: '#150030', bg3: '#0d0040', accent: '#ff00ff', accent2: '#00ffff' },
+    { bg1: '#001020', bg2: '#001830', bg3: '#002040', accent: '#00d4ff', accent2: '#60a5fa' },
+    { bg1: '#100020', bg2: '#180030', bg3: '#0a0030', accent: '#a855f7', accent2: '#fb923c' },
+  ]
+  const p = palettes[styleIndex] || palettes[0]
+  const seed = Math.floor(Math.random() * 9999)
+  const cx1 = 300 + (seed % 500)
+  const cy1 = 200 + ((seed * 3) % 300)
+  const cx2 = 800 + ((seed * 7) % 300)
+  const cy2 = 350 + ((seed * 5) % 200)
+
   return `
 <svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0a192f"/>
-      <stop offset="50%" stop-color="#112240"/>
-      <stop offset="100%" stop-color="#1a365d"/>
+      <stop offset="0%" stop-color="${p.bg1}"/>
+      <stop offset="50%" stop-color="${p.bg2}"/>
+      <stop offset="100%" stop-color="${p.bg3}"/>
     </linearGradient>
-    <radialGradient id="glow">
-      <stop offset="0%" stop-color="#64ffda" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#64ffda" stop-opacity="0"/>
-    </radialGradient>
+    <radialGradient id="g1"><stop offset="0%" stop-color="${p.accent}" stop-opacity="0.35"/><stop offset="100%" stop-color="${p.accent}" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2"><stop offset="0%" stop-color="${p.accent2}" stop-opacity="0.25"/><stop offset="100%" stop-color="${p.accent2}" stop-opacity="0"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8"/></filter>
   </defs>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bg)"/>
-  <circle cx="300" cy="200" r="150" fill="url(#glow)"/>
-  <circle cx="900" cy="400" r="200" fill="url(#glow)"/>
-  <g opacity="0.08" stroke="#64ffda" stroke-width="1">
-    ${Array.from({length: 20}, (_, i) => `<line x1="${i * 60}" y1="0" x2="${i * 60}" y2="${HEIGHT}"/>`).join('')}
-    ${Array.from({length: 11}, (_, i) => `<line x1="0" y1="${i * 60}" x2="${WIDTH}" y2="${i * 60}"/>`).join('')}
+  <circle cx="${cx1}" cy="${cy1}" r="280" fill="url(#g1)"/>
+  <circle cx="${cx2}" cy="${cy2}" r="220" fill="url(#g2)"/>
+  <g opacity="0.08" stroke="${p.accent}" stroke-width="1">
+    ${Array.from({ length: 22 }, (_, i) => `<line x1="${i * 58}" y1="0" x2="${i * 58 + 40}" y2="${HEIGHT}"/>`).join('')}
+    ${Array.from({ length: 12 }, (_, i) => `<line x1="0" y1="${i * 58}" x2="${WIDTH}" y2="${i * 58 + 30}"/>`).join('')}
+  </g>
+  <g opacity="0.2">
+    <circle cx="${cx1 + 60}" cy="${cy1 - 40}" r="3" fill="${p.accent}" filter="url(#glow)"/>
+    <circle cx="${cx1 - 80}" cy="${cy1 + 50}" r="2" fill="${p.accent}" filter="url(#glow)"/>
+    <circle cx="${cx2 + 40}" cy="${cy2 - 60}" r="4" fill="${p.accent2}" filter="url(#glow)"/>
+    <circle cx="${WIDTH - 120}" cy="${150 + (seed % 300)}" r="2" fill="${p.accent}" filter="url(#glow)"/>
+    <circle cx="${100 + (seed % 300)}" cy="${HEIGHT - 120}" r="3" fill="${p.accent2}" filter="url(#glow)"/>
   </g>
 </svg>`
-}
-
-// Variante 1: Composición con logos según tema
-async function generateCoverVariant1(title, tags = []) {
-  const svg = baseTechSvg()
-  let base = await sharp(Buffer.from(svg), { density: 100 })
-    .webp({ quality: 90 })
-    .toBuffer()
-
-  const icons = pickStackIcons(title, tags)
-  const composites = []
-  const positions = [
-    { left: 180, top: 220 },
-    { left: 500, top: 200 },
-    { left: 820, top: 240 },
-  ]
-
-  for (let i = 0; i < icons.length; i++) {
-    const iconPath = icons[i]
-    const resized = await sharp(iconPath)
-      .resize(220, 220, { fit: 'inside' })
-      .toBuffer()
-    composites.push({ input: resized, ...positions[i] })
-  }
-
-  base = await sharp(base).composite(composites).webp({ quality: 85 }).toBuffer()
-  return base
-}
-
-// Variante 2: Estilo Arte/Abstracto
-function generateCoverVariant2Svg(title) {
-  const safeTitle = String(title).slice(0, 90)
-  return `
-<svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bgArt" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#6a11cb"/>
-      <stop offset="50%" stop-color="#2575fc"/>
-      <stop offset="100%" stop-color="#1a1a2e"/>
-    </linearGradient>
-    <linearGradient id="shape1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff006e"/>
-      <stop offset="100%" stop-color="#ff7800"/>
-    </linearGradient>
-    <linearGradient id="shape2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#00d4ff"/>
-      <stop offset="100%" stop-color="#0096c7"/>
-    </linearGradient>
-    <filter id="gooey">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="10"/>
-      <feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10"/>
-    </filter>
-  </defs>
-  
-  <!-- Fondo -->
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bgArt)"/>
-  
-  <!-- Formas abstractas con efecto blob -->
-  <g filter="url(#gooey)" opacity="0.7">
-    <circle cx="300" cy="200" r="180" fill="url(#shape1)"/>
-    <circle cx="350" cy="300" r="150" fill="url(#shape1)"/>
-    <circle cx="250" cy="280" r="120" fill="url(#shape1)"/>
-  </g>
-  
-  <g filter="url(#gooey)" opacity="0.6">
-    <circle cx="900" cy="400" r="200" fill="url(#shape2)"/>
-    <circle cx="950" cy="350" r="160" fill="url(#shape2)"/>
-    <circle cx="850" cy="450" r="140" fill="url(#shape2)"/>
-  </g>
-  
-  <!-- Formas geométricas -->
-  <polygon points="600,100 750,200 650,350 500,250" fill="none" stroke="#ffd60a" stroke-width="3" opacity="0.4"/>
-  <polygon points="400,450 550,480 520,580 380,550" fill="#ff006e" opacity="0.2"/>
-  
-  <!-- Círculos decorativos -->
-  <circle cx="150" cy="150" r="40" fill="none" stroke="#00d4ff" stroke-width="3" opacity="0.6"/>
-  <circle cx="1050" cy="500" r="60" fill="none" stroke="#ffd60a" stroke-width="2" opacity="0.5"/>
-  
-  <!-- Líneas curvas -->
-  <path d="M 100 ${HEIGHT} Q 400 300, 700 ${HEIGHT}" fill="none" stroke="#ff006e" stroke-width="2" opacity="0.3"/>
-  <path d="M 0 315 Q 600 200, ${WIDTH} 400" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.3"/>
-  
-  <!-- Título superpuesto -->
-  <g>
-    <rect x="140" y="220" width="920" height="200" rx="16" fill="rgba(0,0,0,0.35)"/>
-    <text x="180" y="320" font-family="Inter, Arial" font-size="48" fill="#ffffff" font-weight="700">${safeTitle}</text>
-    <text x="180" y="360" font-family="Inter, Arial" font-size="22" fill="#e0e7ff" opacity="0.9">jaimetr.dev • Blog</text>
-  </g>
-</svg>`
-}
-
-// Variante 3: Imagen realista de dev/programación
-async function generateCoverVariant3(title) {
-  const imgPath = path.join(process.cwd(), 'public', 'images', 'programming.png')
-  let base
-  if (fs.existsSync(imgPath)) {
-    base = await sharp(imgPath).resize(WIDTH, HEIGHT, { fit: 'cover' }).toBuffer()
-  } else {
-    // fallback: fondo tech
-    base = await sharp(Buffer.from(baseTechSvg()), { density: 100 }).webp({ quality: 90 }).toBuffer()
-  }
-  // overlay degradado oscuro y tarjeta ligera
-  const overlaySvg = `
-    <svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(0,0,0,0.35)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,0.55)"/>
-        </linearGradient>
-      </defs>
-      <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#fade)"/>
-      <rect x="220" y="160" width="760" height="310" rx="22" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
-    </svg>
-  `
-  const overlayBuf = Buffer.from(overlaySvg)
-  const composed = await sharp(base)
-    .composite([{ input: overlayBuf, left: 0, top: 0 }])
-    .webp({ quality: 85 })
-    .toBuffer()
-  return composed
-}
-
-async function svgToWebp(svgContent) {
-  try {
-    const buffer = Buffer.from(svgContent)
-    return await sharp(buffer, { density: 100 })
-      .webp({ quality: 80 })
-      .toBuffer()
-  } catch (error) {
-    console.error('Error converting SVG to WebP:', error)
-    throw error
-  }
 }
 
 export async function POST(request) {
   try {
-    if (!validateAdminToken(request)) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      )
+    if (!validateAdminRequest(request)) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     const body = await request.json()
     const { title, tags = [] } = body
 
     if (!title) {
-      return NextResponse.json(
-        { error: 'El título es requerido' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'El titulo es requerido' }, { status: 400 })
     }
 
-    // Variante 1: logos según tema
-    const webp1 = await generateCoverVariant1(title, tags)
-    // Variante 2: título superpuesto (SVG)
-    const webp2 = await svgToWebp(generateCoverVariant2Svg(title))
-    // Variante 3: imagen realista dev/programación
-    const webp3 = await generateCoverVariant3(title)
+    const styleKeys = ['neon', 'dark', 'abstract']
+    const styleNames = ['Cyberpunk Neon', 'Tech Oscuro', 'Abstracto Futurista']
+    const variants = []
 
-    // Convertir a base64 para enviar al cliente
-    const base641 = webp1.toString('base64')
-    const base642 = webp2.toString('base64')
-    const base643 = webp3.toString('base64')
+    for (let i = 0; i < 3; i++) {
+      try {
+        const prompt = buildPrompt(title, tags, styleKeys[i])
+        const seed = Math.floor(Math.random() * 99999) + i * 10000
+        const bgBuffer = await fetchAIImage(prompt, seed)
+        const overlaySvg = renderTitleOverlay(title, styleKeys[i])
+        const overlayBuffer = Buffer.from(overlaySvg)
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        variants: [
-          { id: 1, image: `data:image/webp;base64,${base641}`, name: 'Tema visual con logos' },
-          { id: 2, image: `data:image/webp;base64,${base642}`, name: 'Título superpuesto' },
-          { id: 3, image: `data:image/webp;base64,${base643}`, name: 'Imagen realista dev' }
-        ]
+        const composed = await (await getSharpModule())(bgBuffer)
+          .composite([{ input: overlayBuffer, top: 0, left: 0 }])
+          .webp({ quality: 85 })
+          .toBuffer()
+
+        variants.push({
+          id: i + 1,
+          image: `data:image/webp;base64,${composed.toString('base64')}`,
+          name: styleNames[i],
+        })
+      } catch (aiError) {
+        console.warn(`Cover variant ${i + 1} AI failed, using fallback:`, aiError.message)
+        try {
+          const fallbackBg = generateFallbackBg(title, i)
+          const overlaySvg = renderTitleOverlay(title, styleKeys[i])
+
+          const composed = await (await getSharpModule())(Buffer.from(fallbackBg), { density: 100 })
+            .composite([{ input: Buffer.from(overlaySvg), top: 0, left: 0 }])
+            .webp({ quality: 80 })
+            .toBuffer()
+
+          variants.push({
+            id: i + 1,
+            image: `data:image/webp;base64,${composed.toString('base64')}`,
+            name: styleNames[i] + ' (SVG)',
+          })
+        } catch (svgError) {
+          console.error(`Fallback also failed:`, svgError)
+        }
       }
-    })
+    }
+
+    return NextResponse.json({ success: true, data: { variants } })
   } catch (error) {
     console.error('Error generando portadas:', error)
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

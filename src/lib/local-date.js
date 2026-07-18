@@ -58,4 +58,4 @@ class LocalDate {
     }
 }
 
-module.exports = { LocalDate }
+export { LocalDate }

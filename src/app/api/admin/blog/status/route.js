@@ -1,21 +1,17 @@
 import { NextResponse } from 'next/server'
+import { validateAdminRequest } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 
-// Validar token de administrador
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin123'
+export const dynamic = 'force-dynamic';
 
-function validateAdminToken(request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  return token === ADMIN_TOKEN
-}
+
 
 // POST: Actualizar batch de estados (is_hidden, is_featured, featured_order)
 export async function POST(request) {
   try {
-    if (!validateAdminToken(request)) {
+    if (!validateAdminRequest(request)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

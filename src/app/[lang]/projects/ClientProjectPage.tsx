@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import WelcomeScreen from "@/components/portfolio/WelcomeScreen";
 import ProjectGallery from "@/components/portfolio/ProjectGallery";
-import ParticlesBackground from "@/components/portfolio/ParticlesBackground";
+import dynamic from 'next/dynamic'
+const ParticlesBackground = dynamic(() => import('@/components/portfolio/ParticlesBackground'), { ssr: false })
 
 export default function ClientProjectPage() {
   const [showWelcome, setShowWelcome] = useState(true);
