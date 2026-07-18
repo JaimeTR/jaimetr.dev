@@ -83,7 +83,7 @@ export default async function RootLayout({ children, params }) {
     const { lang } = await params;
     
     return (
-        <html suppressHydrationWarning lang={lang} className="scroll-smooth">
+        <html suppressHydrationWarning lang={lang} className="scroll-smooth dark">
             <head>
                 <meta name="google-site-verification" content="MlMRSjHtnqT7cbCEXeYCLPb8xbd-9Jsmf4VG7rl-94s" />
                 <meta name="msvalidate.01" content="6E674BE7C59CEA166AC23BB271E56771" />
