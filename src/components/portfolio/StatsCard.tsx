@@ -23,7 +23,7 @@ export default function StatsCard({ isEmbedded = false }: StatsCardProps = {}) {
   const [targetValue, setTargetValue] = useState(360);
   
   // New dynamic fields
-  const [bgImage, setBgImage] = useState('/developer.gif');
+  const [bgImage, setBgImage] = useState('');
   const [titleEs, setTitleEs] = useState('PROYECTOS');
   const [titleEn, setTitleEn] = useState('PROJECTS');
   const [descEs, setDescEs] = useState('Experiencia continua y evolución técnica constante en cada línea de código.');

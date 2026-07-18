@@ -18,7 +18,7 @@ export function ManageProjects() {
   const [profileId, setProfileId] = useState(null)
   const [savingStats, setSavingStats] = useState(false)
   const [statsProjects, setStatsProjects] = useState(350)
-  const [statsBgImage, setStatsBgImage] = useState('/developer.gif')
+  const [statsBgImage, setStatsBgImage] = useState('')
   const [statsTitleEs, setStatsTitleEs] = useState('PROYECTOS')
   const [statsTitleEn, setStatsTitleEn] = useState('PROJECTS')
   const [statsDescEs, setStatsDescEs] = useState('Experiencia continua y evolución técnica constante en cada línea de código.')
