@@ -20,9 +20,9 @@ export default function ArticlesFooterLink() {
                         <FaBlog className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-dark-800 dark:text-dark-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                            {language === 'es' ? 'Explora más contenido' : 'Explore more content'}
-                        </h3>
+                        <p className="text-lg font-bold text-dark-800 dark:text-dark-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                            {language === 'es' ? 'Explora mas contenido' : 'Explore more content'}
+                        </p>
                         <p className="text-sm text-dark-500 dark:text-dark-400 mt-0.5 line-clamp-1">
                             {language === 'es' 
                                 ? 'Descubre más artículos sobre desarrollo, tecnología e IA.' 
