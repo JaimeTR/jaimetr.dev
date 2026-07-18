@@ -133,32 +133,32 @@ export const Banner = () => {
                         case 'cv':
                             return (profile?.is_cv_visible !== false && profile?.cv_url) ? (
                                 <li key="cv">
-                                    <Pill url={profile.cv_url} externalUrl={true}>
-                                        <FiFileText className="size-4 md:size-6" /> CV
+                                    <Pill url={profile.cv_url} externalUrl={true} ariaLabel="Curriculum Vitae">
+                                        <FiFileText className="size-4 md:size-6" aria-hidden="true" /> CV
                                     </Pill>
                                 </li>
                             ) : null;
                         case 'linkedin':
                             return (profile?.is_linkedin_visible !== false) ? (
                                 <li key="linkedin">
-                                    <Pill url={profile?.linkedin_url || 'https://www.linkedin.com/in/jaimetr/'} externalUrl={true}>
-                                        <LinkedInIcon className="size-4 md:size-6" /> LinkedIn
+                                    <Pill url={profile?.linkedin_url || 'https://www.linkedin.com/in/jaimetr/'} externalUrl={true} ariaLabel="LinkedIn">
+                                        <LinkedInIcon className="size-4 md:size-6" aria-hidden="true" /> LinkedIn
                                     </Pill>
                                 </li>
                             ) : null;
                         case 'github':
                             return (profile?.is_github_visible !== false) ? (
                                 <li key="github">
-                                    <Pill url={profile?.github_url || 'https://github.com/JaimeTR'} externalUrl={true}>
-                                        <GitHubIcon className="size-4 md:size-6" /> GitHub
+                                    <Pill url={profile?.github_url || 'https://github.com/JaimeTR'} externalUrl={true} ariaLabel="GitHub">
+                                        <GitHubIcon className="size-4 md:size-6" aria-hidden="true" /> GitHub
                                     </Pill>
                                 </li>
                             ) : null;
                         case 'email':
                             return (profile?.is_email_visible !== false) ? (
                                 <li key="email">
-                                    <Pill url={`mailto:${profile?.email || 'jaimetr1309@gmail.com'}`} externalUrl={true}>
-                                        <EmailIcon className="size-4 md:size-6" /> {t('contacto')}
+                                    <Pill url={`mailto:${profile?.email || 'jaimetr1309@gmail.com'}`} externalUrl={true} ariaLabel={t('contacto')}>
+                                        <EmailIcon className="size-4 md:size-6" aria-hidden="true" /> {t('contacto')}
                                     </Pill>
                                 </li>
                             ) : null;
