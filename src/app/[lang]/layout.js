@@ -6,6 +6,7 @@ import '@/app/globals.css'
 import { Footer } from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/react'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 import ChatbotWrapper from '@/components/Chatbot/ChatbotWrapper'
 
 export async function generateMetadata({ params }) {
@@ -79,6 +80,7 @@ export default async function RootLayout({ children, params }) {
         <html suppressHydrationWarning lang={lang} className="scroll-smooth">
             <head>
                 <meta name="google-site-verification" content="MlMRSjHtnqT7cbCEXeYCLPb8xbd-9Jsmf4VG7rl-94s" />
+                <meta name="msvalidate.01" content="6E674BE7C59CEA166AC23BB271E56771" />
                 <link rel="icon" type="image/webp" href="/images/jaimetrdev.webp" />
                 <link rel="apple-touch-icon" sizes="180x180" href="/images/jaimetrdev.webp" />
                 <link rel="preconnect" href="https://epmdauwektgtwujsisdh.supabase.co" crossOrigin="anonymous" />
@@ -94,6 +96,7 @@ export default async function RootLayout({ children, params }) {
                         {children}
                         <ChatbotWrapper />
                         <Footer />
+                        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
                         <Analytics />
                     </DarkModeProvider>
                 </LanguageProvider>
