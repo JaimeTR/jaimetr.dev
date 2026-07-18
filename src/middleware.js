@@ -55,7 +55,7 @@ export function middleware(request) {
 
   const locale = getLocale(request)
   request.nextUrl.pathname = `/${locale}${pathname}`
-  return NextResponse.redirect(request.nextUrl)
+  return NextResponse.rewrite(request.nextUrl)
 }
 
 export const config = {
