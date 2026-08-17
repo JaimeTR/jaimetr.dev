@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { BlogGeneratorForm } from '@/components/Admin/BlogGeneratorForm'
 import { BlogsList } from '@/components/Admin/BlogsList'
@@ -49,16 +49,7 @@ export default function AdminDashboard() {
   const [isEditingSections, setIsEditingSections] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  useEffect(() => {
-    const token = localStorage.getItem('adminToken')
-    if (!token) {
-      router.push('/admin/login')
-      return
-    }
-    fetchSections()
-  }, [router])
-
-  const fetchSections = async () => {
+  const fetchSections = useCallback(async () => {
     try {
       const token = localStorage.getItem('adminToken')
       const res = await fetch('/api/admin/sections', {
@@ -78,7 +69,16 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken')
+    if (!token) {
+      router.push('/admin/login')
+      return
+    }
+    fetchSections()
+  }, [fetchSections, router])
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken')

@@ -13,8 +13,12 @@ export async function POST(req) {
     }
 
     // Validacion server-side - sin exponer en cliente
-    const adminEmail = process.env.ADMIN_EMAIL || 'jaimetr1309@gmail.com'
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Tarazona1309'
+    const adminEmail = process.env.ADMIN_EMAIL
+    const adminPassword = process.env.ADMIN_PASSWORD
+
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json({ error: 'Configuracion del administrador no disponible' }, { status: 500 })
+    }
 
     if (email !== adminEmail || password !== adminPassword) {
       return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 })

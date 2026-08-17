@@ -5,18 +5,27 @@ import { rateLimit, RATE_LIMITS } from '@/lib/ratelimit'
 
 export const dynamic = 'force-dynamic'
 
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+const groq = process.env.GROQ_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: 'https://api.groq.com/openai/v1',
+    })
+  : null
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 export async function POST(req) {
   try {
     const { messages, language = 'es' } = await req.json()
+
+    if (!groq) {
+      return NextResponse.json(
+        { error: 'El servicio de IA no está configurado. Añade GROQ_API_KEY para activar el chat.' },
+        { status: 503 }
+      )
+    }
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Mensajes invalidos' }, { status: 400 })
@@ -32,22 +41,24 @@ export async function POST(req) {
     // Limitar historial a 20 mensajes max
     const slicedMessages = messages.slice(-20)
 
-    let dynamicContext = "";
-    try {
-      const { data: profileData } = await supabase.from('profile').select('*').limit(1).single();
-      if (profileData) {
-        dynamicContext = `
+   let dynamicContext = ''
+   if (supabase) {
+     try {
+       const { data: profileData } = await supabase.from('profile').select('*').limit(1).single()
+       if (profileData) {
+         dynamicContext = `
 Nombre: Jaime Tarazona
 Perfil: Ingeniero de Sistemas | Full-Stack Developer | Web Developer WP. +5 años de experiencia creando soluciones web profesionales.
 Email: ${profileData?.contact_email || 'jaimetr1309@gmail.com'}
 WhatsApp/Teléfono: ${profileData?.contact_phone || '+51 975646074'}
 Resumen: ${language === 'es' ? profileData?.about_me_paragraphs?.[0]?.es || '' : profileData?.about_me_paragraphs?.[0]?.en || ''}
 Proyectos Destacados: Más de ${profileData.stats_projects_completed || 300} proyectos completados.
-        `;
-      }
-    } catch (e) {
-      console.warn('Could not fetch dynamic context', e);
-    }
+         `
+       }
+     } catch (e) {
+       console.warn('Could not fetch dynamic context', e)
+     }
+   }
 
     const systemPromptEs = `
 Eres "JaimeAI", el asistente virtual de Jaime Tarazona.
