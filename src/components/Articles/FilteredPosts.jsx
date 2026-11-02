@@ -1,18 +1,31 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { ArticleCard } from '../ArticleCard'
-import { FiSearch, FiChevronLeft, FiChevronRight, FiFilter, FiX } from 'react-icons/fi'
+import { FiSearch, FiChevronLeft, FiChevronRight, FiChevronDown, FiFilter, FiX } from 'react-icons/fi'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { useTranslation } from '@/helpers/translations'
 
 // Recommended tags suggested
 const RECOMMENDED_TAGS = ['React', 'Next.js', 'JavaScript', 'TypeScript', 'OpenAI', 'SEO', 'Tailwind', 'PHP', 'Laravel']
 
 export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
+    const { language } = useLanguage()
+    const t = useTranslation(language)
     const [search, setSearch] = useState('')
     const [selectedTags, setSelectedTags] = useState([])
     const [currentPage, setCurrentPage] = useState(1)
-    
-    const postsPerPage = 6
+    const [showMobileFilters, setShowMobileFilters] = useState(false)
+    const resultsRef = useRef(null)
+
+    const postsPerPage = 12
+
+    const goToPage = (page) => {
+        setCurrentPage(Math.min(Math.max(1, page), totalPages))
+        // Pagination used to swap the grid without moving the viewport, so a
+        // click on "next" appeared to do nothing unless the user scrolled up.
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
 
     // Extract all unique tags from the actual posts
     const allAvailableTags = useMemo(() => {
@@ -107,7 +120,7 @@ export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
                     <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-400 dark:text-dark-500" size={20} />
                     <input 
                         type="text" 
-                        placeholder="Buscar artículos por título o descripción..."
+                        placeholder={t('buscarArticulos')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-dark-900 dark:text-white transition-all"
@@ -124,10 +137,18 @@ export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
 
                 {topTags.length > 0 && (
                     <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-dark-600 dark:text-dark-400">
-                            <FiFilter size={16} /> Filtrar por temas:
-                        </div>
-                        <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowMobileFilters(v => !v)}
+                            aria-expanded={showMobileFilters}
+                            className="flex md:pointer-events-none items-center justify-between w-full gap-2 text-sm font-medium text-dark-600 dark:text-dark-400"
+                        >
+                            <span className="flex items-center gap-2">
+                                <FiFilter size={16} /> {t('filtrarPorTemas')}
+                            </span>
+                            <FiChevronDown size={16} className={`md:hidden transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
+                        </button>
+                        <div className={`${showMobileFilters ? 'flex' : 'hidden'} md:flex flex-wrap gap-2`}>
                             {topTags.map(tag => {
                                 const isSelected = selectedTags.includes(tag)
                                 return (
@@ -150,21 +171,21 @@ export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
             </div>
 
             {/* Results Info */}
-            <div className="flex justify-between items-center text-sm text-dark-500 dark:text-dark-400">
-                <p>Mostrando {currentPosts.length} de {filteredPosts.length} artículos</p>
+            <div ref={resultsRef} className="flex justify-between items-center text-sm text-dark-500 dark:text-dark-400">
+                <p>{language === 'en' ? `Showing ${currentPosts.length} of ${filteredPosts.length} articles` : `Mostrando ${currentPosts.length} de ${filteredPosts.length} artículos`}</p>
                 {selectedTags.length > 0 && (
-                    <button 
+                    <button
                         onClick={() => setSelectedTags([])}
                         className="text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
                     >
-                        Limpiar filtros
+                        {t('limpiarFiltros')}
                     </button>
                 )}
             </div>
 
             {/* Posts Grid */}
             {filteredPosts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                     {currentPosts.map((post) => (
                         <ArticleCard key={post?.slug} article={post} basePath={basePath} />
                     ))}
@@ -174,9 +195,9 @@ export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-dark-100 dark:bg-dark-900 mb-4">
                         <FiSearch size={24} className="text-dark-400 dark:text-dark-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-dark-900 dark:text-white mb-2">No se encontraron artículos</h3>
+                    <h3 className="text-xl font-bold text-dark-900 dark:text-white mb-2">{t('noSeEncontraronArticulos')}</h3>
                     <p className="text-dark-600 dark:text-dark-400 max-w-md mx-auto">
-                        Intenta ajustar tu búsqueda o limpiar los filtros seleccionados para ver más resultados.
+                        {t('intentaAjustarBusqueda')}
                     </p>
                 </div>
             )}
@@ -185,20 +206,22 @@ export const FilteredPosts = ({ posts, basePath = '/posts' }) => {
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-4 pt-8">
                     <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        onClick={() => goToPage(currentPage - 1)}
                         disabled={currentPage === 1}
+                        aria-label={language === 'en' ? 'Previous page' : 'Página anterior'}
                         className="p-2 rounded-lg bg-white dark:bg-dark-900 border border-dark-200 dark:border-dark-800 text-dark-600 dark:text-dark-400 hover:bg-dark-50 dark:hover:bg-dark-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                         <FiChevronLeft size={20} />
                     </button>
-                    
+
                     <span className="text-sm font-medium text-dark-700 dark:text-dark-300">
-                        Página {currentPage} de {totalPages}
+                        {language === 'en' ? `Page ${currentPage} of ${totalPages}` : `Página ${currentPage} de ${totalPages}`}
                     </span>
 
                     <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        onClick={() => goToPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
+                        aria-label={language === 'en' ? 'Next page' : 'Página siguiente'}
                         className="p-2 rounded-lg bg-white dark:bg-dark-900 border border-dark-200 dark:border-dark-800 text-dark-600 dark:text-dark-400 hover:bg-dark-50 dark:hover:bg-dark-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                         <FiChevronRight size={20} />

@@ -3,12 +3,12 @@
 
 import fs from 'fs'
 import path from 'path'
-import { generateEnglishVersion, writePost } from '../src/services/ai.mjs'
+import { generateEnglishVersion, writePost, resolveDefaultProvider } from '../src/services/ai.mjs'
 
 const postsDir = path.join(process.cwd(), 'src', 'posts')
 
 async function main() {
-  const provider = process.env.AI_PROVIDER || 'gemini'
+  const provider = resolveDefaultProvider()
   console.log('Iniciando traducción de blogs existentes...')
   console.log('Proveedor IA:', provider)
   console.log('---\n')

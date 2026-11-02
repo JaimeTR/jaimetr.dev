@@ -140,7 +140,7 @@ export const Navbar = () => {
                         <button
                             className="p-2 text-sm text-dark-700 dark:text-dark-200 rounded-lg"
                             onClick={showNavBar}
-                            aria-label={isOpen ? 'Cerrar menu' : 'Abrir menu'}
+                            aria-label={isOpen ? t('cerrarMenu') : t('abrirMenu')}
                             aria-expanded={isOpen}
                         >
                             {isOpen ? (

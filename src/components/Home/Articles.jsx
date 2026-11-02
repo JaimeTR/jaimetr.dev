@@ -41,12 +41,14 @@ export const Articles = async () => {
         .slice(0, 3)
 
     return (
-        <Container id="articles" className="lg:max-w-[900px]">
+        <Container id="articles" className="lg:max-w-[1200px]">
             <ArticlesHeader />
-            {articles.map((item) => (
-                <ArticleCard key={item.slug} article={item} />
-            ))}
-            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-8">
+                {articles.map((item) => (
+                    <ArticleCard key={item.slug} article={item} />
+                ))}
+            </div>
+
             <ArticlesFooterLink />
         </Container>
     )

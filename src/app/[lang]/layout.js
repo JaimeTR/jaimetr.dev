@@ -87,8 +87,6 @@ export default async function RootLayout({ children, params }) {
             <head>
                 <meta name="google-site-verification" content="MlMRSjHtnqT7cbCEXeYCLPb8xbd-9Jsmf4VG7rl-94s" />
                 <meta name="msvalidate.01" content="6E674BE7C59CEA166AC23BB271E56771" />
-                <link rel="icon" type="image/webp" href="/images/jaimetrdev.webp" />
-                <link rel="apple-touch-icon" sizes="180x180" href="/images/jaimetrdev.webp" />
                 <link rel="preconnect" href="https://epmdauwektgtwujsisdh.supabase.co" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://api.groq.com" crossOrigin="anonymous" />
             </head>

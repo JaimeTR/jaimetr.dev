@@ -10,12 +10,13 @@ const imagesDir = path.join(process.cwd(), 'public', 'images', 'posts')
 
 async function fixCovers() {
   const files = fs.readdirSync(postsDir)
-  const mdxFiles = files.filter(f => f.endsWith('.mdx') && !f.endsWith('.en.mdx'))
-  
+  const mdxFiles = files.filter(f => f.endsWith('.mdx'))
+
   let updated = 0
-  
+
   for (const file of mdxFiles) {
-    const slug = file.replace('.mdx', '')
+    // Both slug.mdx and slug.en.mdx share the same cover image on disk.
+    const slug = file.replace(/\.en\.mdx$|\.mdx$/, '')
     const mdxPath = path.join(postsDir, file)
     const imagePath = path.join(imagesDir, `${slug}.webp`)
     

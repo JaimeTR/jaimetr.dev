@@ -1,5 +1,32 @@
 import fs from 'fs'
 import path from 'path'
+import matter from 'gray-matter'
+
+// None of the CLI scripts under scripts/ were loading .env.local (only migrate.mjs
+// had its own manual parser). Every AI provider call silently ran with no API key,
+// so generation always fell through to the canned fallback template. Node 20.6+
+// supports loadEnvFile natively; do it once here since every script imports this module
+// before making any provider call. Safe to skip if the file doesn't exist (e.g. CI/prod
+// where env vars are injected by the platform instead).
+try {
+  process.loadEnvFile(path.join(process.cwd(), '.env.local'))
+} catch {
+  // no .env.local present — assume env vars are already set (CI/production)
+}
+
+// =============================================================================
+// 0. PROVIDER RESOLUTION
+// =============================================================================
+
+// Picks the first provider that actually has a configured API key, instead of
+// defaulting to 'gemini' regardless of what's set (silent fallback to canned content).
+export function resolveDefaultProvider() {
+  if (process.env.AI_PROVIDER) return process.env.AI_PROVIDER
+  if (process.env.GROQ_API_KEY) return 'groq'
+  if (process.env.GEMINI_API_KEY) return 'gemini'
+  if (process.env.OPENAI_API_KEY) return 'openai'
+  return 'groq'
+}
 
 // =============================================================================
 // 1. SYSTEM PROMPT BUILDER
@@ -41,6 +68,10 @@ function buildSystemPrompt({ tone, titleForContent, audience, tagsList }) {
     '- Mostrar patrones de diseno reales (Singleton, Factory, Observer, Repository, etc.) cuando aplique.',
     '- Codigo realista: usa nombres de variables descriptivos, constantes bien nombradas, estructura de proyecto real.',
     '',
+    'FORMATO DE SALIDA (CRITICO):',
+    '- Responde UNICAMENTE con el cuerpo del articulo en markdown, empezando directamente con "## 1. Introduccion contextual" (o el H2 que corresponda).',
+    '- NO repitas el titulo como texto plano ni como H1 al inicio. NO incluyas una linea "Autor:". NO incluyas una seccion "Titulo SEO" ni "Meta-descripcion" dentro del cuerpo: esos van en el frontmatter, generados aparte, nunca como texto visible del articulo.',
+    '',
     'SEO Y ENGAGEMENT:',
     '- Titulo optimizado para SEO, atractivo y descriptivo.',
     '- Descripcion 150-160 caracteres que resuma el valor tecnico del articulo.',
@@ -76,7 +107,9 @@ function buildUserPrompt({ topic, titleForContent, audience, tagsList, brand }) 
 // 2. GROQ PROVIDER
 // =============================================================================
 
-async function generateWithGroq(system, user) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+async function generateWithGroq(system, user, maxTokens = 4000, retriesLeft = 3) {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return null
 
@@ -87,15 +120,27 @@ async function generateWithGroq(system, user) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: process.env.AI_GROQ_MODEL || 'openai/gpt-oss-120b',
       temperature: 0.7,
-      max_tokens: 8000,
+      // This account's on_demand tier caps combined prompt+completion at 8000
+      // tokens per minute; the system prompt alone runs ~1200-1500 tokens, so
+      // max_tokens must leave headroom or every call 413s and silently falls
+      // back to the canned template.
+      max_tokens: maxTokens,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },
       ],
     }),
   })
+
+  if (response.status === 429 && retriesLeft > 0) {
+    const body = await response.text()
+    const waitMatch = body.match(/try again in ([\d.]+)s/i)
+    const waitMs = waitMatch ? Math.ceil(parseFloat(waitMatch[1]) * 1000) + 500 : 5000
+    await sleep(waitMs)
+    return generateWithGroq(system, user, maxTokens, retriesLeft - 1)
+  }
 
   if (!response.ok) {
     throw new Error('Groq API error: ' + response.status + ' ' + (await response.text()))
@@ -185,7 +230,7 @@ export async function generateBlogMdx({
   keywords = [],
   audience = 'desarrolladores y clientes tecnicos',
   brand = 'Jaime Tarazona',
-  provider = process.env.AI_PROVIDER || 'groq',
+  provider = resolveDefaultProvider(),
   titleOverride,
   customContent,
 }) {
@@ -213,13 +258,19 @@ export async function generateBlogMdx({
         titleForContent,
         fallbackBody,
       })
-    } catch {
+    } catch (error) {
+      console.error('generateBlogMdx: AI generation failed, using fallback template:', error.message)
       body = fallbackBody
     }
   }
 
   const title = titleForContent
-  const description = proposeDescription(body)
+  // The model sometimes echoes "Titulo SEO / Autor / Meta-descripcion" as visible
+  // prose before the real article starts despite the format instructions above.
+  // Strip anything before the first real section heading so it never renders.
+  const rawBody = body
+  body = stripPreamble(rawBody)
+  const description = proposeDescription(rawBody, body)
 
   const frontmatter =
     '---\n' +
@@ -244,12 +295,25 @@ export function writePost({ slug, mdx, language = 'es' }) {
   return outFile
 }
 
-export async function generateEnglishVersion({ topic, mdx, provider = process.env.AI_PROVIDER || 'groq' }) {
+async function translateText(system, user, provider) {
+  if (provider === 'groq') {
+    if (!process.env.GROQ_API_KEY) return null
+    return await generateWithGroq(system, user)
+  } else if (provider === 'gemini') {
+    return await generateWithGemini(system, user, 8000)
+  } else if (provider === 'openai') {
+    return await generateWithOpenAI(system, user, 8000)
+  }
+  return null
+}
+
+export async function generateEnglishVersion({ topic, mdx, provider = resolveDefaultProvider() }) {
   const frontmatterMatch = mdx.match(/^---([\s\S]*?)---/)
   const frontmatterBlock = frontmatterMatch ? frontmatterMatch[1] : ''
   const body = mdx.replace(/^---[\s\S]*?---/, '').trim()
+  const data = matter(mdx).data
 
-  const system = [
+  const bodySystem = [
     'You are an expert technical translator specialized in software engineering and web development documentation.',
     'Your task is to translate a technical blog article from Spanish to English with professional, native-level quality.',
     'Maintain the exact structure, headers, code blocks, and formatting. Only translate text, descriptions, and inline comments.',
@@ -258,38 +322,46 @@ export async function generateEnglishVersion({ topic, mdx, provider = process.en
     'Ensure the translated content reads naturally as if originally written in English by a Senior Software Engineer.',
   ].join('\n')
 
-  const user = [
+  const bodyUser = [
     'Translate the following technical web development article from Spanish to English. Keep all code blocks, YAML, and structure untouched. Only translate natural language content and code comments.',
     '',
     body,
   ].join('\n')
 
-  let translatedBody = ''
+  let translatedBody = body
+  let translatedTitle = data.title || ''
+  let translatedDescription = data.description || ''
 
   try {
-    if (provider === 'groq') {
-      const apiKey = process.env.GROQ_API_KEY
-      if (apiKey) {
-        const result = await generateWithGroq(system, user)
-        translatedBody = result || body
-      } else {
-        translatedBody = body
-      }
-    } else if (provider === 'gemini') {
-      const result = await generateWithGemini(system, user, 8000)
-      translatedBody = result || body
-    } else if (provider === 'openai') {
-      const result = await generateWithOpenAI(system, user, 8000)
-      translatedBody = result || body
-    } else {
-      translatedBody = body
-    }
+    const result = await translateText(bodySystem, bodyUser, provider)
+    if (result) translatedBody = result
   } catch (error) {
-    console.warn('Translation failed with AI, using original content:', error.message)
-    translatedBody = body
+    console.warn('Body translation failed with AI, using original content:', error.message)
   }
 
-  const englishMdx = '---' + frontmatterBlock + '---\n\n' + translatedBody.trim() + '\n'
+  // Frontmatter (title/description) was previously left untranslated, causing
+  // the .en.mdx file to render Spanish text under a hreflang="en" URL.
+  if (data.title || data.description) {
+    try {
+      const metaSystem = 'You are an expert technical translator. Translate the given JSON values from Spanish to English, professional native-level quality. Return ONLY valid JSON with the same keys, no commentary, no markdown fences.'
+      const metaUser = JSON.stringify({ title: data.title || '', description: data.description || '' })
+      const metaResult = await translateText(metaSystem, metaUser, provider)
+      if (metaResult) {
+        const cleaned = metaResult.trim().replace(/^```(json)?/i, '').replace(/```$/, '').trim()
+        const parsed = JSON.parse(cleaned)
+        if (parsed.title) translatedTitle = parsed.title
+        if (parsed.description) translatedDescription = parsed.description
+      }
+    } catch (error) {
+      console.warn('Frontmatter translation failed with AI, keeping original text:', error.message)
+    }
+  }
+
+  const newData = { ...data }
+  if (translatedTitle) newData.title = translatedTitle
+  if (translatedDescription) newData.description = translatedDescription
+
+  const englishMdx = matter.stringify(translatedBody.trim() + '\n', newData)
   return englishMdx
 }
 
@@ -386,14 +458,14 @@ function inferTagsFromTopic(topic) {
 }
 
 function proposeTitle(topic) {
-  const clean = topic.replace(/\.$/, '')
-  if (clean.length <= 60) return clean
-  return clean.slice(0, 57) + '\u2026'
+  // Titles used to be hard-truncated at 60 chars with a trailing ellipsis,
+  // producing broken mid-sentence titles like "...cu\u00e1ndo\u2026". Trust the caller's
+  // topic/title text as-is; callers that need a shorter title should pass one.
+  return topic.replace(/\.$/, '').trim()
 }
 
-function proposeDescription(body) {
-  let plain = body
-    .replace(/^---[\s\S]*?---/m, '')
+function cleanPlainText(s) {
+  return s
     .replace(/#{1,6}\s+/g, '')
     .replace(/\*\*(.+?)\*\*/g, '$1')
     .replace(/\*(.+?)\*/g, '$1')
@@ -405,10 +477,40 @@ function proposeDescription(body) {
     .replace(/\n+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
 
-  const max = 160
+function truncateAtBoundary(plain, max = 158) {
   if (plain.length <= max) return plain
-  return plain.slice(0, max - 1) + '\u2026'
+  const cut = plain.slice(0, max)
+  const lastDot = cut.lastIndexOf('.')
+  const lastSpace = cut.lastIndexOf(' ')
+  const boundary = lastDot > max * 0.6 ? lastDot : lastSpace
+  const trimmed = cut.slice(0, boundary > 0 ? boundary : cut.length).trim()
+  return trimmed.endsWith('.') ? trimmed : trimmed + '.'
+}
+
+// The model sometimes echoes "Titulo SEO / Autor / Meta-descripcion" as visible
+// prose before the real article starts. Drop everything before the first real
+// section heading so that preamble never renders on the page.
+function stripPreamble(rawBody) {
+  const firstHeadingIdx = rawBody.search(/^##\s+/m)
+  if (firstHeadingIdx === -1) return rawBody.trim()
+  return rawBody.slice(firstHeadingIdx).trim()
+}
+
+function proposeDescription(rawBody, cleanedBody = rawBody) {
+  // Prefer whatever the model put after "Meta-descripcion" in a leaked preamble,
+  // since that text was written to be a real 150-160 char summary, not filler.
+  const metaMatch = rawBody.match(/Meta[\s\u2011-]?descripci[o\u00f3]n[^:]*:?\s*\n?\s*([^\n]+)/i)
+  if (metaMatch) {
+    const candidate = cleanPlainText(metaMatch[1]).replace(/^\*+|\*+$/g, '').trim()
+    if (candidate.length > 40) return truncateAtBoundary(candidate)
+  }
+  const firstParagraph = cleanedBody
+    .replace(/^---[\s\S]*?---/m, '')
+    .split(/\n{2,}/)
+    .find(p => p.trim().length > 60) || cleanedBody
+  return truncateAtBoundary(cleanPlainText(firstParagraph))
 }
 
 function sampleBody(topic, title) {

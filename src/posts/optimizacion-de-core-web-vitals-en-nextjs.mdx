@@ -2,9 +2,9 @@
 title: Optimización de Core Web Vitals en Next.js
 date: '2025-12-24'
 description: >-
-  ## Introducción a Optimización de Core Web Vitals en Next.js En el desarrollo
-  web moderno, Optimización de Core Web Vitals en Next.js se ha convertido en un
-  as…
+  Mejora LCP, FID y CLS en aplicaciones Next.js con técnicas de rendering,
+  imágenes, carga diferida y caching. Código real, casos de negocio y
+  comparativas.
 toc: true
 tags:
   - desarrollo web
@@ -15,250 +15,376 @@ tags:
 cover: /images/posts/optimizacion-de-core-web-vitals-en-nextjs.webp
 author: jaimetrdev
 ---
+## 1. Introducción contextual  
 
-## Introducción a Optimización de Core Web Vitals en Next.js
+En los últimos años, Google ha convertido los **Core Web Vitals (CWV)** en el principal criterio de calidad para la experiencia de usuario y, por ende, para el posicionamiento SEO. Los tres indicadores – **Largest Contentful Paint (LCP)**, **First Input Delay (FID)** y **Cumulative Layout Shift (CLS)** – miden, respectivamente, la velocidad de carga percibida, la capacidad de respuesta y la estabilidad visual de una página. Un sitio que no alcanza los umbrales recomendados (LCP < 2.5 s, FID < 100 ms, CLS < 0.1) sufre penalizaciones en rankings y, lo que es peor, pierde conversiones.  
 
-En el desarrollo web moderno, Optimización de Core Web Vitals en Next.js se ha convertido en un aspecto fundamental que todo desarrollador debe dominar. Este artículo explora de manera exhaustiva todos los aspectos relacionados con Optimización de Core Web Vitals en Next.js, desde los fundamentos básicos hasta técnicas avanzadas de implementación.
+Según el **Google Search Console 2023**, más del **55 %** de los sitios web con tráfico superior a 10 k visitas mensuales presentan al menos un Core Web Vital fuera de rango. En el ecosistema de **React** y **Next.js**, la flexibilidad que brinda el framework para combinar rendering estático y dinámico a menudo lleva a decisiones de arquitectura que impactan directamente en estos métricos.  
 
-En las siguientes secciones, abordaremos:
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica paso a paso
-- Casos de uso del mundo real
-- Mejores prácticas y optimizaciones
-- Errores comunes y cómo evitarlos
+En 2021, Next.js 12 introdujo **Middleware**, **Edge Functions** y mejoras en la generación estática, proporcionando herramientas específicas para atacar los cuellos de botella de CWV. Sin embargo, la gran cantidad de configuraciones posibles genera confusión: ¿debería usar `getStaticProps` o `getServerSideProps`? ¿Cómo optimizar imágenes sin sacrificar calidad? ¿Qué estrategia de carga de JavaScript minimiza el FID?  
 
-### ¿Por qué es importante Optimización de Core Web Vitals en Next.js?
+Resolver estas preguntas hoy es crítico porque el **Core Web Vitals Score** pasa a ser un factor de ranking permanente y, al mismo tiempo, los usuarios móviles esperan tiempos de carga sub‑segundo. En este artículo, desglosaremos la arquitectura de Next.js enfocada en CWV, mostraremos implementaciones paso‑a‑paso con código listo para producción y analizaremos casos de uso reales donde la optimización marcó la diferencia en métricas de negocio.
 
-La importancia de Optimización de Core Web Vitals en Next.js radica en varios factores críticos:
+---  
 
-1. **Mejora la experiencia del usuario**: Implementar Optimización de Core Web Vitals en Next.js correctamente resulta en una mejor UX.
-2. **Optimiza el rendimiento**: Reduce tiempos de carga y mejora métricas de performance.
-3. **Aumenta la visibilidad SEO**: Los buscadores priorizan sitios que implementan Optimización de Core Web Vitals en Next.js adecuadamente.
-4. **Facilita el mantenimiento**: Código bien estructurado es más fácil de mantener a largo plazo.
+## 2. Fundamentos y Arquitectura  
 
-## Fundamentos Técnicos
+### 2.1. Qué miden los Core Web Vitals  
 
-Antes de profundizar en la implementación, es crucial entender los conceptos fundamentales:
+| Métrica | Qué evalúa | Umbral recomendado | Impacto directo en Next.js |
+|---------|------------|--------------------|----------------------------|
+| **LCP** | Tiempo que tarda el elemento más grande visible en cargarse (imagen, video o bloque de texto) | ≤ 2.5 s | Rendering del HTML, optimización de imágenes, uso de ISR |
+| **FID** | Latencia entre la primera interacción del usuario y la respuesta del thread principal | ≤ 100 ms | Tamaño del bundle JavaScript, uso de `dynamic()` y `React.lazy` |
+| **CLS** | Suma de todos los cambios inesperados de layout durante la carga | < 0.1 | Evitar fuentes sin `font-display`, reservar espacio para imágenes y ads |
 
-### Conceptos Clave
+### 2.2. Principios de arquitectura para CWV en Next.js  
 
-**Definición**: Optimización de Core Web Vitals en Next.js se refiere a [concepto técnico relevante al tema].
+1. **Renderizado estático siempre que sea posible** – `getStaticProps` + ISR generan HTML en tiempo de compilación, reduciendo el tiempo de respuesta del servidor y, por ende, el LCP.  
+2. **Carga diferida y priorización** – Utilizar el componente `next/image` con `priority` sólo para el hero y `loading="lazy"` para el resto, evitando desplazamientos inesperados (CLS).  
+3. **Fragmentación de JavaScript** – `dynamic()` permite dividir el bundle y cargar módulos bajo demanda, disminuyendo el FID.  
+4. **Edge Caching y Middleware** – Respuestas desde la red de borde (Vercel Edge, Cloudflare Workers) reducen la latencia de red, mejorando LCP y FID simultáneamente.  
+5. **Observabilidad y métricas en tiempo real** – Integrar la Web Vitals API (`web-vitals`) para capturar datos reales en producción y cerrar el bucle de mejora continua.
 
-**Componentes principales**:
-- Configuración inicial y setup
-- Estructura de datos y patrones de diseño
-- Integración con otras tecnologías
-- Testing y validación
+### 2.3. Diagrama conceptual (descrito en texto)  
 
-### Prerequisitos
+- **Cliente** → **CDN Edge** (caché estático HTML + assets) → **Next.js Server** (Middleware → API Routes) → **Base de datos / CMS**.  
+- El flujo de renderizado sigue dos caminos:  
+  - **ISR**: HTML estático pre‑generado + revalidación en background.  
+  - **SSR**: HTML generado on‑demand para páginas altamente dinámicas.  
+- **next/image** intercepta peticiones de imágenes, sirve versiones optimizadas (WebP, AVIF) y gestiona placeholders.  
+- **Dynamic Imports**: Cada página importa solo los componentes críticos; el resto se carga bajo demanda.  
 
-Para seguir este tutorial, necesitas:
-- Conocimientos básicos de JavaScript/TypeScript
-- Familiaridad con el ecosistema de Node.js
-- Editor de código (VS Code recomendado)
-- Terminal/línea de comandos
+### 2.4. Trade‑offs críticos  
 
-## Implementación Práctica
+| Decisión | Ventaja | Desventaja |
+|----------|---------|------------|
+| **ISR vs SSR** | ISR: menor tiempo de respuesta, menos carga de servidor. | ISR: datos pueden estar ligeramente desactualizados (hasta `revalidate`). |
+| **next/image con placeholders** | Mejora CLS y LCP al reservar espacio y cargar imágenes progresivamente. | Overhead de procesamiento de imágenes en build; requiere configuración de loader. |
+| **Edge Functions** | Latencia mínima, escalabilidad global. | Limitaciones de tiempo de ejecución y tamaño de bundle en el edge. |
+| **Dynamic import de componentes UI** | Reduce FID al cargar solo lo necesario. | Posible flash of unstyled content (FOUC) si no se gestiona correctamente. |
 
-Vamos a implementar Optimización de Core Web Vitals en Next.js paso a paso con ejemplos completos y funcionales.
+---  
 
-### Paso 1: Configuración Inicial
+## 3. Implementación práctica  
 
-Primero, configuramos el entorno básico:
+A continuación, presentaremos cinco evoluciones típicas que van de una solución *naïve* a una arquitectura **CWV‑ready**. Cada bloque incluye imports, tipos, manejo de errores y comentarios en español.
 
-```bash
-# Instalar dependencias necesarias
-npm install --save-dev [paquetes-relevantes]
+### 3.1. Optimización de imágenes  
 
-# Inicializar configuración
-npx [herramienta] init
+#### 3.1.1. Versión básica (uso de `<img>` tradicional)
+
+```tsx
+// pages/index.tsx
+import React from 'react';
+
+export default function HomePage() {
+  return (
+    <section>
+      <h1>Bienvenido a nuestro catálogo</h1>
+      {/* Imagen sin optimización ni reserva de espacio */}
+      <img src="/images/hero.jpg" alt="Producto destacado" />
+      <p>Descubre nuestras ofertas.</p>
+    </section>
+  );
+}
 ```
 
-### Paso 2: Implementación Básica
+*Problemas*: No hay lazy loading, la imagen se descarga a tamaño completo y puede generar CLS si el navegador tarda en calcular sus dimensiones.
 
-```javascript
-// Ejemplo básico de implementación
-export function implementacionBasica() {
-  // Configuración inicial
-  const config = {
-    opcion1: true,
-    opcion2: 'valor',
-    // Más opciones...
+#### 3.1.2. Versión intermedia (next/image con `layout="responsive"`)
+
+```tsx
+// pages/index.tsx
+import React from 'react';
+import Image from 'next/image';
+import path from 'path';
+
+export default function HomePage() {
+  return (
+    <section>
+      <h1>Bienvenido a nuestro catálogo</h1>
+      {/* next/image reserva espacio y sirve versión optimizada */}
+      <Image
+        src="/images/hero.jpg"
+        alt="Producto destacado"
+        width={1600}
+        height={900}
+        layout="responsive"
+        priority // carga temprana porque es hero
+      />
+      <p>Descubre nuestras ofertas.</p>
+    </section>
+  );
+}
+```
+
+*Mejoras*: `next/image` genera automáticamente WebP/AVIF, reserva espacio y permite prioridad. Aún falta un **placeholder** para evitar flashes de contenido blanco.
+
+#### 3.1.3. Versión optimizada (placeholder blur + lazy loading)
+
+```tsx
+// pages/index.tsx
+import React from 'react';
+import Image from 'next/image';
+import { GetStaticProps } from 'next';
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Obtiene la ruta de la versión blur (base64) para el placeholder.
+ * En producción se recomienda usar un loader externo (Imgix, Cloudinary).
+ */
+export const getStaticProps: GetStaticProps = async () => {
+  const placeholderPath = path.join(process.cwd(), 'public', 'images', 'hero-blur.jpg');
+  const placeholderBuffer = await fs.promises.readFile(placeholderPath);
+  const placeholderBase64 = placeholderBuffer.toString('base64');
+
+  return {
+    props: {
+      placeholder: `data:image/jpeg;base64,${placeholderBase64}`,
+    },
   };
+};
 
-  // Lógica principal
-  return procesarDatos(config);
-}
+type Props = {
+  placeholder: string;
+};
 
-function procesarDatos(config) {
-  // Implementación detallada
-  console.log('Procesando con:', config);
-  return { exito: true, data: [] };
-}
-```
-
-### Paso 3: Implementación Avanzada
-
-Para casos más complejos, podemos usar un enfoque más robusto:
-
-```javascript
-// Implementación avanzada con manejo de errores
-class GestorAvanzado {
-  constructor(opciones = {}) {
-    this.config = { ...opcionesPorDefecto, ...opciones };
-    this.inicializar();
-  }
-
-  inicializar() {
-    // Setup inicial
-    this.validarConfiguracion();
-    this.prepararRecursos();
-  }
-
-  async ejecutar() {
-    try {
-      const resultado = await this.procesamientoAsincrono();
-      return this.formatearResultado(resultado);
-    } catch (error) {
-      this.manejarError(error);
-      throw error;
-    }
-  }
-
-  validarConfiguracion() {
-    // Validaciones necesarias
-    if (!this.config.required) {
-      throw new Error('Configuración incompleta');
-    }
-  }
+export default function HomePage({ placeholder }: Props) {
+  return (
+    <section>
+      <h1>Bienvenido a nuestro catálogo</h1>
+      <Image
+        src="/images/hero.jpg"
+        alt="Producto destacado"
+        width={1600}
+        height={900}
+        layout="responsive"
+        placeholder="blur"
+        blurDataURL={placeholder}
+        priority // hero sigue siendo prioritaria
+      />
+      <p>Descubre nuestras ofertas.</p>
+    </section>
+  );
 }
 ```
 
-## Casos de Uso Reales
+*Ventajas*:  
+- **CLS** se elimina porque el espacio está reservado y el placeholder mantiene la proporción.  
+- **LCP** mejora al servir una versión optimizada y priorizada.  
+- El código incluye manejo de errores implícitos mediante `await fs.promises.readFile`; si falla, Next.js lanzará una excepción que detendrá la compilación, evitando deploys rotos.
 
-Veamos cómo aplicar Optimización de Core Web Vitals en Next.js en escenarios del mundo real:
+---
 
-### Caso 1: Aplicación E-commerce
+### 3.2. Estrategia de datos: de SSR a ISR + SWR  
 
-En una tienda online, Optimización de Core Web Vitals en Next.js se usa para optimizar el checkout:
+#### 3.2.1. SSR con `getServerSideProps` (naïve)
 
-```javascript
-// Implementación para e-commerce
-async function procesarPedido(carrito, usuario) {
-  // Validar stock disponible
-  const stockValido = await validarInventario(carrito);
-  
-  if (!stockValido) {
-    throw new Error('Productos sin stock');
-  }
+```tsx
+// pages/product/[id].tsx
+import { GetServerSideProps, NextPage } from 'next';
+import { useRouter } from 'next/router';
+import axios from 'axios';
 
-  // Calcular total con impuestos
-  const total = calcularTotal(carrito, usuario.ubicacion);
-  
-  // Procesar pago
-  return await procesarPago(total, usuario.metodoPago);
-}
-```
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+};
 
-### Caso 2: Dashboard Analítico
+type Props = {
+  product: Product;
+};
 
-Para dashboards, Optimización de Core Web Vitals en Next.js mejora la visualización de datos en tiempo real.
-
-### Caso 3: API REST
-
-En APIs, Optimización de Core Web Vitals en Next.js optimiza el manejo de solicitudes y respuestas.
-
-## Mejores Prácticas
-
-### Performance y Optimización
-
-✅ **Hacer**:
-- Cachear resultados cuando sea posible
-- Usar lazy loading para recursos pesados
-- Implementar paginación en listas grandes
-- Monitorear métricas de rendimiento
-
-❌ **Evitar**:
-- Cargar datos innecesarios
-- Múltiples re-renders
-- Bloquear el thread principal
-- Ignorar memory leaks
-
-### Seguridad
-
-💡 **Pro Tip**: Siempre valida y sanitiza inputs del usuario.
-
-```javascript
-// Validación de entrada segura
-function sanitizarInput(input) {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Prevenir XSS
-    .slice(0, 1000); // Limitar tamaño
-}
-```
-
-## Errores Comunes y Soluciones
-
-### Error 1: No manejar estados de carga
-
-**Problema**: La UI se congela mientras se cargan datos.
-
-**Solución**: Implementar estados de loading:
-
-```javascript
-const [loading, setLoading] = useState(false);
-const [data, setData] = useState(null);
-
-async function cargarDatos() {
-  setLoading(true);
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const { id } = context.params!;
   try {
-    const resultado = await fetch('/api/data');
-    setData(resultado);
-  } finally {
-    setLoading(false);
+    const { data } = await axios.get<Product>(`https://api.example.com/products/${id}`);
+    return { props: { product: data } };
+  } catch (error) {
+    // Devolver 404 si el producto no existe
+    return { notFound: true };
+  }
+};
+
+const ProductPage: NextPage<Props> = ({ product }) => {
+  const router = useRouter();
+  if (router.isFallback) return <p>Cargando...</p>;
+
+  return (
+    <article>
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
+      <strong>${product.price}</strong>
+    </article>
+  );
+};
+
+export default ProductPage;
+```
+
+*Problemas*: Cada visita genera una petición al API, aumentando tiempo de respuesta (LCP) y carga del servidor. Además, el bundle incluye `axios` aunque solo se usa en el servidor.
+
+#### 3.2.2. ISR con `getStaticProps` + revalidación
+
+```tsx
+// pages/product/[id].tsx
+import { GetStaticPaths, GetStaticProps, NextPage } from 'next';
+import axios from 'axios';
+import { useRouter } from 'next/router';
+import { SWRConfig } from 'swr';
+import useSWR from 'swr';
+
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+};
+
+type Props = {
+  fallback: { [key: string]: Product };
+};
+
+const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  // Pre‑generar solo los productos más populares
+  const { data: popular } = await axios.get<string[]>(
+    'https://api.example.com/products/popular-ids'
+  );
+  const paths = popular.map((id) => ({ params: { id } }));
+  return { paths, fallback: true };
+};
+
+export const getStaticProps: GetStaticProps<Props> = async (context) => {
+  const { id } = context.params!;
+  try {
+    const { data } = await axios.get<Product>(`https://api.example.com/products/${id}`);
+    return {
+      props: {
+        fallback: {
+          [`/api/products/${id}`]: data,
+        },
+      },
+      revalidate: 60, // 1 minuto de frescura
+    };
+  } catch {
+    return { notFound: true };
+  }
+};
+
+const ProductPage: NextPage<Props> = ({ fallback }) => {
+  const router = useRouter();
+  const { id } = router.query as { id: string };
+  const { data: product, error } = useSWR<Product>(`/api/products/${id}`, fetcher, {
+    fallbackData: fallback[`/api/products/${id}`],
+  });
+
+  if (error) return <p>Error al cargar el producto.</p>;
+  if (!product) return <p>Cargando...</p>;
+
+  return (
+    <article>
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
+      <strong>${product.price}</strong>
+    </article>
+  );
+};
+
+export default ProductPage;
+```
+
+*Mejoras*:  
+- **LCP** se reduce porque el HTML está pre‑generado y servido desde CDN.  
+- **FID** disminuye al cargar solo el bundle necesario; el resto de datos se actualiza en background con SWR.  
+- **Revalidación** garantiza frescura sin sacrificar rendimiento.
+
+#### 3.2.3. Versión final con Edge Middleware y caché de API
+
+```tsx
+// middleware.ts (Edge)
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// Cachear respuestas de API por 30 segundos en el edge
+export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+
+  // Solo interceptar rutas de API de productos
+  if (url.pathname.startsWith('/api/products/')) {
+    const response = await fetch(request);
+    const cloned = response.clone();
+
+    // Añadir encabezados de cache-control
+    const headers = new Headers(cloned.headers);
+    headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+
+    return new NextResponse(cloned.body, {
+      status: cloned.status,
+      headers,
+    });
+  }
+
+  // Pasar el resto de peticiones sin modificar
+  return NextResponse.next();
+}
+```
+
+```tsx
+// pages/api/products/[id].ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import axios from 'axios';
+
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Product | { error: string }>
+) {
+  const { id } = req.query;
+  if (typeof id !== 'string') {
+    res.status(400).json({ error: 'ID inválido' });
+    return;
+  }
+
+  try {
+    const { data } = await axios.get<Product>(`https://api.example.com/products/${id}`);
+    // Responder con caché controlado por middleware
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=60');
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(404).json({ error: 'Producto no encontrado' });
   }
 }
 ```
 
-### Error 2: Ignorar compatibilidad de navegadores
+*Impacto*: El **Edge Middleware** sirve respuestas de API directamente desde la capa de borde, reduciendo latencia de red (LCP) y evitando sobrecargar el servidor de origen. Además, la estrategia de **stale‑while‑revalidate** mantiene la disponibilidad incluso cuando la origin está bajo carga.
 
-**Problema**: Código que solo funciona en Chrome.
+---
 
-**Solución**: Usar polyfills y feature detection.
+### 3.3. Reducción del FID mediante carga diferida de JavaScript  
 
-### Error 3: No optimizar para móviles
+#### 3.3.1. Bundle monolítico (naïve)
 
-**Problema**: La experiencia en móvil es deficiente.
+```tsx
+// pages/dashboard.tsx
+import React, { useEffect, useState } from 'react';
+import Chart from 'chart.js';
+import { getAnalytics } from '../lib/analytics';
 
-**Solución**: Diseño responsive y touch-friendly desde el inicio.
+export default function Dashboard() {
+  const [data, setData] = useState<number[]>([]);
 
-## Recursos Adicionales
-
-Para profundizar más en Optimización de Core Web Vitals en Next.js, consulta:
-
-- 📚 Documentación oficial
-- 🛠️ Herramientas de desarrollo recomendadas
-- 💻 Repositorios de ejemplo en GitHub
-- 🎓 Cursos y tutoriales avanzados
-
-## Conclusión
-
-Optimización de Core Web Vitals en Next.js es una habilidad esencial en el desarrollo web moderno. A lo largo de este artículo, hemos cubierto:
-
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica con ejemplos completos
-- Casos de uso del mundo real
-- Mejores prácticas de performance y seguridad
-- Errores comunes y cómo evitarlos
-
-La clave está en practicar constantemente y mantenerse actualizado con las últimas tendencias del ecosistema.
-
-### Próximos Pasos
-
-1. Implementa los ejemplos en tu propio proyecto
-2. Experimenta con diferentes configuraciones
-3. Mide el impacto en performance
-4. Comparte tus resultados con la comunidad
-
-Si necesitas ayuda profesional para implementar Optimización de Core Web Vitals en Next.js en tu proyecto, o requieres consultoría especializada en desarrollo web, optimización de performance, arquitectura de aplicaciones o integración de nuevas tecnologías, no dudes en contactarme. Ofrezco servicios de desarrollo full-stack con React, Next.js, WordPress, y soluciones personalizadas para cada necesidad.
+  useEffect(() => {
+    // Carga pesada en el cliente
+    getAnalytics().then(setData);
+    const ctx = document.getElementById('my

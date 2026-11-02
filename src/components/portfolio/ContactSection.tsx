@@ -49,6 +49,7 @@ export default function ContactSection() {
             }}
             className={`p-3 rounded-full text-gray-300 transition-colors ${link.color} ${link.bg}`}
             title={link.name}
+            aria-label={link.name}
           >
             <Icon className="w-6 h-6" />
           </motion.a>

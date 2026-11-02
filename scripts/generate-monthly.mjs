@@ -12,7 +12,8 @@ function pickTopic() {
 
 async function main() {
   const topic = pickTopic()
-  const provider = process.env.AI_PROVIDER || 'gemini'
+  const { resolveDefaultProvider } = await import('../src/services/ai.mjs')
+  const provider = resolveDefaultProvider()
   console.log('Generando post mensual')
   console.log('Tema:', topic)
   console.log('Proveedor IA:', provider)

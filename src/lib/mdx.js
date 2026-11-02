@@ -46,7 +46,7 @@ export const getPostBySlug = async (slug, lang = 'es') => {
     } else if (fs.existsSync(esPath)) {
         mdxSource = fs.readFileSync(esPath, 'utf-8')
     } else {
-        return { content: '', frontmatter: { slug: cleanSlug, title: cleanSlug, date: '', tags: [] } }
+        return null
     }
     const { data, content } = matter(mdxSource)
     return {

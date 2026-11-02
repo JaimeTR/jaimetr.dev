@@ -1,10 +1,7 @@
 ---
-title: Estrategias de caching en React y SWR
+title: Caching Strategies in React and SWR
 date: '2025-12-24'
-description: >-
-  ## Introducción a Estrategias de caching en React y SWR En el desarrollo web
-  moderno, Estrategias de caching en React y SWR se ha convertido en un aspecto
-  fund…
+description: 'architecture, production code, real-world cases and anti-patterns.'
 toc: true
 tags:
   - desarrollo web
@@ -14,254 +11,453 @@ tags:
   - seo
   - ia
   - gemini
-cover: /images/og.png
+cover: /images/posts/estrategias-de-caching-en-react-y-swr.webp
 author: jaimetrdev
-featured_order: 14
+---
+## 1. Contextual Introduction  
+
+Over the past five years, load speed has become a decisive factor for user retention and SEO ranking. According to the *Web Almanac 2023* from HTTP Archive, **70 % of visitors abandon a page if it takes more than 3 s to appear**. In React environments, where most of the content is generated on the client, the latency of requests to external APIs is usually the main bottleneck.
+
+**Caching** is the technique that allows reuse of already‑fetched data, reducing the number of round‑trips and, consequently, improving metrics such as **First Contentful Paint (FCP)** and **Time to Interactive (TTI)**. Within the React ecosystem, the **SWR** (Stale‑While‑Revalidate) library from Vercel has gained traction because it combines a declarative fetching model with an intelligent cache engine that respects HTTP caching principles.
+
+Solving the caching problem today is critical for three reasons:  
+
+1. **User experience** – Every millisecond counts for the perception of smoothness.  
+2. **Operational costs** – Fewer backend requests reduce cloud resource consumption.  
+3. **Scalability** – A good cache design lets the application maintain performance under high concurrency without needing to horizontally scale the API.
+
+In this article we will dive into **React‑specific caching strategies with SWR**, covering everything from theoretical fundamentals to production‑ready code examples, business use cases, and anti‑patterns to avoid.
+
 ---
 
-## Introducción a Estrategias de caching en React y SWR
+## 2. Fundamentals and Architecture  
 
-En el desarrollo web moderno, Estrategias de caching en React y SWR se ha convertido en un aspecto fundamental que todo desarrollador debe dominar. Este artículo explora de manera exhaustiva todos los aspectos relacionados con Estrategias de caching en React y SWR, desde los fundamentos básicos hasta técnicas avanzadas de implementación.
+### 2.1. Web Caching Principles  
 
-En las siguientes secciones, abordaremos:
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica paso a paso
-- Casos de uso del mundo real
-- Mejores prácticas y optimizaciones
-- Errores comunes y cómo evitarlos
+| Principle | Description |
+|-----------|-------------|
+| **Cache‑Aside** | The application controls when to read/write the cache. Ideal for data that changes infrequently. |
+| **Write‑Through** | Every write updates both the cache and the data source simultaneously. Guarantees consistency at the cost of latency. |
+| **Stale‑While‑Revalidate** | Serves “stale” data while updating it in the background. Balances freshness and speed (the model implemented by SWR). |
 
-### ¿Por qué es importante Estrategias de caching en React y SWR?
+### 2.2. Why SWR?  
 
-La importancia de Estrategias de caching en React y SWR radica en varios factores críticos:
+SWR is based on the **Stale‑While‑Revalidate** algorithm from HTTP/1.1. Each call to `useSWR(key, fetcher)` returns:  
 
-1. **Mejora la experiencia del usuario**: Implementar Estrategias de caching en React y SWR correctamente resulta en una mejor UX.
-2. **Optimiza el rendimiento**: Reduce tiempos de carga y mejora métricas de performance.
-3. **Aumenta la visibilidad SEO**: Los buscadores priorizan sitios que implementan Estrategias de caching en React y SWR adecuadamente.
-4. **Facilita el mantenimiento**: Código bien estructurado es más fácil de mantener a largo plazo.
+1. **Cached data** (if present).  
+2. **Revalidation state** (if an update is in progress).  
+3. **Errors** (if the fetch failed).  
 
-## Fundamentos Técnicos
+The internal engine maintains a **global map of key → value** and controls expiration via **revalidation intervals**, **focus revalidation**, and **revalidation on reconnect**. It also supports **mutations** (local updates) and **manual revalidations**, making it suitable for highly interactive applications (e‑commerce, dashboards, SaaS).
 
-Antes de profundizar en la implementación, es crucial entender los conceptos fundamentales:
+### 2.3. Conceptual Diagram (described in text)  
 
-### Conceptos Clave
+1. **React component** calls `useSWR(key, fetcher)`.  
+2. **SWR Cache Layer** looks for `key` in the **global store** (Map).  
+   - If found → returns data immediately.  
+   - If not → executes `fetcher`.  
+3. **Fetcher** (async function) makes the HTTP request (axios/fetch).  
+4. **Response** is stored in the cache with **metadata** (timestamp, ttl).  
+5. **Revalidation** is triggered by:  
+   - **focus** (browser window regains focus).  
+   - **interval** (optional, every N ms).  
+   - **mutate** (manual update).  
+6. **Subscribed components** receive the updated data via React state.
 
-**Definición**: Estrategias de caching en React y SWR se refiere a [concepto técnico relevante al tema].
+This flow allows **all components that share the same key** to read from the same cache, avoiding duplicate requests.
 
-**Componentes principales**:
-- Configuración inicial y setup
-- Estructura de datos y patrones de diseño
-- Integración con otras tecnologías
-- Testing y validación
+### 2.4. Design Decisions and Trade‑offs  
 
-### Prerequisitos
+| Decision | Advantage | Disadvantage |
+|----------|-----------|--------------|
+| **Static TTL** (e.g., 5 min) | Simplicity, predictability | Possible staleness of critical data |
+| **Dynamic TTL based on headers** | Freshness aligned with backend policy | Parsing complexity and more code |
+| **Global cache (SWR) vs. local cache (React context)** | Automatic sharing between components | Potential state contamination if not well segmented |
+| **Persistence in IndexedDB** | Cache survives page reloads | Serialization overhead and possible UI blocking |
 
-Para seguir este tutorial, necesitas:
-- Conocimientos básicos de JavaScript/TypeScript
-- Familiaridad con el ecosistema de Node.js
-- Editor de código (VS Code recomendado)
-- Terminal/línea de comandos
+---
 
-## Implementación Práctica
+## 3. Practical Implementation  
 
-Vamos a implementar Estrategias de caching en React y SWR paso a paso con ejemplos completos y funcionales.
+Below are **five examples** that show the evolution from a basic fetching solution to a robust architecture with SWR, error handling, smart revalidation, and persistence.
 
-### Paso 1: Configuración Inicial
+### 3.1. Naïve approach: `fetch` inside the component  
 
-Primero, configuramos el entorno básico:
+```tsx
+// src/components/ProductListNaive.tsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-```bash
-# Instalar dependencias necesarias
-npm install --save-dev [paquetes-relevantes]
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
 
-# Inicializar configuración
-npx [herramienta] init
+/**
+ * Basic example: fetch in useEffect, without caching.
+ * Every component render triggers the request again.
+ */
+export const ProductListNaive: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get<Product[]>('/api/products');
+        setProducts(response.data);
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response) {
+          setError(`Error ${err.response.status}: ${err.response.statusText}`);
+        } else {
+          setError('Unexpected error while loading products');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []); // Empty dependency array, but runs on every mount
+
+  if (loading) return <p>Loading products...</p>;
+  if (error) return <p className="error">{error}</p>;
+
+  return (
+    <ul>
+      {products.map(p => (
+        <li key={p.id}>
+          {p.name} - ${p.price.toFixed(2)}
+        </li>
+      ))}
+    </ul>
+  );
+};
 ```
 
-### Paso 2: Implementación Básica
+*Detected issues*:  
+- **Duplicate request** if the component unmounts and mounts again.  
+- No **cache** nor **revalidation**.  
+- Rudimentary error handling.
 
-```javascript
-// Ejemplo básico de implementación
-export function implementacionBasica() {
-  // Configuración inicial
-  const config = {
-    opcion1: true,
-    opcion2: 'valor',
-    // Más opciones...
+---
+
+### 3.2. First caching layer: SWR with fixed TTL  
+
+```tsx
+// src/hooks/useProducts.ts
+import useSWR, { SWRConfiguration } from 'swr';
+import axios, { AxiosResponse } from 'axios';
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+/**
+ * Typed fetcher that returns the data directly.
+ * SWR will use it to store the result in its global cache.
+ */
+const fetcher = async (url: string): Promise<Product[]> => {
+  const response: AxiosResponse<Product[]> = await axios.get(url);
+  return response.data;
+};
+
+/**
+ * Reusable hook with a 5‑minute TTL.
+ */
+export const useProducts = (config?: SWRConfiguration) => {
+  const { data, error, mutate, isValidating } = useSWR<Product[]>(
+    '/api/products',
+    fetcher,
+    {
+      // 5 minutes of stale time → data served without immediate revalidation
+      staleTime: 5 * 60 * 1000,
+      // Revalidate on focus to keep freshness
+      revalidateOnFocus: true,
+      // Optional: revalidate every 10 minutes in the background
+      refreshInterval: 10 * 60 * 1000,
+      ...config,
+    }
+  );
+
+  return {
+    products: data,
+    isLoading: !error && !data,
+    isError: error,
+    mutate,
+    isValidating,
+  };
+};
+```
+
+```tsx
+// src/components/ProductListSWR.tsx
+import React from 'react';
+import { useProducts } from '../hooks/useProducts';
+
+export const ProductListSWR: React.FC = () => {
+  const { products, isLoading, isError } = useProducts();
+
+  if (isLoading) return <p>Loading products...</p>;
+  if (isError) return <p className="error">Failed to load products.</p>;
+
+  return (
+    <ul>
+      {products!.map(p => (
+        <li key={p.id}>
+          {p.name} - ${p.price.toFixed(2)}
+        </li>
+      ))}
+    </ul>
+  );
+};
+```
+
+**Advantages over the naïve version**:  
+- **Global cache** prevents repeated requests across components.  
+- **TTL** controls freshness.  
+- **Automatic revalidation** when the window regains focus.
+
+---
+
+### 3.3. Cache with deduplication and error retry  
+
+```tsx
+// src/hooks/useProductsAdvanced.ts
+import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { Product } from './useProducts';
+
+const fetcher = async (url: string): Promise<Product[]> => {
+  const response: AxiosResponse<Product[]> = await axios.get(url, {
+    // Timeout to avoid prolonged hangs
+    timeout: 8000,
+  });
+  return response.data;
+};
+
+/**
+ * Advanced configuration:
+ * - dedupingInterval: 2 s to avoid simultaneous identical requests.
+ * - retryOnError: 3 attempts with exponential backoff.
+ * - onErrorRetry: custom logic to not retry 404.
+ */
+export const useProductsAdvanced = (
+  config?: SWRConfiguration
+): SWRResponse<Product[], AxiosError> => {
+  const baseConfig: SWRConfiguration = {
+    staleTime: 2 * 60 * 1000,
+    revalidateOnFocus: true,
+    dedupingInterval: 2000,
+    errorRetryCount: 3,
+    errorRetryInterval: 1500,
+    onErrorRetry: (err, key, config, revalidate, opts) => {
+      // Do not retry if the error is 404 (resource not found)
+      if (err?.response?.status === 404) return;
+      // Retry with exponential backoff
+      setTimeout(() => revalidate({ retryCount: opts.retryCount + 1 }), opts.retryCount * 1500);
+    },
+    ...config,
   };
 
-  // Lógica principal
-  return procesarDatos(config);
-}
-
-function procesarDatos(config) {
-  // Implementación detallada
-  console.log('Procesando con:', config);
-  return { exito: true, data: [] };
-}
+  return useSWR<Product[], AxiosError>('/api/products', fetcher, baseConfig);
+};
 ```
 
-### Paso 3: Implementación Avanzada
+```tsx
+// src/components/ProductListAdvanced.tsx
+import React from 'react';
+import { useProductsAdvanced } from '../hooks/useProductsAdvanced';
+import { Product } from '../hooks/useProducts';
 
-Para casos más complejos, podemos usar un enfoque más robusto:
+export const ProductListAdvanced: React.FC = () => {
+  const { data, error, isValidating, mutate } = useProductsAdvanced();
 
-```javascript
-// Implementación avanzada con manejo de errores
-class GestorAvanzado {
-  constructor(opciones = {}) {
-    this.config = { ...opcionesPorDefecto, ...opciones };
-    this.inicializar();
+  if (!data && !error) return <p>Loading products...</p>;
+  if (error) {
+    const status = error.response?.status;
+    const msg = status === 404 ? 'Product not found' : 'Error loading data';
+    return <p className="error">{msg}</p>;
   }
 
-  inicializar() {
-    // Setup inicial
-    this.validarConfiguracion();
-    this.prepararRecursos();
-  }
+  const handleRefresh = () => mutate(); // Force manual revalidation
 
-  async ejecutar() {
-    try {
-      const resultado = await this.procesamientoAsincrono();
-      return this.formatearResultado(resultado);
-    } catch (error) {
-      this.manejarError(error);
-      throw error;
-    }
-  }
-
-  validarConfiguracion() {
-    // Validaciones necesarias
-    if (!this.config.required) {
-      throw new Error('Configuración incompleta');
-    }
-  }
-}
+  return (
+    <>
+      <button onClick={handleRefresh} disabled={isValidating}>
+        {isValidating ? 'Updating…' : 'Refresh list'}
+      </button>
+      <ul>
+        {data!.map((p: Product) => (
+          <li key={p.id}>
+            {p.name} - ${p.price.toFixed(2)}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+};
 ```
 
-## Casos de Uso Reales
+**Key improvements**:  
+- **Deduplication** avoids multiple identical requests within a 2‑second window.  
+- **Retry with backoff** improves resilience against transient failures.  
+- **Manual `mutate`** lets you invalidate the cache on business events (e.g., product creation).
 
-Veamos cómo aplicar Estrategias de caching en React y SWR en escenarios del mundo real:
+---
 
-### Caso 1: Aplicación E-commerce
+### 3.4. Persistence in *IndexedDB* with `swr` + `swr-async`  
 
-En una tienda online, Estrategias de caching en React y SWR se usa para optimizar el checkout:
+For applications that require **offline‑first** behavior or want to keep data across reloads, we can extend SWR with a persistence layer. We’ll use the `idb-keyval` library to interact with IndexedDB.
 
-```javascript
-// Implementación para e-commerce
-async function procesarPedido(carrito, usuario) {
-  // Validar stock disponible
-  const stockValido = await validarInventario(carrito);
-  
-  if (!stockValido) {
-    throw new Error('Productos sin stock');
+```tsx
+// src/lib/cache/persistedCache.ts
+import { Cache } from 'swr';
+import { get, set } from 'idb-keyval';
+
+/**
+ * Implementation of SWR's Cache interface that persists
+ * each key in IndexedDB. JSON.stringify is used for serialization.
+ */
+export class IndexedDBCache implements Cache {
+  async get(key: string) {
+    const raw = await get<string>(key);
+    return raw ? JSON.parse(raw) : undefined;
   }
 
-  // Calcular total con impuestos
-  const total = calcularTotal(carrito, usuario.ubicacion);
-  
-  // Procesar pago
-  return await procesarPago(total, usuario.metodoPago);
-}
-```
+  async set(key: string, value: any) {
+    await set(key, JSON.stringify(value));
+  }
 
-### Caso 2: Dashboard Analítico
-
-Para dashboards, Estrategias de caching en React y SWR mejora la visualización de datos en tiempo real.
-
-### Caso 3: API REST
-
-En APIs, Estrategias de caching en React y SWR optimiza el manejo de solicitudes y respuestas.
-
-## Mejores Prácticas
-
-### Performance y Optimización
-
-✅ **Hacer**:
-- Cachear resultados cuando sea posible
-- Usar lazy loading para recursos pesados
-- Implementar paginación en listas grandes
-- Monitorear métricas de rendimiento
-
-❌ **Evitar**:
-- Cargar datos innecesarios
-- Múltiples re-renders
-- Bloquear el thread principal
-- Ignorar memory leaks
-
-### Seguridad
-
-💡 **Pro Tip**: Siempre valida y sanitiza inputs del usuario.
-
-```javascript
-// Validación de entrada segura
-function sanitizarInput(input) {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Prevenir XSS
-    .slice(0, 1000); // Limitar tamaño
-}
-```
-
-## Errores Comunes y Soluciones
-
-### Error 1: No manejar estados de carga
-
-**Problema**: La UI se congela mientras se cargan datos.
-
-**Solución**: Implementar estados de loading:
-
-```javascript
-const [loading, setLoading] = useState(false);
-const [data, setData] = useState(null);
-
-async function cargarDatos() {
-  setLoading(true);
-  try {
-    const resultado = await fetch('/api/data');
-    setData(resultado);
-  } finally {
-    setLoading(false);
+  async delete(key: string) {
+    await set(key, undefined);
   }
 }
 ```
 
-### Error 2: Ignorar compatibilidad de navegadores
+```tsx
+// src/hooks/useProductsPersisted.ts
+import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
+import axios, { AxiosResponse } from 'axios';
+import { IndexedDBCache } from '../lib/cache/persistedCache';
+import { Product } from './useProducts';
 
-**Problema**: Código que solo funciona en Chrome.
+const fetcher = async (url: string): Promise<Product[]> => {
+  const resp: AxiosResponse<Product[]> = await axios.get(url);
+  return resp.data;
+};
 
-**Solución**: Usar polyfills y feature detection.
+const persistedCache = new IndexedDBCache();
 
-### Error 3: No optimizar para móviles
+export const useProductsPersisted = (
+  config?: SWRConfiguration
+): SWRResponse<Product[], any> => {
+  const baseConfig: SWRConfiguration = {
+    cache: persistedCache,
+    // If there is data in IndexedDB, use it immediately
+    fallbackData: undefined,
+    // Always revalidate on mount, but don’t block the UI
+    revalidateOnMount: true,
+    // 10‑minute TTL for persisted data
+    staleTime: 10 * 60 * 1000,
+    ...config,
+  };
 
-**Problema**: La experiencia en móvil es deficiente.
+  return useSWR<Product[]>('/api/products', fetcher, baseConfig);
+};
+```
 
-**Solución**: Diseño responsive y touch-friendly desde el inicio.
+```tsx
+// src/components/ProductListPersisted.tsx
+import React from 'react';
+import { useProductsPersisted } from '../hooks/useProductsPersisted';
 
-## Recursos Adicionales
+export const ProductListPersisted: React.FC = () => {
+  const { data, error, isValidating, mutate } = useProductsPersisted();
 
-Para profundizar más en Estrategias de caching en React y SWR, consulta:
+  if (!data && !error) return <p>Loading products (offline fallback)…</p>;
+  if (error) return <p className="error">Failed to load data.</p>;
 
-- 📚 Documentación oficial
-- 🛠️ Herramientas de desarrollo recomendadas
-- 💻 Repositorios de ejemplo en GitHub
-- 🎓 Cursos y tutoriales avanzados
+  return (
+    <>
+      <button onClick={() => mutate()} disabled={isValidating}>
+        {isValidating ? 'Synchronizing…' : 'Synchronize'}
+      </button>
+      <ul>
+        {data!.map(p => (
+          <li key={p.id}>
+            {p.name} - ${p.price.toFixed(2)}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+};
+```
 
-## Conclusión
+**Rationale**:  
+- **Persistence** lets the UI display data even when offline, improving Core Web Vitals (First Input Delay).  
+- SWR’s **Cache interface** is extensible; by implementing `IndexedDBCache` we keep the original API unchanged for components.
 
-Estrategias de caching en React y SWR es una habilidad esencial en el desarrollo web moderno. A lo largo de este artículo, hemos cubierto:
+---
 
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica con ejemplos completos
-- Casos de uso del mundo real
-- Mejores prácticas de performance y seguridad
-- Errores comunes y cómo evitarlos
+### 3.5. Distributed cache with *SWR* + *Supabase Edge Functions*  
 
-La clave está en practicar constantemente y mantenerse actualizado con las últimas tendencias del ecosistema.
+In enterprise scenarios with high concurrency, it can be useful for the cache layer to be **shared across instances** (e.g., using Redis). Supabase allows creating *Edge Functions* that act as a smart proxy with Redis caching.
 
-### Próximos Pasos
+```ts
+// supabase/functions/cacheProducts.ts (Node.js + TypeScript)
+import { serve } from 'std/server';
+import { createClient } from '@supabase/supabase-js';
+import Redis from 'ioredis';
 
-1. Implementa los ejemplos en tu propio proyecto
-2. Experimenta con diferentes configuraciones
-3. Mide el impacto en performance
-4. Comparte tus resultados con la comunidad
+const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
+const redis = new Redis({
+  host: Deno.env.get('REDIS_HOST'),
+  port: Number(Deno.env.get('REDIS_PORT')),
+  password: Deno.env.get('REDIS_PASSWORD'),
+});
 
-Si necesitas ayuda profesional para implementar Estrategias de caching en React y SWR en tu proyecto, o requieres consultoría especializada en desarrollo web, optimización de performance, arquitectura de aplicaciones o integración de nuevas tecnologías, no dudes en contactarme. Ofrezco servicios de desarrollo full-stack con React, Next.js, WordPress, y soluciones personalizadas para cada necesidad.
+serve(async (req) => {
+  const cacheKey = 'products:all';
+  // First try to read from Redis
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    return new Response(cached, {
+      headers: { 'Content-Type': 'application/json', 'x-cache': 'HIT' },
+    });
+  }
+
+  // If not in cache, fetch from Supabase Postgres
+  const { data, error } = await supabase.from('products').select('*');
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+
+  const payload = JSON.stringify(data);
+  // Store result in Redis with a TTL of 5 minutes
+  await redis.setex(cacheKey, 300, payload);
+
+  return new Response(payload, {
+    headers: { 'Content-Type': 'application/json', 'x-cache': 'MISS' },
+  });
+});
+```
+
+**How to consume it from the React app**  
+
+```tsx
+// src/hooks/useProductsDistributed.ts
+import useSWR, { SWRConfiguration } from 'swr';
+import axios from 'axios';
+import { Product } from './useProducts';
+
+const fetcher = (url: string) => axios.get<Product[]>(url).then(res => res.data);
+
+export const useProductsDistributed = (config?: SWRConfiguration) => {
+  return useSWR<Product[]>('https://YOUR_SUPABASE_PROJECT.supabase.co/functions/v1/cacheProducts', fetcher, {
+    // Keep data for 5 minutes; the Edge Function will refresh the Redis entry
+    staleTime

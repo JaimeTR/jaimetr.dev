@@ -1,8 +1,19 @@
 #!/usr/bin/env node
 // Script CLI para generar un post MDX con IA y guardarlo en src/posts
 
-import { generateBlogMdx, writePost } from '../src/services/ai.mjs'
+import fs from 'fs'
+import path from 'path'
+import matter from 'gray-matter'
+import { generateBlogMdx, writePost, resolveDefaultProvider } from '../src/services/ai.mjs'
 import { generateCover } from '../src/services/cover.mjs'
+
+function patchCover(filePath, coverPath) {
+  if (!fs.existsSync(filePath)) return
+  const raw = fs.readFileSync(filePath, 'utf-8')
+  const { data, content } = matter(raw)
+  data.cover = coverPath
+  fs.writeFileSync(filePath, matter.stringify(content, data), 'utf-8')
+}
 
 async function main() {
   const args = process.argv.slice(2)
@@ -12,7 +23,7 @@ async function main() {
   }
 
   // Parseo de banderas
-  let provider = process.env.AI_PROVIDER || 'gemini'
+  let provider = resolveDefaultProvider()
   let language = 'both' // por defecto genera EN ambos idiomas
   const topicParts = []
   for (let i = 0; i < args.length; i++) {
@@ -34,7 +45,10 @@ async function main() {
   console.log('Idioma(s):', language)
 
   const { slug, mdx, title, tags } = await generateBlogMdx({ topic, provider })
-  
+
+  const esPath = path.join(process.cwd(), 'src', 'posts', `${slug}.mdx`)
+  const enPath = path.join(process.cwd(), 'src', 'posts', `${slug}.en.mdx`)
+
   // Generar versión en español
   if (language === 'es' || language === 'both') {
     const esFile = writePost({ slug, mdx, language: 'es' })
@@ -51,6 +65,12 @@ async function main() {
 
   const coverPath = await generateCover({ slug, title, tags })
   console.log('✅ Portada generada en:', coverPath)
+
+  // Antes esto se generaba pero nunca se escribía de vuelta al frontmatter,
+  // dejando 'cover: /images/og.png' como placeholder permanente en ambos idiomas.
+  patchCover(esPath, coverPath)
+  patchCover(enPath, coverPath)
+
   console.log('\n✨ Artículos creados exitosamente en ambos idiomas')
 }
 

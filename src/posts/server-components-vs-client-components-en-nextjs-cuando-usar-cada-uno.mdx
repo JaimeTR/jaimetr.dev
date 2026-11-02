@@ -1,0 +1,380 @@
+---
+title: 'Server Components vs Client Components en Next.js: cuándo usar cada uno'
+date: '2026-08-25'
+description: >-
+  En los últimos años Next.js se ha consolidado como la solución de referencia
+  para aplicaciones React que requieren renderizado híbrido, SEO sólido y una.
+toc: true
+tags:
+  - next.js
+  - javascript
+  - typescript
+cover: >-
+  /images/posts/server-components-vs-client-components-en-nextjs-cuando-usar-cada-uno.webp
+author: jaimetrdev
+---
+
+## 1. Introducción contextual
+
+En los últimos años **Next.js** se ha consolidado como la solución de referencia para aplicaciones React que requieren renderizado híbrido, SEO sólido y una experiencia de usuario comparable a una SPA tradicional. La llegada de **Server Components (SC)** en la versión 13, junto con los ya maduros **Client Components (CC)**, ha abierto un nuevo espacio de decisiones arquitectónicas que impactan directamente en la latencia percibida, el consumo de recursos del servidor y la mantenibilidad del código.
+
+Según el *State of JavaScript 2024*, el 68 % de los equipos que usan React han migrado al menos una parte de su stack a Next.js, y el 42 % menciona la gestión de componentes como su principal reto de rendimiento. En un contexto donde **Core Web Vitals** son un factor determinante para la conversión (una mejora de 0.1 en LCP puede incrementar en un 8 % la tasa de conversión), entender cuándo delegar la renderización al servidor y cuándo mantenerla en el cliente es crítico.
+
+Históricamente, React ha sido exclusivamente **client‑side**, obligando a los desarrolladores a cargar la lógica completa en el navegador. Con la introducción de **SSR** y **Static Generation**, se mitigó parte del problema, pero la carga de JavaScript seguía siendo alta. **Server Components** permiten ejecutar código React en el servidor sin enviarlo al cliente, reduciendo dramáticamente el bundle y permitiendo acceso directo a recursos backend (bases de datos, APIs internas) sin exponer credenciales. Por el contrario, **Client Components** siguen siendo necesarios para interactividad, suscripciones en tiempo real y cualquier cosa que dependa del estado del navegador.
+
+Resolver este dilema hoy no es solo cuestión de rendimiento; es una decisión de arquitectura que afecta la **seguridad**, la **escalabilidad** y la **experiencia de desarrollo**. A lo largo de este artículo, desglosaremos los conceptos, mostraremos implementaciones reales, y ofreceremos una guía práctica para decidir cuándo usar cada tipo de componente en Next.js.
+
+---
+
+## 2. Fundamentos y Arquitectura
+
+### 2.1 ¿Qué es un Server Component?
+
+Un **Server Component** (SC) es un módulo React que se ejecuta exclusivamente en el entorno Node.js del servidor. Su salida es **HTML estático** que se inserta en la página final, y **no** genera código JavaScript para el cliente. Las principales características son:
+
+| Característica | Detalle |
+|----------------|---------|
+| **Renderizado** | Se produce en el servidor durante la fase de *render* de la página. |
+| **Bundle** | No se incluye en el bundle cliente; el tamaño del JavaScript disminuye. |
+| **Acceso a recursos** | Puede importar módulos de Node (p.ej., `fs`, `pg`) y hacer consultas a bases de datos sin exponer credenciales. |
+| **Estado** | No mantiene estado reactivo; cualquier interacción requiere un CC o una llamada a API. |
+| **Streaming** | Compatibles con *React Server Components* streaming, lo que permite enviar fragmentos de HTML tan pronto como estén listos. |
+
+#### Trade‑off
+- **Ventajas**: Reducción de JavaScript, seguridad de datos, carga inicial más rápida.
+- **Desventajas**: No pueden usar hooks de navegador (`useEffect`, `useState`), y cada render implica una petición al servidor, lo que puede incrementar la latencia si no se cachea adecuadamente.
+
+### 2.2 ¿Qué es un Client Component?
+
+Un **Client Component** (CC) sigue el modelo tradicional de React: se ejecuta en el navegador, recibe props del servidor y gestiona interactividad mediante hooks y eventos. Sus atributos son:
+
+| Característica | Detalle |
+|----------------|---------|
+| **Renderizado** | Se ejecuta en el cliente después de que el HTML del SC haya sido hidratado. |
+| **Bundle** | Forma parte del bundle JavaScript que se envía al navegador. |
+| **Acceso a recursos** | Solo a APIs expuestas vía fetch/Axios o a recursos del navegador (localStorage, DOM). |
+| **Estado** | Soporta `useState`, `useEffect`, `useReducer`, etc. |
+| **Lazy Loading** | Puede cargarse bajo demanda con `dynamic` de Next.js. |
+
+#### Trade‑off
+- **Ventajas**: Interactividad total, manejo de eventos en tiempo real, soporte para bibliotecas que dependen del DOM.
+- **Desventajas**: Aumenta el peso del bundle, potencialmente afecta LCP y TTI, exposición de lógica sensible si no se protege.
+
+### 2.3 Diagrama conceptual (texto)
+
+```
+[Cliente] <---> HTTP GET --> [Next.js Server] 
+    |                                 |
+    |   1. Renderiza Server Components (Node)   |
+    |   2. Genera HTML + JSON de props          |
+    |   3. Envía al cliente (HTML)              |
+    |                                 |
+    |   4. Hydratación: React crea árbol de componentes del cliente |
+    |   5. Client Components se cargan bajo demanda (dynamic import) |
+    |                                 |
+    |   6. Interacción del usuario dispara eventos en CC |
+    |   7. CC llama a API Routes o a servicios externos |
+    |                                 |
+    |   8. Si se necesita nuevo SC, se hace SSR parcial (fetch) |
+```
+
+En este flujo, los **SC** son la capa de datos y presentación estática, mientras que los **CC** son la capa de interacción. La separación clara permite aplicar estrategias de **caching** y **code‑splitting** de forma independiente.
+
+---
+
+## 3. Implementación práctica
+
+A continuación, presentaremos tres casos de evolución: un componente de lista de productos que pasa de una solución **naïve** (todo en cliente) a una arquitectura **optimizada** usando Server Components y técnicas de streaming.
+
+### 3.1 Caso 1 – Lista de productos (versión 1: todo cliente)
+
+```typescript
+// components/ProductListClient.tsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+// Tipo de producto
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl: string;
+}
+
+/**
+ * Componente cliente que obtiene la lista vía API pública.
+ * No hay caching ni manejo de errores robusto.
+ */
+export default function ProductListClient(): JSX.Element {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Llamada directa al endpoint público
+    axios
+      .get<Product[]>('/api/products')
+      .then((res) => setProducts(res.data))
+      .catch((err) => console.error('Error al cargar productos', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Cargando productos...</p>;
+
+  return (
+    <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {products.map((p) => (
+        <li key={p.id} className="border rounded p-2">
+          <img src={p.imageUrl} alt={p.name} className="w-full h-32 object-cover" />
+          <h3 className="mt-2 font-semibold">{p.name}</h3>
+          <p className="text-gray-600">{p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+**Problemas detectados**
+
+- Toda la carga de datos ocurre en el cliente → aumenta TTI.
+- El bundle incluye `axios`, `react`, etc., pese a que la lista es estática.
+- No hay control de **caching** ni de **revalidación**.
+- La API pública expone la base de datos sin filtros de seguridad.
+
+### 3.2 Caso 2 – Migración a Server Component (versión 2)
+
+```typescript
+// app/components/ProductListServer.tsx
+import React from 'react';
+import { Pool } from 'pg';
+
+// Configuración del pool (se reutiliza en todo el proceso)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+});
+
+/**
+ * Server Component que consulta directamente la BD.
+ * No se envía ningún JavaScript al cliente.
+ */
+export default async function ProductListServer(): Promise<JSX.Element> {
+  const client = await pool.connect();
+  try {
+    const res = await client.query<Product>('SELECT id, name, price, image_url FROM products ORDER BY created_at DESC LIMIT 20');
+    const products = res.rows;
+
+    return (
+      <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {products.map((p) => (
+          <li key={p.id} className="border rounded p-2">
+            {/* La URL de la imagen es pública, el resto es estático */}
+            <img src={p.image_url} alt={p.name} className="w-full h-32 object-cover" loading="lazy" />
+            <h3 className="mt-2 font-semibold">{p.name}</h3>
+            <p className="text-gray-600">{Number(p.price).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</p>
+          </li>
+        ))}
+      </ul>
+    );
+  } finally {
+    client.release();
+  }
+}
+
+// Definición de tipo para TS
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  image_url: string;
+};
+```
+
+**Mejoras introducidas**
+
+- Eliminamos el bundle cliente para la lista → reducción del JavaScript en ~30 KB.
+- La consulta se ejecuta en el servidor, evitando exposición de la BD.
+- Se usa **lazy loading** en imágenes (`loading="lazy"`).
+- La conexión a la base de datos se gestiona con un pool reutilizable, reduciendo la latencia de conexión.
+
+### 3.3 Caso 3 – Optimización con Streaming y Cache (versión 3)
+
+```typescript
+// app/components/ProductListStream.tsx
+import React, { Suspense } from 'react';
+import { cache } from 'react';
+import { Pool } from 'pg';
+
+// Cache de nivel aplicación (TTL 60s)
+const getProducts = cache(async (): Promise<Product[]> => {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+  });
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query<Product>(
+      `SELECT id, name, price, image_url
+       FROM products
+       ORDER BY created_at DESC
+       LIMIT 20`
+    );
+    return rows;
+  } finally {
+    client.release();
+  }
+});
+
+export default async function ProductListStream(): Promise<JSX.Element> {
+  // Suspense permite que el servidor envíe HTML parcial mientras se resuelve la promesa
+  return (
+    <Suspense fallback={<p>Cargando productos...</p>}>
+      <ProductList />
+    </Suspense>
+  );
+}
+
+// Sub‑componente que depende de la promesa cacheada
+async function ProductList(): Promise<JSX.Element> {
+  const products = await getProducts();
+
+  return (
+    <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {products.map((p) => (
+        <li key={p.id} className="border rounded p-2">
+          <img src={p.image_url} alt={p.name} className="w-full h-32 object-cover" loading="lazy" />
+          <h3 className="mt-2 font-semibold">{p.name}</h3>
+          <p className="text-gray-600">{Number(p.price).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Tipo reutilizable
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  image_url: string;
+};
+```
+
+**Ventajas de la versión 3**
+
+- **`cache`** de React (v18.3+) evita consultas repetidas dentro del mismo proceso durante 60 s, reduciendo la carga de la BD.
+- **`Suspense`** permite streaming: el HTML que no depende de la lista se envía inmediatamente, mejorando LCP.
+- El componente sigue sin generar JavaScript para la lista, manteniendo la carga ligera.
+- El código está preparado para **incremental static regeneration (ISR)** añadiendo `revalidate: 60` en la ruta si se desea.
+
+### 3.4 Caso 4 – Interactividad mínima con Client Component
+
+Supongamos que queremos permitir al usuario **añadir a favoritos** sin recargar la página. Crearemos un pequeño CC que se comunica con una API Route.
+
+```typescript
+// components/FavoriteButtonClient.tsx
+'use client';
+
+import { useState } from 'react';
+import axios from 'axios';
+
+interface Props {
+  productId: number;
+  initialFavorited: boolean;
+}
+
+/**
+ * Cliente ligero que solo envía una petición POST a la API.
+ * El bundle resultante es ~5 KB gracias a la directiva 'use client'.
+ */
+export default function FavoriteButtonClient({ productId, initialFavorited }: Props): JSX.Element {
+  const [favorited, setFavorited] = useState(initialFavorited);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/favorites/toggle', { productId });
+      setFavorited(res.data.favorited);
+    } catch (err) {
+      console.error('Error al actualizar favoritos', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      disabled={loading}
+      className={`px-3 py-1 rounded ${favorited ? 'bg-red-500' : 'bg-gray-300'}`}
+    >
+      {loading ? 'Guardando...' : favorited ? '❤️ Guardado' : '🤍 Guardar'}
+    </button>
+  );
+}
+```
+
+**Puntos clave**
+
+- La directiva `'use client'` indica a Next.js que este archivo se compile como **Client Component**.
+- El componente es extremadamente pequeño; la mayor parte de la UI (lista) sigue siendo Server Component.
+- Se delega la lógica de persistencia a una **API Route** (`/api/favorites/toggle`), que puede estar protegida con JWT o cookies HttpOnly.
+
+### 3.5 Caso 5 – API Route segura (Node.js)
+
+```typescript
+// pages/api/favorites/toggle.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { getSession } from 'next-auth/react';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+});
+
+/**
+ * Endpoint POST que alterna el estado de favorito para un producto.
+ * Solo usuarios autenticados pueden ejecutar la operación.
+ */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método no permitido' });
+  }
+
+  const session = await getSession({ req });
+  if (!session?.user?.email) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+
+  const { productId } = req.body;
+  if (typeof productId !== 'number') {
+    return res.status(400).json({ error: 'productId inválido' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // Verifica si ya está marcado como favorito
+    const { rows } = await client.query<{ count: number }>(
+      `SELECT COUNT(*) FROM favorites WHERE user_email = $1 AND product_id = $2`,
+      [session.user.email, productId]
+    );
+
+    if (rows[0].count > 0) {
+      // Elimina
+      await client.query('DELETE FROM favorites WHERE user_email = $1 AND product_id = $2', [
+        session.user.email,
+        productId,
+      ]);
+      await client.query('COMMIT');
+      return res.json({ favorited: false });
+    } else {
+      // Inserta
+      await client.query(
+        `INSERT INTO favorites (user_email, product_id, created_at) VALUES ($1, $2, NOW())`,
+        [session.user.email, productId]
+      );
+      await client.query('COMMIT');
+      return res.json({ favor

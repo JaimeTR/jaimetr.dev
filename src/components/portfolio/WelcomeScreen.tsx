@@ -57,9 +57,9 @@ export default function WelcomeScreen({ onEnter }: WelcomeScreenProps) {
         >
           <span>Full Stack Developer</span>
           <span className="text-accent/50 hidden md:inline">•</span>
-          <span>WordPress Expert</span>
+          <span>{language === 'es' ? 'Experto en WordPress' : 'WordPress Expert'}</span>
           <span className="text-accent/50 hidden md:inline">•</span>
-          <span>AI Automation Specialist</span>
+          <span>{language === 'es' ? 'Especialista en Automatización con IA' : 'AI Automation Specialist'}</span>
         </motion.p>
 
         <motion.button

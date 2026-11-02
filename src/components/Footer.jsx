@@ -20,9 +20,9 @@ export const Footer = () => {
     }
 
     const defaultLinks = [
-        { id: 'l1', url_es: '/', url_en: '/', label_es: 'Inicio', label_en: 'Home', visible: true },
-        { id: 'l2', url_es: '/#experience', url_en: '/#experience', label_es: 'Experiencia', label_en: 'Experience', visible: true },
-        { id: 'l3', url_es: '/projects', url_en: '/projects', label_es: 'Proyectos', label_en: 'Projects', visible: true }
+        { id: 'l1', url_es: '/es', url_en: '/en', label_es: 'Inicio', label_en: 'Home', visible: true },
+        { id: 'l2', url_es: '/es#experience', url_en: '/en#experience', label_es: 'Experiencia', label_en: 'Experience', visible: true },
+        { id: 'l3', url_es: '/es/projects', url_en: '/en/projects', label_es: 'Proyectos', label_en: 'Projects', visible: true }
     ]
 
     const links = profile?.footer_links || defaultLinks
@@ -33,7 +33,7 @@ export const Footer = () => {
         <footer id="contacto" className="container mx-auto px-2 lg:px-28 2xl:px-52 mt-14 mb-8">
             <div className="rounded-lg border-dark-100 dark:border-dark-700 shadow dark:shadow-dark-700 mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between ">
                 <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">
-                    <Link href="/" className="hover:underline">
+                    <Link href={`/${language}`} className="hover:underline">
                         {language === 'es' ? textEs : textEn}
                     </Link>
                 </span>

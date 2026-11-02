@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { getPostBySlug, getPosts } from '@/lib/mdx'
 import { ArticleBody } from '@/components/ArticleBody'
 import { ArticleJsonLd } from '@/components/ArticleJsonLd'
@@ -9,7 +10,9 @@ export async function generateStaticParams() {
 }
 export async function generateMetadata({ params }, parent) {
     const { slug, lang } = await params
-    const { frontmatter } = await getPostBySlug(slug, lang)
+    const post = await getPostBySlug(slug, lang)
+    if (!post) notFound()
+    const { frontmatter } = post
     const previousImages = (await parent).openGraph?.images || []
     const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : (typeof frontmatter.tags === 'string' ? [frontmatter.tags] : [])
     const seoKeywords = tags.join(', ') || 'programacion, javascript, web development'
@@ -50,7 +53,9 @@ export async function generateMetadata({ params }, parent) {
 
 export default async function PostPage({ params }) {
     const { slug, lang } = await params
-    const { content, frontmatter } = await getPostBySlug(slug, lang)
+    const post = await getPostBySlug(slug, lang)
+    if (!post) notFound()
+    const { content, frontmatter } = post
     const t = lang === 'en' ? { home: 'Home', posts: 'Blog' } : { home: 'Inicio', posts: 'Blog' }
     return (
         <>

@@ -131,7 +131,7 @@ export default function ProjectCard({ project, onOpenProject, isEmbedded = false
           <div className="w-full relative overflow-hidden rounded-full">
             <div className="relative flex items-center justify-center gap-2 bg-dark-100 dark:bg-dark-800 border border-dark-200 dark:border-dark-700 px-4 py-3 rounded-full text-sm font-bold text-dark-400 dark:text-dark-500 w-full h-full cursor-not-allowed uppercase">
               <Globe className="w-4 h-4" />
-              <span>Sin enlace</span>
+              <span>{t('sinEnlace')}</span>
             </div>
           </div>
         )}

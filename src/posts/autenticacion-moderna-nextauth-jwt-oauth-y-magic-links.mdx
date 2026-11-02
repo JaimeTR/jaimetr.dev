@@ -1,17 +1,18 @@
 ---
 title: Seguridad de autenticación con JWT y magic links
 date: '2026-07-18'
-excerpt: 
-description: Introducción contextual La seguridad de la autenticación es un aspecto crítico en el desarrollo web moderno. Con el aumento de la cantidad de aplicaciones web …
+description: >-
+  Autenticación con JWT y magic links: cómo funcionan, sus trade-offs de
+  seguridad y ejemplos reales de implementación en producción con NextAuth.
 tags:
-    - desarrollo web
-cover: '/images/posts/autenticacion-moderna-nextauth-jwt-oauth-y-magic-links.webp'
+  - desarrollo web
+cover: /images/posts/autenticacion-moderna-nextauth-jwt-oauth-y-magic-links.webp
 author: jaimetrdev
 is_featured: false
 ---
 
 
-# Introducción contextual
+## Introducción contextual
 La seguridad de la autenticación es un aspecto crítico en el desarrollo web moderno. Con el aumento de la cantidad de aplicaciones web y la cantidad de usuarios que interactúan con ellas, la necesidad de garantizar la identidad y la autorización de los usuarios es más importante que nunca. En este contexto, las tecnologías de autenticación como JWT (JSON Web Tokens) y magic links han ganado popularidad en los últimos años debido a su simplicidad y eficacia.
 
 La autenticación con JWT se basa en la emisión de un token de acceso que contiene información del usuario y es firmado digitalmente por el servidor. Este token se envía al cliente, que lo almacena y lo envía de vuelta al servidor en cada solicitud para autenticar la identidad del usuario. Por otro lado, los magic links son enlaces especiales que se envían al usuario por correo electrónico o mensaje de texto, y que, al ser accedidos, autenticarán automáticamente al usuario sin necesidad de contraseña.

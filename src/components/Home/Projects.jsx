@@ -1,25 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { AiOutlineArrowRight } from 'react-icons/ai'
 import { SectionTitle } from '../SectionTitle'
-import { ProjectCard } from '../ProjectCard'
 import { Container } from '../Container'
-import { PROJECTS } from '@/helpers/projects'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import ProjectGallery from '@/components/portfolio/ProjectGallery'
-
-const sorted = PROJECTS.sort((a, b) => {
-    if (a.date < b.date) {
-        return 1
-    }
-    if (a.date > b.date) {
-        return -1
-    }
-    // a must be equal to b
-    return 0
-}).slice(0, 3)
 
 export const Projects = () => {
     const [mounted, setMounted] = useState(false)

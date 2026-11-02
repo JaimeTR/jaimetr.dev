@@ -1,5 +1,4 @@
 import { getAllPostsMetadata, getPosts } from '@/lib/mdx'
-import { PROJECTS } from '@/helpers/projects'
 import fs from 'fs'
 import path from 'path'
 
@@ -46,19 +45,6 @@ export default function sitemap() {
         priority: 0.8,
       })
     }
-  }
-
-  // Projects - solo ES
-  for (const project of PROJECTS) {
-    const date = project.date ? new Date(project.date) : new Date('2022-01-01')
-    if (isNaN(date.getTime())) continue
-
-    entries.push({
-      url: `${baseUrl}/es/projects/${project.slug}`,
-      lastModified: date.toISOString(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    })
   }
 
   return entries

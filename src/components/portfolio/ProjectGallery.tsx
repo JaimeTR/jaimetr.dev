@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ProjectCard, { Project } from "./ProjectCard";
 import ContactSection from "./ContactSection";
@@ -46,6 +46,28 @@ export default function ProjectGallery({ isEmbedded = false }: ProjectGalleryPro
   const [selectedProjectUrl, setSelectedProjectUrl] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showMobileCategoryMenu, setShowMobileCategoryMenu] = useState(false);
+  const mobileCategoryMenuRef = useRef<HTMLDivElement>(null);
+
+  // The dropdown used to toggle via raw classList mutation with no React state,
+  // so it had no aria-expanded, no click-outside dismissal, and no Escape key.
+  useEffect(() => {
+    if (!showMobileCategoryMenu) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (mobileCategoryMenuRef.current && !mobileCategoryMenuRef.current.contains(e.target as Node)) {
+        setShowMobileCategoryMenu(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMobileCategoryMenu(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showMobileCategoryMenu]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -154,14 +176,13 @@ export default function ProjectGallery({ isEmbedded = false }: ProjectGalleryPro
             </div>
 
             {/* Mobile Filters (Dropdown) */}
-            <div className="md:hidden relative flex items-center justify-between min-w-[280px]">
+            <div ref={mobileCategoryMenuRef} className="md:hidden relative flex items-center justify-between min-w-[280px]">
               <span className="text-dark-500 dark:text-dark-400 text-sm font-medium">{t('categoria')}</span>
-              <motion.button 
+              <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  const menu = document.getElementById('mobile-category-menu');
-                  if (menu) menu.classList.toggle('hidden');
-                }}
+                onClick={() => setShowMobileCategoryMenu(v => !v)}
+                aria-expanded={showMobileCategoryMenu}
+                aria-haspopup="true"
                 className="flex items-center gap-2 bg-dark-50 dark:bg-dark-900/80 border border-dark-200 dark:border-dark-700 px-4 py-2 rounded-xl text-dark-900 dark:text-white font-semibold text-sm"
               >
                 {t(categoryKeys[activeCategory])}
@@ -169,24 +190,26 @@ export default function ProjectGallery({ isEmbedded = false }: ProjectGalleryPro
               </motion.button>
 
               {/* Dropdown Menu */}
-              <div id="mobile-category-menu" className="hidden absolute top-full right-0 mt-3 w-full sm:w-64 max-h-[60vh] overflow-y-auto bg-white/95 dark:bg-dark-900/95 backdrop-blur-2xl border border-dark-200 dark:border-dark-700 rounded-2xl shadow-xl dark:shadow-2xl p-2 flex flex-col gap-1 z-50">
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => {
-                      setActiveCategory(category);
-                      document.getElementById('mobile-category-menu')?.classList.add('hidden');
-                    }}
-                    className={`text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                      activeCategory === category 
-                        ? "bg-dark-100 dark:bg-white/10 text-dark-900 dark:text-white" 
-                        : "text-dark-600 dark:text-dark-400 hover:bg-dark-50 dark:hover:bg-white/5 hover:text-dark-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {t(categoryKeys[category])}
-                  </button>
-                ))}
-              </div>
+              {showMobileCategoryMenu && (
+                <div className="absolute top-full right-0 mt-3 w-full sm:w-64 max-h-[60vh] overflow-y-auto bg-white/95 dark:bg-dark-900/95 backdrop-blur-2xl border border-dark-200 dark:border-dark-700 rounded-2xl shadow-xl dark:shadow-2xl p-2 flex flex-col gap-1 z-50">
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => {
+                        setActiveCategory(category);
+                        setShowMobileCategoryMenu(false);
+                      }}
+                      className={`text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                        activeCategory === category
+                          ? "bg-dark-100 dark:bg-white/10 text-dark-900 dark:text-white"
+                          : "text-dark-600 dark:text-dark-400 hover:bg-dark-50 dark:hover:bg-white/5 hover:text-dark-900 dark:hover:text-white"
+                      }`}
+                    >
+                      {t(categoryKeys[category])}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>

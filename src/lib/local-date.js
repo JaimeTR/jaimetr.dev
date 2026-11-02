@@ -24,27 +24,27 @@ class LocalDate {
         const diffToToday = this.diff(substractingDate)
         // Fallback si la fecha es inválida o no finita
         if (!Number.isFinite(diffToToday)) {
-            return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(0, 'day')
+            return new Intl.RelativeTimeFormat('es', { style: 'long', numeric: 'auto' }).format(0, 'day')
         }
         if (diffToToday > 7 && diffToToday < 30) {
-            return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(
+            return new Intl.RelativeTimeFormat('es', { style: 'long', numeric: 'auto' }).format(
                 -Math.floor(this.diff(substractingDate, 'week')),
                 'week'
             )
         }
         if (diffToToday > 30 && diffToToday < 365) {
-            return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(
+            return new Intl.RelativeTimeFormat('es', { style: 'long', numeric: 'auto' }).format(
                 -Math.floor(this.diff(substractingDate, 'month')),
                 'month'
             )
         }
         if (diffToToday >= 365) {
-            return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(
+            return new Intl.RelativeTimeFormat('es', { style: 'long', numeric: 'auto' }).format(
                 -Math.floor(this.diff(substractingDate, 'year')),
                 'year'
             )
         }
-        return new Intl.RelativeTimeFormat('es', { style: 'long' }).format(-Math.floor(diffToToday), 'day')
+        return new Intl.RelativeTimeFormat('es', { style: 'long', numeric: 'auto' }).format(-Math.floor(diffToToday), 'day')
     }
 
     diff(date, diffType = 'day') {

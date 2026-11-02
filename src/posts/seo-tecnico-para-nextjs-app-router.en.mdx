@@ -1,10 +1,9 @@
 ---
-title: SEO técnico para Next.js (App Router)
+title: Technical SEO for Next.js (App Router)
 date: '2025-12-24'
 description: >-
-  ## Introducción a SEO técnico para Next.js (App Router) En el desarrollo web
-  moderno, SEO técnico para Next.js (App Router) se ha convertido en un aspecto
-  fund…
+  In the last decade, page load speed and semantic structuring of websites have
+  become critical factors for ranking in.
 toc: true
 tags:
   - desarrollo web
@@ -12,254 +11,399 @@ tags:
   - react
   - next.js
   - seo
-cover: /images/og.png
+cover: /images/posts/seo-tecnico-para-nextjs-app-router.webp
 author: jaimetrdev
-featured_order: 28
+---
+## 1. Contextual Introduction  
+
+In the last decade, page‑load speed and semantic structuring of websites have become critical factors for search‑engine ranking. Google states that **70 % of users abandon a page that takes more than 5 s to load** and that **Core Web Vitals** have been part of the ranking algorithm since 2021. In the JavaScript ecosystem, Next.js has become the reference solution for React applications with hybrid rendering (SSR, SSG, ISR).  
+
+The **App Router**, introduced in Next.js 13, replaces the old `pages/` system and enables an architecture based on server and client components, nested routes, and shared layouts. This flexibility opens new possibilities for technical SEO, but also entails design decisions that must align with indexing, speed, and accessibility requirements.  
+
+Globally, organic traffic accounts for **≈ 53 %** of all website visits, and a 0.5 % shift in average result position can translate into tens of thousands of additional visits for an average e‑commerce site. That’s why **solving technical SEO challenges in Next.js (App Router) is critical today**: competition is getting fiercer and search engines penalize sites that do not meet performance and structured‑data standards.  
+
+In this article we will break down the fundamentals, the recommended architecture, and the step‑by‑step implementation, with production‑ready code examples, real‑world use cases, and a comparison of rendering strategies. By the end you will have a concrete action plan to take your Next.js application to the next level of visibility.
+
 ---
 
-## Introducción a SEO técnico para Next.js (App Router)
+## 2. Fundamentals and Architecture  
 
-En el desarrollo web moderno, SEO técnico para Next.js (App Router) se ha convertido en un aspecto fundamental que todo desarrollador debe dominar. Este artículo explora de manera exhaustiva todos los aspectos relacionados con SEO técnico para Next.js (App Router), desde los fundamentos básicos hasta técnicas avanzadas de implementación.
+### 2.1 Key Concepts  
 
-En las siguientes secciones, abordaremos:
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica paso a paso
-- Casos de uso del mundo real
-- Mejores prácticas y optimizaciones
-- Errores comunes y cómo evitarlos
+| Concept | What it is | Why it matters for SEO |
+|----------|------------|------------------------|
+| **App Router** | Routing system based on the `app/` directory with server components (`.server.tsx`) and client components (`.tsx`). | Allows per‑route server‑rendered HTML, ensuring crawlers receive rendered content. |
+| **Server‑Components (SC)** | Components that run exclusively on the server and never reach the client bundle. | Reduce JavaScript sent to the browser, improving LCP and FID. |
+| **Metadata API** | Export of `metadata` from each route to define `<title>`, `<meta>` and `openGraph`. | Centralizes SEO tag management and prevents duplicates. |
+| **Dynamic Routes + `generateStaticParams`** | Static generation of dynamic routes at build time or on‑demand (ISR). | Guarantees friendly, pre‑rendered URLs for crawlers. |
+| **Edge Middleware** | Code that runs on the Edge layer before the request reaches the page. | Enables 301 redirects, canonicalization, and bot detection without touching page code. |
 
-### ¿Por qué es importante SEO técnico para Next.js (App Router)?
+### 2.2 Design Decisions and Trade‑offs  
 
-La importancia de SEO técnico para Next.js (App Router) radica en varios factores críticos:
+| Decision | Advantages | Disadvantages |
+|----------|------------|---------------|
+| **SSR (Server‑Side Rendering) on all routes** | Content always up‑to‑date; SEO guaranteed. | Higher response time under heavy load; higher infrastructure cost. |
+| **SSG (Static Site Generation) with ISR** | Excellent performance; low cost; on‑demand updates. | Not suitable for data that changes every second (e.g., real‑time prices). |
+| **Heavy use of Server‑Components** | Bundle size reduction, better Core Web Vitals. | Cannot use React local state; requires careful separation of logic. |
+| **Edge Middleware for redirects** | Minimal latency; centralized logic. | Limited to 50 ms execution; cannot perform heavy I/O. |
 
-1. **Mejora la experiencia del usuario**: Implementar SEO técnico para Next.js (App Router) correctamente resulta en una mejor UX.
-2. **Optimiza el rendimiento**: Reduce tiempos de carga y mejora métricas de performance.
-3. **Aumenta la visibilidad SEO**: Los buscadores priorizan sitios que implementan SEO técnico para Next.js (App Router) adecuadamente.
-4. **Facilita el mantenimiento**: Código bien estructurado es más fácil de mantener a largo plazo.
+### 2.3 Conceptual Diagram (described in text)  
 
-## Fundamentos Técnicos
+1. **Client** → requests `GET /products/123`.  
+2. **Edge Middleware** intercepts, checks `User‑Agent` and applies canonicalization.  
+3. **App Router** resolves the route `app/products/[id]/page.tsx`.  
+4. **Server‑Component** `ProductDetail.server.tsx` queries the database via **Supabase** (PostgreSQL) using the **Repository Pattern**.  
+5. **Metadata** exported in `page.tsx` generates `<title>`, `<meta description>` and `JSON‑LD`.  
+6. **HTML** is sent to the client, **React Hydration** occurs only in components marked as client.  
 
-Antes de profundizar en la implementación, es crucial entender los conceptos fundamentales:
+---
 
-### Conceptos Clave
+## 3. Practical Implementation  
 
-**Definición**: SEO técnico para Next.js (App Router) se refiere a [concepto técnico relevante al tema].
+Below is the evolution of a product‑detail page, from a **naïve** version (client‑only React) to an **optimized** architecture with Server‑Components, Metadata, and Edge Middleware.
 
-**Componentes principales**:
-- Configuración inicial y setup
-- Estructura de datos y patrones de diseño
-- Integración con otras tecnologías
-- Testing y validación
+### 3.1 Version 1 – Basic Approach (Client‑only)  
 
-### Prerequisitos
+```tsx
+// app/productos/[id]/page.tsx
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-Para seguir este tutorial, necesitas:
-- Conocimientos básicos de JavaScript/TypeScript
-- Familiaridad con el ecosistema de Node.js
-- Editor de código (VS Code recomendado)
-- Terminal/línea de comandos
+interface Producto {
+  id: string;
+  nombre: string;
+  precio: number;
+  descripcion: string;
+}
 
-## Implementación Práctica
+/**
+ * Client page that loads data via fetch in the browser.
+ * Not crawler‑friendly because the initial HTML is empty.
+ */
+export default function ProductoDetalle() {
+  const [producto, setProducto] = useState<Producto | null>(null);
+  const [error, setError] = useState<string>("");
 
-Vamos a implementar SEO técnico para Next.js (App Router) paso a paso con ejemplos completos y funcionales.
+  // Extract the id from the URL using the browser API
+  const id = new URLSearchParams(window.location.search).get("id") ?? "";
 
-### Paso 1: Configuración Inicial
+  useEffect(() => {
+    if (!id) {
+      setError("Product ID not specified");
+      return;
+    }
+    axios
+      .get<Producto>(`/api/productos/${id}`)
+      .then((res) => setProducto(res.data))
+      .catch(() => setError("Error loading product"));
+  }, [id]);
 
-Primero, configuramos el entorno básico:
+  if (error) return <p>{error}</p>;
+  if (!producto) return <p>Loading...</p>;
 
-```bash
-# Instalar dependencias necesarias
-npm install --save-dev [paquetes-relevantes]
-
-# Inicializar configuración
-npx [herramienta] init
+  return (
+    <article>
+      <h1>{producto.nombre}</h1>
+      <p>{producto.descripcion}</p>
+      <strong>{producto.precio.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</strong>
+    </article>
+  );
+}
 ```
 
-### Paso 2: Implementación Básica
+**SEO Issues**  
 
-```javascript
-// Ejemplo básico de implementación
-export function implementacionBasica() {
-  // Configuración inicial
-  const config = {
-    opcion1: true,
-    opcion2: 'valor',
-    // Más opciones...
+* The HTML delivered to the crawler is just a `<div id="root"></div>`.  
+* No `<title>` or `<meta description>` tags.  
+* Content depends on JavaScript; Google renders it, but other bots may not.  
+
+---
+
+### 3.2 Version 2 – Server‑Component + Metadata (SSR)  
+
+```tsx
+// app/productos/[id]/page.tsx
+import type { Metadata } from "next";
+import ProductDetailServer from "./ProductDetail.server";
+import { notFound } from "next/navigation";
+
+/**
+ * Export static metadata based on the route id.
+ * Next.js runs this function on the server before rendering.
+ */
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const producto = await fetchProducto(params.id);
+  if (!producto) {
+    // If it does not exist, return generic metadata and let the 404 page handle it.
+    return {
+      title: "Product not found",
+      description: "The requested product is not available.",
+    };
+  }
+  return {
+    title: `${producto.nombre} - Online Store`,
+    description: producto.descripcion.slice(0, 150),
+    openGraph: {
+      title: producto.nombre,
+      description: producto.descripcion,
+      images: [{ url: producto.imagenUrl }],
+    },
+    robots: "index, follow",
+  };
+}
+
+/**
+ * Helper function that queries the database via Supabase.
+ * Runs on the server, so we can use secret credentials.
+ */
+async function fetchProducto(id: string) {
+  const supabase = (await import("@supabase/supabase-js")).createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data, error } = await supabase.from("productos").select("*").eq("id", id).single();
+  if (error) {
+    console.error("Error fetching product:", error);
+    return null;
+  }
+  return data;
+}
+
+/**
+ * Render the server component that already has the data.
+ */
+export default async function ProductoPage({ params }: { params: { id: string } }) {
+  const producto = await fetchProducto(params.id);
+  if (!producto) {
+    notFound(); // Throws 404 and Next.js shows the error page.
+  }
+  return <ProductDetailServer producto={producto} />;
+}
+```
+
+```tsx
+// app/productos/[id]/ProductDetail.server.tsx
+import type { ReactNode } from "react";
+
+interface Props {
+  producto: {
+    id: string;
+    nombre: string;
+    precio: number;
+    descripcion: string;
+    imagenUrl: string;
+  };
+}
+
+/**
+ * Server Component: no JavaScript is sent to the client.
+ * Contains only static markup, ideal for SEO.
+ */
+export default function ProductDetailServer({ producto }: Props): ReactNode {
+  return (
+    <article>
+      <h1>{producto.nombre}</h1>
+      <img src={producto.imagenUrl} alt={producto.nombre} loading="lazy" width={600} height={400} />
+      <p>{producto.descripcion}</p>
+      <strong>
+        {producto.precio.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+      </strong>
+    </article>
+  );
+}
+```
+
+**Improvements**  
+
+* The HTML arrives already rendered with real content.  
+* `metadata` generates `<title>`, `<meta description>` and OpenGraph tags.  
+* Unnecessary JavaScript is not sent, improving LCP.  
+
+---
+
+### 3.3 Version 3 – ISR + Edge Middleware + Repository Pattern  
+
+#### 3.3.1 Repository (data access)
+
+```ts
+// src/repositories/productRepository.ts
+import { createClient } from "@supabase/supabase-js";
+
+export interface Producto {
+  id: string;
+  nombre: string;
+  precio: number;
+  descripcion: string;
+  imagenUrl: string;
+}
+
+/**
+ * Repository Pattern implementation.
+ * Centralizes Supabase access and allows mocking in tests.
+ */
+export class ProductoRepository {
+  private supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  async findById(id: string): Promise<Producto | null> {
+    const { data, error } = await this.supabase
+      .from<Producto>("productos")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return null;
+    }
+    return data;
+  }
+
+  async findAllIds(): Promise<string[]> {
+    const { data, error } = await this.supabase.from("productos").select("id");
+    if (error) {
+      console.error("Supabase error:", error);
+      return [];
+    }
+    return data.map((row) => row.id);
+  }
+}
+```
+
+#### 3.3.2 ISR – `generateStaticParams`
+
+```tsx
+// app/productos/[id]/page.tsx (continues)
+import { ProductoRepository } from "@/src/repositories/productRepository";
+
+export const revalidate = 60; // ISR: re‑generate every 60 s
+
+export async function generateStaticParams() {
+  const repo = new ProductoRepository();
+  const ids = await repo.findAllIds();
+  return ids.map((id) => ({ id }));
+}
+
+/* The rest of the file remains the same, but now the page is
+   statically generated at build time and revalidated each minute. */
+```
+
+#### 3.3.3 Edge Middleware (canonical + bot detection)
+
+```ts
+// middleware.ts (located at the project root)
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+/**
+ * Middleware executed on the Edge Network.
+ * - Redirects HTTP → HTTPS.
+ * - Adds canonical link if the URL contains tracking parameters.
+ * - Blocks known malicious bots.
+ */
+export function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+
+  // 1️⃣ Enforce HTTPS
+  if (url.protocol === "http") {
+    url.protocol = "https";
+    return NextResponse.redirect(url);
+  }
+
+  // 2️⃣ Canonical: remove ?utm_* from the query string
+  const cleanSearch = url.searchParams
+    .entries()
+    .filter(([k]) => !k.startsWith("utm_"))
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&");
+  if (cleanSearch !== url.search) {
+    url.search = cleanSearch;
+    const response = NextResponse.rewrite(url);
+    response.headers.set("Link", `<${url.toString()}>; rel="canonical"`);
+    return response;
+  }
+
+  // 3️⃣ Simple block of suspicious bots
+  const ua = request.headers.get("user-agent")?.toLowerCase() ?? "";
+  if (ua.includes("curl") || ua.includes("wget")) {
+    return new NextResponse("Access denied", { status: 403 });
+  }
+
+  // Continue with the normal request
+  return NextResponse.next();
+}
+
+// Apply middleware to all routes except /api/*
+export const config = {
+  matcher: "/((?!api/).*)",
+};
+```
+
+**Benefits of Version 3**  
+
+* **ISR** combines SSG speed with fresh data (re‑validation every minute).  
+* **Edge Middleware** ensures crawlers receive canonical URLs and avoids duplicate content.  
+* **Repository Pattern** makes unit testing easy and keeps data‑access logic isolated.  
+
+---
+
+### 3.4 Additional Code Examples (5‑8 blocks)  
+
+#### 3.4.1 Structured JSON‑LD (Product schema)
+
+```tsx
+// app/productos/[id]/StructuredData.tsx
+import type { Producto } from "@/src/repositories/productRepository";
+
+interface Props {
+  producto: Producto;
+}
+
+/**
+ * Generates JSON‑LD following schema.org/Product.
+ * Inserted into <head> via next/head.
+ */
+export default function StructuredData({ producto }: Props) {
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: producto.nombre,
+    image: producto.imagenUrl,
+    description: producto.descripcion,
+    sku: producto.id,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: producto.precio,
+      availability: "https://schema.org/InStock",
+    },
   };
 
-  // Lógica principal
-  return procesarDatos(config);
-}
-
-function procesarDatos(config) {
-  // Implementación detallada
-  console.log('Procesando con:', config);
-  return { exito: true, data: [] };
-}
-```
-
-### Paso 3: Implementación Avanzada
-
-Para casos más complejos, podemos usar un enfoque más robusto:
-
-```javascript
-// Implementación avanzada con manejo de errores
-class GestorAvanzado {
-  constructor(opciones = {}) {
-    this.config = { ...opcionesPorDefecto, ...opciones };
-    this.inicializar();
-  }
-
-  inicializar() {
-    // Setup inicial
-    this.validarConfiguracion();
-    this.prepararRecursos();
-  }
-
-  async ejecutar() {
-    try {
-      const resultado = await this.procesamientoAsincrono();
-      return this.formatearResultado(resultado);
-    } catch (error) {
-      this.manejarError(error);
-      throw error;
-    }
-  }
-
-  validarConfiguracion() {
-    // Validaciones necesarias
-    if (!this.config.required) {
-      throw new Error('Configuración incompleta');
-    }
-  }
+  return (
+    <script
+      type="application/ld+json"
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
 }
 ```
 
-## Casos de Uso Reales
+#### 3.4.2 Lazy‑loaded client component (e.g., cart button)
 
-Veamos cómo aplicar SEO técnico para Next.js (App Router) en escenarios del mundo real:
+```tsx
+// app/components/CartButton.client.tsx
+"use client";
 
-### Caso 1: Aplicación E-commerce
+import { useState } from "react";
 
-En una tienda online, SEO técnico para Next.js (App Router) se usa para optimizar el checkout:
+/**
+ * Client‑only component that loads on demand.
+ * Ideal for interactivity that does not affect SEO.
+ */
+export default function CartButton() {
+  const [added, setAdded] = useState(false);
 
-```javascript
-// Implementación para e-commerce
-async function procesarPedido(carrito, usuario) {
-  // Validar stock disponible
-  const stockValido = await validarInventario(carrito);
-  
-  if (!stockValido) {
-    throw new Error('Productos sin stock');
-  }
-
-  // Calcular total con impuestos
-  const total = calcularTotal(carrito, usuario.ubicacion);
-  
-  // Procesar pago
-  return await procesarPago(total, usuario.metodoPago);
-}
-```
-
-### Caso 2: Dashboard Analítico
-
-Para dashboards, SEO técnico para Next.js (App Router) mejora la visualización de datos en tiempo real.
-
-### Caso 3: API REST
-
-En APIs, SEO técnico para Next.js (App Router) optimiza el manejo de solicitudes y respuestas.
-
-## Mejores Prácticas
-
-### Performance y Optimización
-
-✅ **Hacer**:
-- Cachear resultados cuando sea posible
-- Usar lazy loading para recursos pesados
-- Implementar paginación en listas grandes
-- Monitorear métricas de rendimiento
-
-❌ **Evitar**:
-- Cargar datos innecesarios
-- Múltiples re-renders
-- Bloquear el thread principal
-- Ignorar memory leaks
-
-### Seguridad
-
-💡 **Pro Tip**: Siempre valida y sanitiza inputs del usuario.
-
-```javascript
-// Validación de entrada segura
-function sanitizarInput(input) {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Prevenir XSS
-    .slice(0, 1000); // Limitar tamaño
-}
-```
-
-## Errores Comunes y Soluciones
-
-### Error 1: No manejar estados de carga
-
-**Problema**: La UI se congela mientras se cargan datos.
-
-**Solución**: Implementar estados de loading:
-
-```javascript
-const [loading, setLoading] = useState(false);
-const [data, setData] = useState(null);
-
-async function cargarDatos() {
-  setLoading(true);
-  try {
-    const resultado = await fetch('/api/data');
-    setData(resultado);
-  } finally {
-    setLoading(false);
-  }
-}
-```
-
-### Error 2: Ignorar compatibilidad de navegadores
-
-**Problema**: Código que solo funciona en Chrome.
-
-**Solución**: Usar polyfills y feature detection.
-
-### Error 3: No optimizar para móviles
-
-**Problema**: La experiencia en móvil es deficiente.
-
-**Solución**: Diseño responsive y touch-friendly desde el inicio.
-
-## Recursos Adicionales
-
-Para profundizar más en SEO técnico para Next.js (App Router), consulta:
-
-- 📚 Documentación oficial
-- 🛠️ Herramientas de desarrollo recomendadas
-- 💻 Repositorios de ejemplo en GitHub
-- 🎓 Cursos y tutoriales avanzados
-
-## Conclusión
-
-SEO técnico para Next.js (App Router) es una habilidad esencial en el desarrollo web moderno. A lo largo de este artículo, hemos cubierto:
-
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica con ejemplos completos
-- Casos de uso del mundo real
-- Mejores prácticas de performance y seguridad
-- Errores comunes y cómo evitarlos
-
-La clave está en practicar constantemente y mantenerse actualizado con las últimas tendencias del ecosistema.
-
-### Próximos Pasos
-
-1. Implementa los ejemplos en tu propio proyecto
-2. Experimenta con diferentes configuraciones
-3. Mide el impacto en performance
-4. Comparte tus resultados con la comunidad
-
-Si necesitas ayuda profesional para implementar SEO técnico para Next.js (App Router) en tu proyecto, o requieres consultoría especializada en desarrollo web, optimización de performance, arquitectura de aplicaciones o integración de nuevas tecnologías, no dudes en contactarme. Ofrezco servicios de desarrollo full-stack con React, Next.js, WordPress, y soluciones personalizadas para cada necesidad.
+  const

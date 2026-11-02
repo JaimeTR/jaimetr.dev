@@ -3,6 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/app/providers/LanguageProvider";
+import { useTranslation } from "@/helpers/translations";
 
 interface ProjectViewerProps {
   url: string;
@@ -10,18 +12,49 @@ interface ProjectViewerProps {
 }
 
 export default function ProjectViewer({ url, onClose }: ProjectViewerProps) {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  // null = still checking, true/false = server told us whether it can be framed
+  const [preflightEmbeddable, setPreflightEmbeddable] = useState<boolean | null>(null);
+
+  // Many of the sites shown here are WordPress installs that commonly send
+  // X-Frame-Options/CSP frame-ancestors, which used to mean a silent iframe
+  // that never fires onLoad until an 8s timeout. Ask the server to check the
+  // headers first so a known-blocked site skips straight to "open in a new
+  // tab" instead of making the visitor wait out a doomed load.
+  useEffect(() => {
+    let cancelled = false;
+    setPreflightEmbeddable(null);
+    fetch(`/api/check-embeddable?url=${encodeURIComponent(url)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        setPreflightEmbeddable(data.embeddable !== false);
+        if (data.embeddable === false) {
+          setIsLoading(false);
+          setHasError(true);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Inconclusive check shouldn't block the attempt — behave as before.
+        setPreflightEmbeddable(true);
+      });
+    return () => { cancelled = true };
+  }, [url]);
 
   useEffect(() => {
+    if (preflightEmbeddable === false) return; // already short-circuited above
     const timer = setTimeout(() => {
       if (isLoading) {
         setIsLoading(false);
         setHasError(true);
       }
-    }, 8000);
+    }, 6000);
     return () => clearTimeout(timer);
-  }, [url, isLoading]);
+  }, [url, isLoading, preflightEmbeddable]);
 
   // Bloquear el scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -72,17 +105,19 @@ export default function ProjectViewer({ url, onClose }: ProjectViewerProps) {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors"
-                title="Abrir en nueva pestaña"
+                title={t('abrirNuevaPestana')}
+                aria-label={t('abrirNuevaPestana')}
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
-              
+
               <div className="w-px h-5 bg-white/20 mx-1 hidden sm:block" />
 
-              <button 
+              <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-white hover:bg-red-500/80 p-2 rounded-xl transition-colors group"
-                title="Cerrar"
+                title={t('cerrar')}
+                aria-label={t('cerrar')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -93,15 +128,15 @@ export default function ProjectViewer({ url, onClose }: ProjectViewerProps) {
           <div className="flex-1 relative bg-white overflow-hidden">
             {hasError ? (
               <div className="flex flex-col items-center justify-center h-full gap-4 text-dark-600 dark:text-dark-400 p-8">
-                <p className="text-lg font-semibold">No se pudo cargar la vista previa</p>
-                <p className="text-sm text-center">El sitio web bloquea la previsualización en iframe por seguridad.</p>
+                <p className="text-lg font-semibold">{t('previewNoDisponible')}</p>
+                <p className="text-sm text-center">{t('previewBloqueadoPorSitio')}</p>
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-colors"
                 >
-                  Abrir en nueva pestaña
+                  {t('abrirNuevaPestana')}
                 </a>
               </div>
             ) : (

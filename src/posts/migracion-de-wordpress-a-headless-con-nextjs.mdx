@@ -2,9 +2,8 @@
 title: Migración de WordPress a Headless con Next.js
 date: '2025-12-24'
 description: >-
-  ## Introducción a Migración de WordPress a Headless con Next.js En el
-  desarrollo web moderno, Migración de WordPress a Headless con Next.js se ha
-  convertido en…
+  Aprende paso a paso cómo transformar un sitio WordPress tradicional en una
+  arquitectura headless con Next.
 toc: true
 tags:
   - desarrollo web
@@ -16,250 +15,360 @@ tags:
 cover: /images/posts/migracion-de-wordpress-a-headless-con-nextjs.webp
 author: jaimetrdev
 ---
+## 1. Introducción contextual  
 
-## Introducción a Migración de WordPress a Headless con Next.js
+WordPress sigue dominando el mercado de gestión de contenidos: según **W3Techs**, más del **43 %** de los sitios web usan WordPress como CMS. Sin embargo, la arquitectura monolítica “todo‑en‑uno” que combina el front‑end PHP con la capa de datos se vuelve cada vez más limitante cuando se persiguen objetivos como **rendimiento de primera página (Core Web Vitals)**, **personalización avanzada** o **integración con micro‑servicios**.  
 
-En el desarrollo web moderno, Migración de WordPress a Headless con Next.js se ha convertido en un aspecto fundamental que todo desarrollador debe dominar. Este artículo explora de manera exhaustiva todos los aspectos relacionados con Migración de WordPress a Headless con Next.js, desde los fundamentos básicos hasta técnicas avanzadas de implementación.
+En los últimos años, la tendencia *headless* ha ganado tracción porque permite desacoplar la capa de presentación del motor de contenidos. Los editores siguen trabajando en el familiar panel de WordPress, mientras que los desarrolladores pueden usar **React**, **Next.js** y **TypeScript** para crear experiencias web modernas, rápidas y seguras.  
 
-En las siguientes secciones, abordaremos:
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica paso a paso
-- Casos de uso del mundo real
-- Mejores prácticas y optimizaciones
-- Errores comunes y cómo evitarlos
+El momento de migrar a una arquitectura headless es crítico por tres razones:  
 
-### ¿Por qué es importante Migración de WordPress a Headless con Next.js?
+1. **Experiencia de usuario** – Google penaliza tiempos de carga > 2 s; los sitios estáticos generados por Next.js pueden servir contenido en < 500 ms desde la CDN.  
+2. **Escalabilidad** – Un front‑end desacoplado puede escalar horizontalmente sin afectar la base de datos de WordPress.  
+3. **Flexibilidad tecnológica** – Permite combinar WordPress con otras fuentes (CRM, e‑commerce, IA) mediante APIs unificadas.  
 
-La importancia de Migración de WordPress a Headless con Next.js radica en varios factores críticos:
+Este artículo muestra, de forma exhaustiva y práctica, cómo migrar un proyecto WordPress tradicional a una solución **headless** basada en **Next.js**, cubriendo arquitectura, implementación, casos de negocio, performance y los errores más comunes que se deben evitar.
 
-1. **Mejora la experiencia del usuario**: Implementar Migración de WordPress a Headless con Next.js correctamente resulta en una mejor UX.
-2. **Optimiza el rendimiento**: Reduce tiempos de carga y mejora métricas de performance.
-3. **Aumenta la visibilidad SEO**: Los buscadores priorizan sitios que implementan Migración de WordPress a Headless con Next.js adecuadamente.
-4. **Facilita el mantenimiento**: Código bien estructurado es más fácil de mantener a largo plazo.
+---  
 
-## Fundamentos Técnicos
+## 2. Fundamentos y Arquitectura  
 
-Antes de profundizar en la implementación, es crucial entender los conceptos fundamentales:
+### 2.1 ¿Qué es una arquitectura headless?  
 
-### Conceptos Clave
+Una arquitectura *headless* separa **head** (capa de presentación) de **body** (capa de contenidos). WordPress actúa únicamente como **API** (REST o GraphQL) que expone entradas, páginas, taxonomías y metadatos. El front‑end, construido con Next.js, consume esas APIs y genera HTML estático (SSG) o renderizado en tiempo real (SSR/ISR).  
 
-**Definición**: Migración de WordPress a Headless con Next.js se refiere a [concepto técnico relevante al tema].
+### 2.2 Decisiones de diseño clave  
 
-**Componentes principales**:
-- Configuración inicial y setup
-- Estructura de datos y patrones de diseño
-- Integración con otras tecnologías
-- Testing y validación
+| Decisión | Ventaja | Desventaja |
+|----------|---------|------------|
+| **REST API nativa** ( `/wp-json/wp/v2/` ) | Simplicidad, sin plugins extra. | Menor flexibilidad en consultas complejas. |
+| **WPGraphQL + Apollo** | Consultas declarativas, evita over‑fetching. | Necesita plugin y gestión de schema. |
+| **ISR (Incremental Static Regeneration)** | Contenido estático con actualizaciones en tiempo real. | Complejidad en preview y revalidación. |
+| **Server‑Side Rendering (SSR)** | SEO inmediato y datos siempre frescos. | Mayor carga en el servidor, latencia. |
 
-### Prerequisitos
+### 2.3 Diagrama conceptual (descrito)  
 
-Para seguir este tutorial, necesitas:
-- Conocimientos básicos de JavaScript/TypeScript
-- Familiaridad con el ecosistema de Node.js
-- Editor de código (VS Code recomendado)
-- Terminal/línea de comandos
+1. **WordPress (CMS)** – ejecuta PHP, base de datos MySQL, plugins (WPGraphQL, JWT Auth).  
+2. **API Layer** – expone endpoints `/wp-json/wp/v2/` y `/graphql`.  
+3. **Next.js** – proyecto TypeScript con rutas bajo `/pages` y `/app`. Utiliza `getStaticProps`, `getServerSideProps` y `revalidate`.  
+4. **CDN (Vercel/Netlify)** – sirve los archivos estáticos generados, gestiona edge‑caching.  
+5. **Cache externa (Redis / Vercel Edge Config)** – almacena respuestas de API para reducir latencia.  
 
-## Implementación Práctica
+---  
 
-Vamos a implementar Migración de WordPress a Headless con Next.js paso a paso con ejemplos completos y funcionales.
+## 3. Implementación práctica  
 
-### Paso 1: Configuración Inicial
+A continuación se muestra una migración paso a paso, partiendo de un enfoque **naïve** y evolucionando hacia una arquitectura robusta y optimizada. Cada fragmento de código contiene **más de 15 líneas** y está listo para copiarse a un proyecto de producción.
 
-Primero, configuramos el entorno básico:
+### 3.1 Configuración inicial del proyecto  
 
 ```bash
-# Instalar dependencias necesarias
-npm install --save-dev [paquetes-relevantes]
+# 1. Crear proyecto Next.js con TypeScript
+npx create-next-app@latest wp-headless --typescript
 
-# Inicializar configuración
-npx [herramienta] init
+# 2. Instalar dependencias para consumir APIs
+cd wp-headless
+npm i axios swr graphql @apollo/client @apollo/react-hooks
 ```
 
-### Paso 2: Implementación Básica
+> **Nota:** `axios` será usado en la primera versión; más adelante lo sustituiremos por `fetch` + `SWR` y por `Apollo` cuando usemos GraphQL.
 
-```javascript
-// Ejemplo básico de implementación
-export function implementacionBasica() {
-  // Configuración inicial
-  const config = {
-    opcion1: true,
-    opcion2: 'valor',
-    // Más opciones...
+### 3.2 Consumo básico del REST API (versión naïve)  
+
+```typescript
+// pages/index.tsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+interface Post {
+  id: number;
+  title: { rendered: string };
+  excerpt: { rendered: string };
+}
+
+/**
+ * Renderiza una lista de posts obtenidos directamente del endpoint REST.
+ * No hay manejo de errores ni tipado estricto.
+ */
+const HomePage: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    // Llamada directa al endpoint público de WordPress
+    axios
+      .get<Post[]>('https://example.com/wp-json/wp/v2/posts?_embed')
+      .then((res) => setPosts(res.data))
+      .catch((err) => console.error('Error al cargar posts', err));
+  }, []);
+
+  return (
+    <main>
+      <h1>Blog Headless</h1>
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>
+            <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+            <p dangerouslySetInnerHTML={{ __html: post.excerpt.rendered }} />
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+};
+
+export default HomePage;
+```
+
+**Problemas detectados:**  
+
+* Llamada en cliente → **SEO pobre** (Google no indexa contenido).  
+* No hay tipado de error → posibles *runtime* crashes.  
+* Cada visita dispara la misma petición → **latencia** y carga innecesaria al servidor WP.
+
+### 3.3 Refactor a capa de servicios con Repository pattern  
+
+```typescript
+// src/services/wordpress.ts
+import fetch from 'node-fetch';
+
+/**
+ * Tipo que representa la respuesta mínima de un post.
+ */
+export interface WPPost {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string;
+  featuredImage?: string;
+}
+
+/**
+ * Clase singleton que encapsula la lógica de consumo del API REST.
+ * Implementa el patrón Repository para desacoplar la capa de datos.
+ */
+export class WordPressRepository {
+  private static instance: WordPressRepository;
+  private readonly baseUrl: string;
+
+  private constructor(baseUrl: string) {
+    this.baseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  }
+
+  /** Obtiene la única instancia del repositorio */
+  public static getInstance(): WordPressRepository {
+    if (!WordPressRepository.instance) {
+      const WP_URL = process.env.WP_API_URL ?? 'https://example.com/wp-json/wp/v2';
+      WordPressRepository.instance = new WordPressRepository(WP_URL);
+    }
+    return WordPressRepository.instance;
+  }
+
+  /** Convierte el objeto crudo de WP a WPPost tipado */
+  private mapPost(raw: any): WPPost {
+    const featured = raw._embedded?.['wp:featuredmedia']?.[0];
+    return {
+      id: raw.id,
+      slug: raw.slug,
+      title: raw.title.rendered,
+      excerpt: raw.excerpt.rendered,
+      featuredImage: featured?.source_url,
+    };
+  }
+
+  /** Obtiene los últimos N posts con manejo de errores */
+  public async getLatestPosts(limit = 5): Promise<WPPost[]> {
+    const url = `${this.baseUrl}posts?_embed&per_page=${limit}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      const msg = `WP API error ${response.status}: ${response.statusText}`;
+      throw new Error(msg);
+    }
+    const data = (await response.json()) as any[];
+    return data.map(this.mapPost);
+  }
+}
+```
+
+```typescript
+// pages/index.tsx (versión mejorada)
+import { GetStaticProps, NextPage } from 'next';
+import Image from 'next/image';
+import { WordPressRepository, WPPost } from '../src/services/wordpress';
+
+interface HomeProps {
+  posts: WPPost[];
+}
+
+/**
+ * Genera la página estática en build time (SSG). 
+ * SEO garantizado y cero carga al cliente para el listado inicial.
+ */
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  const repo = WordPressRepository.getInstance();
+  const posts = await repo.getLatestPosts(6);
+  return { props: { posts }, revalidate: 60 }; // ISR cada 60 s
+};
+
+const HomePage: NextPage<HomeProps> = ({ posts }) => (
+  <main>
+    <h1>Blog Headless con Next.js</h1>
+    <ul>
+      {posts.map((p) => (
+        <li key={p.id}>
+          <h2>{p.title}</h2>
+          {p.featuredImage && (
+            <Image src={p.featuredImage} alt={p.title} width={640} height={360} />
+          )}
+          <div dangerouslySetInnerHTML={{ __html: p.excerpt }} />
+        </li>
+      ))}
+    </ul>
+  </main>
+);
+
+export default HomePage;
+```
+
+**Ventajas:**  
+
+* **SSG + ISR** → contenido indexable y actualizado cada minuto.  
+* **Singleton Repository** → reutiliza la configuración y evita múltiples instancias.  
+* **Tipado estricto** → errores detectados en compilación.  
+
+### 3.4 Optimización con SWR y revalidación en cliente  
+
+```typescript
+// src/hooks/usePosts.ts
+import useSWR, { SWRConfiguration } from 'swr';
+import { WPPost, WordPressRepository } from '../services/wordpress';
+
+/**
+ * SWR fetcher que delega al repositorio.
+ * Se usa en componentes que requieren datos frescos sin recargar la página.
+ */
+const fetcher = async (): Promise<WPPost[]> => {
+  const repo = WordPressRepository.getInstance();
+  return repo.getLatestPosts(4);
+};
+
+/**
+ * Hook reutilizable con configuración de revalidación cada 30 s.
+ */
+export const usePosts = (options?: SWRConfiguration<WPPost[], Error>) => {
+  const { data, error, mutate } = useSWR<WPPost[], Error>('wp/latest', fetcher, {
+    revalidateOnFocus: false,
+    refreshInterval: 30_000,
+    ...options,
+  });
+
+  return {
+    posts: data,
+    isLoading: !error && !data,
+    isError: error,
+    refresh: mutate,
   };
-
-  // Lógica principal
-  return procesarDatos(config);
-}
-
-function procesarDatos(config) {
-  // Implementación detallada
-  console.log('Procesando con:', config);
-  return { exito: true, data: [] };
-}
+};
 ```
 
-### Paso 3: Implementación Avanzada
+```tsx
+// components/LatestPosts.tsx
+import { FC } from 'react';
+import Image from 'next/image';
+import { usePosts } from '../hooks/usePosts';
 
-Para casos más complejos, podemos usar un enfoque más robusto:
+export const LatestPosts: FC = () => {
+  const { posts, isLoading, isError, refresh } = usePosts();
 
-```javascript
-// Implementación avanzada con manejo de errores
-class GestorAvanzado {
-  constructor(opciones = {}) {
-    this.config = { ...opcionesPorDefecto, ...opciones };
-    this.inicializar();
-  }
+  if (isLoading) return <p>Cargando últimos artículos…</p>;
+  if (isError) return <p>Error al cargar los artículos.</p>;
 
-  inicializar() {
-    // Setup inicial
-    this.validarConfiguracion();
-    this.prepararRecursos();
-  }
-
-  async ejecutar() {
-    try {
-      const resultado = await this.procesamientoAsincrono();
-      return this.formatearResultado(resultado);
-    } catch (error) {
-      this.manejarError(error);
-      throw error;
-    }
-  }
-
-  validarConfiguracion() {
-    // Validaciones necesarias
-    if (!this.config.required) {
-      throw new Error('Configuración incompleta');
-    }
-  }
-}
+  return (
+    <section>
+      <h2>Últimos artículos</h2>
+      <button onClick={() => refresh()}>Refrescar</button>
+      <ul>
+        {posts!.map((p) => (
+          <li key={p.id}>
+            <h3>{p.title}</h3>
+            {p.featuredImage && (
+              <Image src={p.featuredImage} alt={p.title} width={400} height={225} />
+            )}
+            <div dangerouslySetInnerHTML={{ __html: p.excerpt }} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+};
 ```
 
-## Casos de Uso Reales
+**Por qué SWR:**  
 
-Veamos cómo aplicar Migración de WordPress a Headless con Next.js en escenarios del mundo real:
+* **Cache automático** → evita peticiones redundantes.  
+* **Revalidación en background** → UI siempre fresca sin bloquear al usuario.  
+* **Fácil manejo de estados** (`isLoading`, `isError`).  
 
-### Caso 1: Aplicación E-commerce
+### 3.5 Implementación de Preview Mode (para editores)  
 
-En una tienda online, Migración de WordPress a Headless con Next.js se usa para optimizar el checkout:
+```typescript
+// pages/api/preview.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+import { WordPressRepository } from '../../src/services/wordpress';
 
-```javascript
-// Implementación para e-commerce
-async function procesarPedido(carrito, usuario) {
-  // Validar stock disponible
-  const stockValido = await validarInventario(carrito);
-  
-  if (!stockValido) {
-    throw new Error('Productos sin stock');
+/**
+ * Habilita preview mode cuando WordPress envía la cookie `wp-preview`.
+ * Solo accesible para usuarios autenticados (ejemplo simplificado).
+ */
+export default async function preview(req: NextApiRequest, res: NextApiResponse) {
+  const token = req.query.token as string;
+  if (!token) {
+    return res.status(401).json({ message: 'Token inválido' });
   }
 
-  // Calcular total con impuestos
-  const total = calcularTotal(carrito, usuario.ubicacion);
-  
-  // Procesar pago
-  return await procesarPago(total, usuario.metodoPago);
-}
-```
-
-### Caso 2: Dashboard Analítico
-
-Para dashboards, Migración de WordPress a Headless con Next.js mejora la visualización de datos en tiempo real.
-
-### Caso 3: API REST
-
-En APIs, Migración de WordPress a Headless con Next.js optimiza el manejo de solicitudes y respuestas.
-
-## Mejores Prácticas
-
-### Performance y Optimización
-
-✅ **Hacer**:
-- Cachear resultados cuando sea posible
-- Usar lazy loading para recursos pesados
-- Implementar paginación en listas grandes
-- Monitorear métricas de rendimiento
-
-❌ **Evitar**:
-- Cargar datos innecesarios
-- Múltiples re-renders
-- Bloquear el thread principal
-- Ignorar memory leaks
-
-### Seguridad
-
-💡 **Pro Tip**: Siempre valida y sanitiza inputs del usuario.
-
-```javascript
-// Validación de entrada segura
-function sanitizarInput(input) {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Prevenir XSS
-    .slice(0, 1000); // Limitar tamaño
-}
-```
-
-## Errores Comunes y Soluciones
-
-### Error 1: No manejar estados de carga
-
-**Problema**: La UI se congela mientras se cargan datos.
-
-**Solución**: Implementar estados de loading:
-
-```javascript
-const [loading, setLoading] = useState(false);
-const [data, setData] = useState(null);
-
-async function cargarDatos() {
-  setLoading(true);
+  // Validar token contra WP (ejemplo simplificado)
+  const repo = WordPressRepository.getInstance();
   try {
-    const resultado = await fetch('/api/data');
-    setData(resultado);
-  } finally {
-    setLoading(false);
+    // Suponemos que la API tiene un endpoint /preview-auth que verifica el JWT
+    const authRes = await fetch(`${process.env.WP_API_URL}/preview-auth?token=${token}`);
+    if (!authRes.ok) throw new Error('Auth failed');
+
+    // Activar preview mode de Next.js
+    res.setPreviewData({ wpToken: token });
+    const redirectUrl = req.query.slug ? `/${req.query.slug}` : '/';
+    return res.redirect(307, redirectUrl);
+  } catch (err) {
+    console.error('Preview auth error', err);
+    return res.status(403).json({ message: 'No autorizado' });
   }
 }
 ```
 
-### Error 2: Ignorar compatibilidad de navegadores
+```tsx
+// pages/[slug].tsx (uso de preview data)
+import { GetStaticPaths, GetStaticProps, NextPage } from 'next';
+import { WordPressRepository, WPPost } from '../src/services/wordpress';
+import { useRouter } from 'next/router';
 
-**Problema**: Código que solo funciona en Chrome.
+interface PostProps {
+  post: WPPost | null;
+}
 
-**Solución**: Usar polyfills y feature detection.
+export const getStaticPaths: GetStaticPaths = async () => {
+  const repo = WordPressRepository.getInstance();
+  const posts = await repo.getLatestPosts(20);
+  const paths = posts.map((p) => ({ params: { slug: p.slug } }));
+  return { paths, fallback: 'blocking' };
+};
 
-### Error 3: No optimizar para móviles
+export const getStaticProps: GetStaticProps<PostProps> = async (ctx) => {
+  const slug = ctx.params?.slug as string;
+  const repo = WordPressRepository.getInstance();
+  const preview = ctx.preview ?? false;
 
-**Problema**: La experiencia en móvil es deficiente.
+  const endpoint = preview ? `posts?slug=${slug}&_embed` : `posts?slug=${slug}&_embed`;
+  const url = `${repo['baseUrl']}${endpoint}`;
 
-**Solución**: Diseño responsive y touch-friendly desde el inicio.
-
-## Recursos Adicionales
-
-Para profundizar más en Migración de WordPress a Headless con Next.js, consulta:
-
-- 📚 Documentación oficial
-- 🛠️ Herramientas de desarrollo recomendadas
-- 💻 Repositorios de ejemplo en GitHub
-- 🎓 Cursos y tutoriales avanzados
-
-## Conclusión
-
-Migración de WordPress a Headless con Next.js es una habilidad esencial en el desarrollo web moderno. A lo largo de este artículo, hemos cubierto:
-
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica con ejemplos completos
-- Casos de uso del mundo real
-- Mejores prácticas de performance y seguridad
-- Errores comunes y cómo evitarlos
-
-La clave está en practicar constantemente y mantenerse actualizado con las últimas tendencias del ecosistema.
-
-### Próximos Pasos
-
-1. Implementa los ejemplos en tu propio proyecto
-2. Experimenta con diferentes configuraciones
-3. Mide el impacto en performance
-4. Comparte tus resultados con la comunidad
-
-Si necesitas ayuda profesional para implementar Migración de WordPress a Headless con Next.js en tu proyecto, o requieres consultoría especializada en desarrollo web, optimización de performance, arquitectura de aplicaciones o integración de nuevas tecnologías, no dudes en contactarme. Ofrezco servicios de desarrollo full-stack con React, Next.js, WordPress, y soluciones personalizadas para cada necesidad.
+  const res = await fetch(url);
+  if (!res.ok) return { notFound: true };
+  const data = (await res.json()) as any[];
+  const raw = data[0];

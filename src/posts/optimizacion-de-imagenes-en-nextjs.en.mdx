@@ -1,10 +1,9 @@
 ---
-title: Optimización de imágenes en Next.js
+title: Image Optimization in Next.js
 date: '2025-12-24'
 description: >-
-  ## Introducción a Optimización de imágenes en Next.js En el desarrollo web
-  moderno, Optimización de imágenes en Next.js se ha convertido en un aspecto
-  fundamen…
+  Discover how to optimize images in Next.js with proven techniques, real code
+  examples, and scalability strategies to improve Core Web Vitals and.
 toc: true
 tags:
   - desarrollo web
@@ -12,254 +11,453 @@ tags:
   - react
   - next.js
   - seo
-cover: /images/og.png
+cover: /images/posts/optimizacion-de-imagenes-en-nextjs.webp
 author: jaimetrdev
-featured_order: 24
+---
+## 1. Contextual Introduction  
+
+In the last decade, load speed has become a decisive factor for the profitability of any web project. According to **Google PageSpeed Insights 2024**, a 1 s delay in page load reduces e‑commerce conversion by **7 %** and increases bounce rate by **16 %** on content sites. Among the factors that influence speed, **images account for between 50 % and 70 % of a page’s total weight**.  
+
+Next.js, Vercel’s React framework, has evolved from a hybrid rendering solution to a full‑blown resource‑optimization platform. Since version **13**, the `<Image>` component and the **Edge Functions** architecture allow serving adaptive versions of visual assets, reducing **Time to First Byte (TTFB)** and improving the **Core Web Vitals** (LCP, CLS, FID).  
+
+However, merely including the `<Image>` component does not guarantee optimal performance. The choice of **format**, **dimension**, **caching**, and **loading strategy** remain engineering decisions that must align with business requirements (SEO, accessibility, CDN costs, etc.). This article walks through, step by step, how to design and execute a robust image‑optimization solution in Next.js, with production‑ready code examples and analysis of critical trade‑offs.
+
 ---
 
-## Introducción a Optimización de imágenes en Next.js
+## 2. Fundamentals and Architecture  
 
-En el desarrollo web moderno, Optimización de imágenes en Next.js se ha convertido en un aspecto fundamental que todo desarrollador debe dominar. Este artículo explora de manera exhaustiva todos los aspectos relacionados con Optimización de imágenes en Next.js, desde los fundamentos básicos hasta técnicas avanzadas de implementación.
+### 2.1 Key Concepts  
 
-En las siguientes secciones, abordaremos:
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica paso a paso
-- Casos de uso del mundo real
-- Mejores prácticas y optimizaciones
-- Errores comunes y cómo evitarlos
+| Concept | Description | Impact on Next.js |
+|---|---|---|
+| **Responsive Images** | Serve different resolutions based on the viewport. | `<Image>` automatically generates `srcset` and `sizes`. |
+| **Adaptive Format** | Use AVIF/WebP when the browser supports it. | Next.js detects support at the Edge level and delivers the best format. |
+| **Lazy Loading** | Load the image only when it enters the viewport. | `<Image loading="lazy">` enables `IntersectionObserver`. |
+| **Cache‑Control** | Define TTL and revalidation policies. | `next.config.js` allows custom headers at the Edge layer. |
+| **Edge CDN** | Distribute content close to the end user. | Vercel Edge Network or any CDN compatible with Next.js. |
 
-### ¿Por qué es importante Optimización de imágenes en Next.js?
+### 2.2 Design Decisions  
 
-La importancia de Optimización de imágenes en Next.js radica en varios factores críticos:
+1. **Centralize loading logic** through a **custom loader** (Factory) that abstracts the image source (local, S3, Cloudinary).  
+2. **Apply the Repository pattern** for persisting metadata (dimensions, hash, versions) in PostgreSQL via Supabase.  
+3. **Use a Singleton** for CDN configuration, avoiding costly recreations on every request.  
 
-1. **Mejora la experiencia del usuario**: Implementar Optimización de imágenes en Next.js correctamente resulta en una mejor UX.
-2. **Optimiza el rendimiento**: Reduce tiempos de carga y mejora métricas de performance.
-3. **Aumenta la visibilidad SEO**: Los buscadores priorizan sitios que implementan Optimización de imágenes en Next.js adecuadamente.
-4. **Facilita el mantenimiento**: Código bien estructurado es más fácil de mantener a largo plazo.
+### 2.3 Conceptual Diagram (described in text)  
 
-## Fundamentos Técnicos
+- **Client** → requests HTML page.  
+- **Next.js (Edge)** → renders the page, inserts `<Image>` with `src` pointing to **ImageLoaderFactory**.  
+- **ImageLoaderFactory** decides the final URL:  
+  - If the image resides in **Supabase Storage**, it generates a signed URL with expiration.  
+  - If it resides in **Cloudinary**, it applies transformations (`f_auto,q_auto`).  
+- **Edge CDN** → delivers the optimized version (WebP/AVIF) according to the `Accept` header.  
+- **Cache** → controls revalidation via `Cache-Control: public, max‑age=31536000, immutable`.  
 
-Antes de profundizar en la implementación, es crucial entender los conceptos fundamentales:
+---
 
-### Conceptos Clave
+## 3. Practical Implementation  
 
-**Definición**: Optimización de imágenes en Next.js se refiere a [concepto técnico relevante al tema].
+Below is the evolution of an image‑optimization solution in Next.js, from a **naïve** implementation to an **optimized and extensible** architecture.
 
-**Componentes principales**:
-- Configuración inicial y setup
-- Estructura de datos y patrones de diseño
-- Integración con otras tecnologías
-- Testing y validación
+### 3.1 Basic approach: static `<img>`  
 
-### Prerequisitos
+```tsx
+// pages/product/[id].tsx
+import { GetStaticProps, GetStaticPaths } from 'next';
+import { fetchProduct } from '../../lib/api';
 
-Para seguir este tutorial, necesitas:
-- Conocimientos básicos de JavaScript/TypeScript
-- Familiaridad con el ecosistema de Node.js
-- Editor de código (VS Code recomendado)
-- Terminal/línea de comandos
+type Props = {
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string; // Direct URL to S3
+  };
+};
 
-## Implementación Práctica
+export default function ProductPage({ product }: Props) {
+  return (
+    <section>
+      <h1>{product.name}</h1>
+      {/* Image without optimization */}
+      <img src={product.imageUrl} alt={product.name} width={800} height={600} />
+    </section>
+  );
+}
 
-Vamos a implementar Optimización de imágenes en Next.js paso a paso con ejemplos completos y funcionales.
-
-### Paso 1: Configuración Inicial
-
-Primero, configuramos el entorno básico:
-
-```bash
-# Instalar dependencias necesarias
-npm install --save-dev [paquetes-relevantes]
-
-# Inicializar configuración
-npx [herramienta] init
+// ... getStaticProps / getStaticPaths omitted for brevity
 ```
 
-### Paso 2: Implementación Básica
+**Problems:**  
+- No `srcset`, so the browser always downloads the same resolution.  
+- No lazy loading.  
+- No WebP/AVIF format is served.  
 
-```javascript
-// Ejemplo básico de implementación
-export function implementacionBasica() {
-  // Configuración inicial
-  const config = {
-    opcion1: true,
-    opcion2: 'valor',
-    // Más opciones...
+---
+
+### 3.2 First leap: using Next.js `<Image>` component  
+
+```tsx
+// pages/product/[id].tsx
+import Image from 'next/image';
+import { GetStaticProps, GetStaticPaths } from 'next';
+import { fetchProduct } from '../../lib/api';
+
+type Props = {
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string; // Direct URL to S3
+  };
+};
+
+export default function ProductPage({ product }: Props) {
+  return (
+    <section>
+      <h1>{product.name}</h1>
+      {/* Next.js Image enables srcset, lazy loading, and adaptive formats */}
+      <Image
+        src={product.imageUrl}
+        alt={product.name}
+        width={800}
+        height={600}
+        placeholder="blur"
+        blurDataURL="/placeholder.png"
+        quality={80}
+      />
+    </section>
+  );
+}
+```
+
+**Advantages:**  
+- Automatically generates `srcset`.  
+- Lazy loading by default (`loading="lazy"`).  
+- Applies quality optimization (`quality`).  
+
+**Limitations:**  
+- The default loader only works with domains declared in `next.config.js`.  
+- No control over transformations (crop, watermark).  
+
+---
+
+### 3.3 Custom loader with Factory (intermediate version)  
+
+```tsx
+// lib/imageLoader.ts
+import { URL } from 'url';
+
+/**
+ * Loader interface. Each implementation must return an optimized URL
+ * that includes quality and format parameters.
+ */
+export interface ImageLoader {
+  buildUrl(src: string, width: number, quality: number): string;
+}
+
+/**
+ * Loader for Supabase Storage (uses query params for transformation).
+ */
+class SupabaseLoader implements ImageLoader {
+  private readonly baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  buildUrl(src: string, width: number, quality: number): string {
+    const url = new URL(`${this.baseUrl}/${src}`);
+    url.searchParams.set('width', width.toString());
+    url.searchParams.set('quality', quality.toString());
+    url.searchParams.set('format', 'auto'); // Cloudflare or Supabase can decide
+    return url.toString();
+  }
+}
+
+/**
+ * Loader for Cloudinary (applies f_auto,q_auto).
+ */
+class CloudinaryLoader implements ImageLoader {
+  private readonly cloudName: string;
+
+  constructor(cloudName: string) {
+    this.cloudName = cloudName;
+  }
+
+  buildUrl(src: string, width: number, quality: number): string {
+    // Cloudinary URL pattern: https://res.cloudinary.com/<cloud>/image/upload/w_<w>,q_<q>/path
+    return `https://res.cloudinary.com/${this.cloudName}/image/upload/w_${width},q_${quality},f_auto/${src}`;
+  }
+}
+
+/**
+ * Factory that returns the appropriate implementation based on the environment variable.
+ */
+export class ImageLoaderFactory {
+  private static instance: ImageLoader | null = null;
+
+  static getLoader(): ImageLoader {
+    if (this.instance) return this.instance;
+
+    const provider = process.env.IMAGE_PROVIDER;
+    if (provider === 'cloudinary') {
+      this.instance = new CloudinaryLoader(process.env.CLOUDINARY_CLOUD_NAME!);
+    } else {
+      // fallback to Supabase
+      this.instance = new SupabaseLoader(process.env.SUPABASE_STORAGE_URL!);
+    }
+    return this.instance;
+  }
+}
+```
+
+```tsx
+// components/OptimizedImage.tsx
+import Image, { ImageProps } from 'next/image';
+import { ImageLoaderFactory } from '../lib/imageLoader';
+
+/**
+ * Wrapper that delegates URL construction to the loader factory.
+ */
+export const OptimizedImage = (props: ImageProps) => {
+  const { src, width = 800, quality = 75, ...rest } = props;
+  const loader = ImageLoaderFactory.getLoader();
+
+  // Next.js allows passing a custom `loader` function.
+  const customLoader = ({
+    src,
+    width,
+    quality,
+  }: {
+    src: string;
+    width: number;
+    quality?: number;
+  }) => {
+    return loader.buildUrl(src, width, quality ?? 75);
   };
 
-  // Lógica principal
-  return procesarDatos(config);
-}
+  return (
+    <Image
+      src={src as string}
+      width={width}
+      quality={quality}
+      loader={customLoader}
+      placeholder="blur"
+      blurDataURL="/placeholder.png"
+      {...rest}
+    />
+  );
+};
+```
 
-function procesarDatos(config) {
-  // Implementación detallada
-  console.log('Procesando con:', config);
-  return { exito: true, data: [] };
+```tsx
+// pages/product/[id].tsx (using the wrapper)
+import { OptimizedImage } from '../../components/OptimizedImage';
+import { GetStaticProps, GetStaticPaths } from 'next';
+import { fetchProduct } from '../../lib/api';
+
+type Props = {
+  product: {
+    id: string;
+    name: string;
+    imagePath: string; // Relative path in the bucket
+  };
+};
+
+export default function ProductPage({ product }: Props) {
+  return (
+    <section>
+      <h1>{product.name}</h1>
+      <OptimizedImage
+        src={product.imagePath}
+        alt={product.name}
+        width={1200}
+        height={800}
+        quality={85}
+      />
+    </section>
+  );
 }
 ```
 
-### Paso 3: Implementación Avanzada
+**Trade‑offs:**  
+- **Pros:** Centralizes URL‑generation logic, allows swapping providers without touching components.  
+- **Cons:** Adds an abstraction layer that increases initial complexity.  
 
-Para casos más complejos, podemos usar un enfoque más robusto:
+---
 
-```javascript
-// Implementación avanzada con manejo de errores
-class GestorAvanzado {
-  constructor(opciones = {}) {
-    this.config = { ...opcionesPorDefecto, ...opciones };
-    this.inicializar();
-  }
+### 3.4 Build‑time optimization: `next-optimized-images` (deprecated) → **next-image-export-optimizer**  
 
-  inicializar() {
-    // Setup inicial
-    this.validarConfiguracion();
-    this.prepararRecursos();
-  }
+Although the `next-optimized-images` plugin is deprecated, the community has adopted **`next-image-export-optimizer`** to generate static AVIF and WebP versions during the *build*.
 
-  async ejecutar() {
-    try {
-      const resultado = await this.procesamientoAsincrono();
-      return this.formatearResultado(resultado);
-    } catch (error) {
-      this.manejarError(error);
-      throw error;
+```bash
+# .bashrc (or CI script)
+export NEXT_IMAGE_OPTIMIZER=true
+```
+
+```yaml
+# next.config.mjs
+import imageOptimizer from 'next-image-export-optimizer';
+import { defineConfig } from 'next';
+
+export default defineConfig({
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'my-supabase.storage',
+        pathname: '/**',
+      },
+    ],
+  },
+  // Integration of the optimizer in the export phase
+  experimental: {
+    images: {
+      unoptimized: false,
+    },
+  },
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      config.module.rules.push({
+        test: /\.(jpe?g|png|gif|svg)$/i,
+        use: [
+          {
+            loader: imageOptimizer.loader,
+            options: {
+              // Generate AVIF and WebP, keep JPEG as fallback
+              formats: ['avif', 'webp'],
+              quality: 80,
+              // Common breakpoint widths
+              widths: [320, 640, 960, 1280, 1600, 1920],
+            },
+          },
+        ],
+      });
     }
+    return config;
+  },
+});
+```
+
+**Benefits:**  
+- Images are processed once in CI, reducing load on the Edge.  
+- The resulting files are served as static assets, allowing `Cache-Control: immutable`.  
+
+**Considerations:**  
+- The build process becomes more expensive (CPU‑intensive). It is recommended to run it on runners with dedicated resources.  
+
+---
+
+### 3.5 Advanced strategy: **Edge Middleware** + **Dynamic Image Service** (Node.js)  
+
+For cases where an image needs dynamic transformations (crop, overlay, branding), you can expose an **API Route** that acts as an image micro‑service, running on the Edge.
+
+```ts
+// src/pages/api/_image.ts
+import type { NextRequest } from 'next/server';
+import sharp from 'sharp';
+import { supabaseClient } from '../../lib/supabase';
+
+// Singleton for the Supabase client (avoids reconnections)
+let supabase = supabaseClient;
+
+/**
+ * Middleware that receives query parameters:
+ *   ?src=path/to/img.jpg&width=1200&format=webp&fit=crop
+ */
+export const config = {
+  runtime: 'edge',
+};
+
+export default async function handler(req: NextRequest) {
+  const url = new URL(req.url);
+  const src = url.searchParams.get('src');
+  const width = Number(url.searchParams.get('width')) || 800;
+  const format = (url.searchParams.get('format') as 'webp' | 'avif' | 'jpeg') || 'webp';
+  const fit = (url.searchParams.get('fit') as 'cover' | 'contain') || 'cover';
+
+  if (!src) {
+    return new Response('Missing src', { status: 400 });
   }
 
-  validarConfiguracion() {
-    // Validaciones necesarias
-    if (!this.config.required) {
-      throw new Error('Configuración incompleta');
-    }
+  // 1️⃣ Fetch the original image from Supabase Storage
+  const { data, error } = await supabase.storage.from('images').download(src);
+  if (error || !data) {
+    return new Response('Image not found', { status: 404 });
   }
+
+  // 2️⃣ Transform with Sharp (crop, resize, format conversion)
+  const transformed = await sharp(await data.arrayBuffer())
+    .resize({ width, fit })
+    .toFormat(format, { quality: 85 })
+    .toBuffer();
+
+  // 3️⃣ Respond with cache headers
+  const headers = new Headers({
+    'Content-Type': `image/${format}`,
+    'Cache-Control': 'public, max-age=31536000, immutable',
+  });
+
+  return new Response(transformed, { status: 200, headers });
 }
 ```
 
-## Casos de Uso Reales
+```tsx
+// components/DynamicOptimizedImage.tsx
+import Image from 'next/image';
+import { useMemo } from 'react';
 
-Veamos cómo aplicar Optimización de imágenes en Next.js en escenarios del mundo real:
+/**
+ * Wrapper that points to the Edge API for dynamic transformations.
+ */
+export const DynamicOptimizedImage = ({
+  src,
+  alt,
+  width,
+  height,
+  format = 'webp',
+  fit = 'cover',
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  format?: 'webp' | 'avif' | 'jpeg';
+  fit?: 'cover' | 'contain';
+}) => {
+  const url = useMemo(() => {
+    const params = new URLSearchParams({
+      src,
+      width: width.toString(),
+      format,
+      fit,
+    });
+    return `/api/_image?${params.toString()}`;
+  }, [src, width, format, fit]);
 
-### Caso 1: Aplicación E-commerce
-
-En una tienda online, Optimización de imágenes en Next.js se usa para optimizar el checkout:
-
-```javascript
-// Implementación para e-commerce
-async function procesarPedido(carrito, usuario) {
-  // Validar stock disponible
-  const stockValido = await validarInventario(carrito);
-  
-  if (!stockValido) {
-    throw new Error('Productos sin stock');
-  }
-
-  // Calcular total con impuestos
-  const total = calcularTotal(carrito, usuario.ubicacion);
-  
-  // Procesar pago
-  return await procesarPago(total, usuario.metodoPago);
-}
+  return (
+    <Image
+      src={url}
+      alt={alt}
+      width={width}
+      height={height}
+      placeholder="blur"
+      blurDataURL="/placeholder.png"
+    />
+  );
+};
 ```
 
-### Caso 2: Dashboard Analítico
+**Advantages of this architecture:**  
 
-Para dashboards, Optimización de imágenes en Next.js mejora la visualización de datos en tiempo real.
+| Aspect | Static approach (next‑image‑export‑optimizer) | Edge Middleware + Sharp |
+|---|---|---|
+| **Latency** | Very low (CDN serves pre‑generated file) | Moderate (processing at the edge) |
+| **Flexibility** | Limited to predefined breakpoints and formats | Unlimited dynamic transformations |
+| **Build cost** | High (CPU‑intensive during CI) | Low (runtime cost spread across edge nodes) |
+| **Cacheability** | Immutable static assets | Can still be cached, but varies per request parameters |
 
-### Caso 3: API REST
-
-En APIs, Optimización de imágenes en Next.js optimiza el manejo de solicitudes y respuestas.
-
-## Mejores Prácticas
-
-### Performance y Optimización
-
-✅ **Hacer**:
-- Cachear resultados cuando sea posible
-- Usar lazy loading para recursos pesados
-- Implementar paginación en listas grandes
-- Monitorear métricas de rendimiento
-
-❌ **Evitar**:
-- Cargar datos innecesarios
-- Múltiples re-renders
-- Bloquear el thread principal
-- Ignorar memory leaks
-
-### Seguridad
-
-💡 **Pro Tip**: Siempre valida y sanitiza inputs del usuario.
-
-```javascript
-// Validación de entrada segura
-function sanitizarInput(input) {
-  return input
-    .trim()
-    .replace(/[<>]/g, '') // Prevenir XSS
-    .slice(0, 1000); // Limitar tamaño
-}
-```
-
-## Errores Comunes y Soluciones
-
-### Error 1: No manejar estados de carga
-
-**Problema**: La UI se congela mientras se cargan datos.
-
-**Solución**: Implementar estados de loading:
-
-```javascript
-const [loading, setLoading] = useState(false);
-const [data, setData] = useState(null);
-
-async function cargarDatos() {
-  setLoading(true);
-  try {
-    const resultado = await fetch('/api/data');
-    setData(resultado);
-  } finally {
-    setLoading(false);
-  }
-}
-```
-
-### Error 2: Ignorar compatibilidad de navegadores
-
-**Problema**: Código que solo funciona en Chrome.
-
-**Solución**: Usar polyfills y feature detection.
-
-### Error 3: No optimizar para móviles
-
-**Problema**: La experiencia en móvil es deficiente.
-
-**Solución**: Diseño responsive y touch-friendly desde el inicio.
-
-## Recursos Adicionales
-
-Para profundizar más en Optimización de imágenes en Next.js, consulta:
-
-- 📚 Documentación oficial
-- 🛠️ Herramientas de desarrollo recomendadas
-- 💻 Repositorios de ejemplo en GitHub
-- 🎓 Cursos y tutoriales avanzados
-
-## Conclusión
-
-Optimización de imágenes en Next.js es una habilidad esencial en el desarrollo web moderno. A lo largo de este artículo, hemos cubierto:
-
-- Fundamentos teóricos y conceptos clave
-- Implementación práctica con ejemplos completos
-- Casos de uso del mundo real
-- Mejores prácticas de performance y seguridad
-- Errores comunes y cómo evitarlos
-
-La clave está en practicar constantemente y mantenerse actualizado con las últimas tendencias del ecosistema.
-
-### Próximos Pasos
-
-1. Implementa los ejemplos en tu propio proyecto
-2. Experimenta con diferentes configuraciones
-3. Mide el impacto en performance
-4. Comparte tus resultados con la comunidad
-
-Si necesitas ayuda profesional para implementar Optimización de imágenes en Next.js en tu proyecto, o requieres consultoría especializada en desarrollo web, optimización de performance, arquitectura de aplicaciones o integración de nuevas tecnologías, no dudes en contactarme. Ofrezco servicios de desarrollo full-stack con React, Next.js, WordPress, y soluciones personalizadas para cada necesidad.
+---

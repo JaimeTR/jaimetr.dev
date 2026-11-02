@@ -95,6 +95,24 @@ export const translations = {
         // Common
         inicio: 'Inicio',
         cv: 'CV',
+
+        // Blog: buscador y filtros
+        buscarArticulos: 'Buscar artículos por título o descripción...',
+        filtrarPorTemas: 'Filtrar por temas:',
+        limpiarFiltros: 'Limpiar filtros',
+        noSeEncontraronArticulos: 'No se encontraron artículos',
+        intentaAjustarBusqueda: 'Intenta ajustar tu búsqueda o limpiar los filtros seleccionados para ver más resultados.',
+
+        // Navbar mobile menu
+        abrirMenu: 'Abrir menu',
+        cerrarMenu: 'Cerrar menu',
+
+        // Project viewer modal
+        abrirNuevaPestana: 'Abrir en nueva pestaña',
+        cerrar: 'Cerrar',
+        previewNoDisponible: 'No se pudo cargar la vista previa',
+        previewBloqueadoPorSitio: 'El sitio web bloquea la previsualización en iframe por seguridad.',
+        sinEnlace: 'Sin enlace',
     },
     en: {
         // Navbar
@@ -192,6 +210,24 @@ export const translations = {
         // Common
         inicio: 'Home',
         cv: 'Resume',
+
+        // Blog: search and filters
+        buscarArticulos: 'Search articles by title or description...',
+        filtrarPorTemas: 'Filter by topic:',
+        limpiarFiltros: 'Clear filters',
+        noSeEncontraronArticulos: 'No articles found',
+        intentaAjustarBusqueda: 'Try adjusting your search or clearing the selected filters to see more results.',
+
+        // Navbar mobile menu
+        abrirMenu: 'Open menu',
+        cerrarMenu: 'Close menu',
+
+        // Project viewer modal
+        abrirNuevaPestana: 'Open in new tab',
+        cerrar: 'Close',
+        previewNoDisponible: 'Preview unavailable',
+        previewBloqueadoPorSitio: 'This website blocks iframe preview for security reasons.',
+        sinEnlace: 'No link',
     }
 }
 

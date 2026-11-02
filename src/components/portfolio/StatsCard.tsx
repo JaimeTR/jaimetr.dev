@@ -67,14 +67,16 @@ export default function StatsCard({ isEmbedded = false }: StatsCardProps = {}) {
 
   const innerContent = (
     <>
-      {/* Background GIF / Image */}
-      <Image 
-        src={bgImage} 
-        alt="Developer Background" 
-        fill
-        className="absolute inset-0 w-full h-full object-cover opacity-10 dark:opacity-60 group-hover:opacity-20 dark:group-hover:opacity-80 group-hover:scale-105 transition-all duration-1000 dark:mix-blend-screen mix-blend-multiply"
-        unoptimized={bgImage.endsWith('.gif')}
-      />
+      {/* Background GIF / Image (opcional, configurable desde el admin) */}
+      {bgImage && (
+        <Image
+          src={bgImage}
+          alt="Developer Background"
+          fill
+          className="absolute inset-0 w-full h-full object-cover opacity-10 dark:opacity-60 group-hover:opacity-20 dark:group-hover:opacity-80 group-hover:scale-105 transition-all duration-1000 dark:mix-blend-screen mix-blend-multiply"
+          unoptimized={bgImage.endsWith('.gif')}
+        />
+      )}
       {/* Dark/Light Overlay to ensure text readability */}
       <div className="absolute inset-0 bg-white/70 group-hover:bg-white/50 dark:bg-black/50 dark:group-hover:bg-black/40 transition-colors duration-700" />
       <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/50 dark:from-black/80 dark:via-transparent dark:to-black/30" />
