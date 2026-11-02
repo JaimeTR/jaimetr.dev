@@ -5,7 +5,10 @@ import { createAuthToken } from '@/lib/auth'
 export const dynamic = 'force-dynamic'
 
 function hashCode(code, email) {
-  const secret = process.env.ADMIN_SECRET || process.env.ADMIN_TOKEN || 'jaimetr_internal_secret_2025'
+  const secret = process.env.ADMIN_SECRET || process.env.ADMIN_TOKEN
+  if (!secret) {
+    throw new Error('ADMIN_SECRET or ADMIN_TOKEN must be configured')
+  }
   const timestamp = Math.floor(Date.now() / 60000)
   return crypto.createHash('sha256').update(`${code}:${email}:${secret}:${timestamp}`).digest('hex')
 }
@@ -20,7 +23,11 @@ export async function POST(req) {
     }
 
     const now = Date.now()
-    const secret = process.env.ADMIN_SECRET || process.env.ADMIN_TOKEN || 'jaimetr_internal_secret_2025'
+    const secret = process.env.ADMIN_SECRET || process.env.ADMIN_TOKEN
+
+    if (!secret) {
+      return NextResponse.json({ error: 'Configuracion de administrador no disponible' }, { status: 500 })
+    }
 
     let valid = false
     for (let offset = 0; offset <= 5; offset++) {

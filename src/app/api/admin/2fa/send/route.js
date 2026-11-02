@@ -10,7 +10,10 @@ function generateCode() {
 }
 
 function hashCode(code, email) {
-  const secret = process.env.ADMIN_SECRET || process.env.ADMIN_TOKEN || 'jaimetr_internal_secret_2025'
+  const secret = process.env.ADMIN_SECRET || process.env.ADMIN_TOKEN
+  if (!secret) {
+    throw new Error('ADMIN_SECRET or ADMIN_TOKEN must be configured')
+  }
   const timestamp = Math.floor(Date.now() / 60000)
   return crypto.createHash('sha256').update(`${code}:${email}:${secret}:${timestamp}`).digest('hex')
 }
@@ -65,7 +68,11 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Email requerido' }, { status: 400 })
     }
 
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'jaimetr1309@gmail.com'
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
+    if (!adminEmail) {
+      return NextResponse.json({ error: 'Configuracion de administrador no disponible' }, { status: 500 })
+    }
+
     if (email !== adminEmail) {
       return NextResponse.json({ error: 'Email no autorizado' }, { status: 403 })
     }
