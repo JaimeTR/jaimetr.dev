@@ -40,3 +40,9 @@ extracted_strings.txt
 index-*.css
 index-*.js
 keynote_source*.html
+
+# Herramientas de agentes (se reinstalan, no son del producto)
+.claude/
+.agents/
+.impeccable/
+skills-lock.json

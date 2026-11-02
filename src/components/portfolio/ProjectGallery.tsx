@@ -31,8 +31,6 @@ const categoryKeys: Record<string, string> = {
   "Automatizaciones": "automatizaciones"
 };
 
-import { supabase } from '@/lib/supabase'
-
 interface ProjectGalleryProps {
   isEmbedded?: boolean;
 }
@@ -79,14 +77,11 @@ export default function ProjectGallery({ isEmbedded = false }: ProjectGalleryPro
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('is_visible', true)
-        .order('sort_order', { ascending: true });
-        
-      if (!error && data) {
-        setProjectsData(data as Project[]);
+      try {
+        const res = await fetch('/api/projects');
+        if (res.ok) setProjectsData((await res.json()) as Project[]);
+      } catch {
+        // sin conexion: la galeria queda vacia
       }
       setLoading(false);
     };

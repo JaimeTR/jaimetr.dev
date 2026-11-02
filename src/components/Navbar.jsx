@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 'use client'
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { NavLink } from './NavLink'
 import { FaLinkedinIn, FaGithub, FaFacebook, FaInstagram } from 'react-icons/fa'
 import { SiTiktok } from 'react-icons/si'
@@ -13,7 +13,6 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 
 export const Navbar = () => {
-    const navRef = useRef()
     const [isOpen, setIsOpen] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
     const [profile, setProfile] = useState(null)
@@ -34,10 +33,16 @@ export const Navbar = () => {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
-    const showNavBar = () => {
-        navRef.current.classList.toggle('hidden')
-        setIsOpen(!isOpen)
-    }
+    // El menu movil se abre y cierra solo con estado (antes se mutaba el DOM y se desincronizaba al redimensionar).
+    useEffect(() => {
+        if (!isOpen) return
+        const cerrarConEscape = (e) => e.key === 'Escape' && setIsOpen(false)
+        document.addEventListener('keydown', cerrarConEscape)
+        return () => document.removeEventListener('keydown', cerrarConEscape)
+    }, [isOpen])
+
+    const showNavBar = () => setIsOpen((abierto) => !abierto)
+    const cerrarMenu = () => setIsOpen(false)
 
     const headerClass = `fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'top-0 sm:top-4 px-0 sm:px-4' : 'top-0 px-0'}`
     const navClass = `container max-w-6xl mx-auto flex flex-wrap items-center justify-between transition-all duration-300 ${
@@ -142,6 +147,7 @@ export const Navbar = () => {
                             onClick={showNavBar}
                             aria-label={isOpen ? t('cerrarMenu') : t('abrirMenu')}
                             aria-expanded={isOpen}
+                            aria-controls="menu-principal"
                         >
                             {isOpen ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
@@ -156,8 +162,8 @@ export const Navbar = () => {
                     </div>
                 </div>
                 <div
-                    ref={navRef}
-                    className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1 transition-all duration-500"
+                    id="menu-principal"
+                    className={`items-center justify-between w-full md:flex md:w-auto md:order-1 transition-all duration-500 ${isOpen ? 'flex' : 'hidden'}`}
                 >
                     <ul className="flex flex-col gap-6 p-4 md:p-0 mt-4 font-medium md:flex-row md:mt-0 md:border-0">
                         {headerLinks.filter(l => l.visible !== false).map((link, idx) => (
@@ -165,7 +171,7 @@ export const Navbar = () => {
                                 <NavLink 
                                     label={language === 'es' ? link.label_es : link.label_en} 
                                     link={getLinkUrl(link)} 
-                                    action={showNavBar} 
+                                    action={cerrarMenu} 
                                 />
                             </li>
                         ))}

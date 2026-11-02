@@ -43,23 +43,14 @@ export async function POST(request) {
     const body = await request.json()
     const { type, data } = body
 
-    if (!type || !['project', 'experience'].includes(type)) {
+    if (!type || !['experience'].includes(type)) {
       return NextResponse.json(
-        { error: 'Tipo de dato inválido. Use "project" o "experience"' },
+        { error: 'Tipo de dato inválido. Use "experience"' },
         { status: 400 }
       )
     }
 
     // Validar datos requeridos
-    if (type === 'project') {
-      if (!data.name || !data.description) {
-        return NextResponse.json(
-          { error: 'Nombre y descripción del proyecto son requeridos' },
-          { status: 400 }
-        )
-      }
-    }
-
     if (type === 'experience') {
       if (!data.role || !data.company || !data.date || !data.description) {
         return NextResponse.json(
@@ -69,41 +60,9 @@ export async function POST(request) {
       }
     }
 
-    // Aquí guardamos en el archivo
-    if (type === 'project') {
-      const projectsPath = path.join(process.cwd(), 'src/data/projects.json')
-      let projects = []
-      
-      try {
-        if (fs.existsSync(projectsPath)) {
-          const fileData = fs.readFileSync(projectsPath, 'utf8')
-          projects = JSON.parse(fileData)
-        }
-      } catch (e) {
-        console.error("Error leyendo projects.json", e)
-      }
-
-      const newId = projects.length > 0 ? Math.max(...projects.map(p => p.id || 0)) + 1 : 1
-      
-      const newProject = {
-        id: newId,
-        title: data.name,
-        description: data.description,
-        image: data.image || "/developer.gif",
-        category: "Webs", // Categoría por defecto
-        rubro: "Otros",
-        technologies: data.technologies || [],
-        url: data.link || data.github || "",
-        allowIframe: false
-      }
-
-      projects.unshift(newProject) // Agregar al inicio
-      fs.writeFileSync(projectsPath, JSON.stringify(projects, null, 2))
-    }
-
     return NextResponse.json({
       success: true,
-      message: `${type === 'project' ? 'Proyecto' : 'Experiencia'} agregado correctamente`,
+      message: 'Experiencia agregada correctamente',
       data
     })
   } catch (error) {

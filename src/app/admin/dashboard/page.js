@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { BlogGeneratorForm } from '@/components/Admin/BlogGeneratorForm'
 import { BlogsList } from '@/components/Admin/BlogsList'
 import { BlogEditor } from '@/components/Admin/BlogEditor'
-import { ManageProjects } from '@/components/Admin/ManageProjects'
 import { ManageProfile } from '@/components/Admin/ManageProfile'
 import { ManageAboutMe } from '@/components/Admin/ManageAboutMe'
 import { ManageExperience } from '@/components/Admin/ManageExperience'
@@ -22,7 +21,6 @@ const menuItems = [
   { id: 'profile', label: 'Perfil', icon: FiUser },
   { id: 'aboutme', label: 'Sobre Mi', icon: FiSmile },
   { id: 'experience', label: 'Experiencia', icon: FiBriefcase },
-  { id: 'project', label: 'Proyectos', icon: FiPackage },
   { id: 'skills', label: 'Habilidades', icon: FiCode },
   { id: 'manage-blog', label: 'Blogs', icon: FiEdit3 },
   { id: 'chat-messages', label: 'Chats', icon: FiMessageSquare },
@@ -33,7 +31,6 @@ const componentMap = {
   'profile': ManageProfile,
   'aboutme': ManageAboutMe,
   'experience': ManageExperience,
-  'project': ManageProjects,
   'skills': ManageSkills,
   'manage-blog': null,
   'chat-messages': ManageChatMessages,

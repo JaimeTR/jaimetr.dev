@@ -1,33 +1,14 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { NextResponse } from 'next/server'
+import { proyectosDelErp } from '@/lib/erp'
+import { supabase } from '@/lib/supabase'
 
-const dataFilePath = path.join(process.cwd(), 'src', 'data', 'projects.json');
+export const revalidate = 1800
 
+// Primero el ERP (la fuente); si no esta disponible, la tabla projects de Supabase como respaldo.
 export async function GET() {
-  try {
-    const fileContents = await fs.readFile(dataFilePath, 'utf8');
-    const projects = JSON.parse(fileContents);
-    return NextResponse.json(projects);
-  } catch (error) {
-    console.error("Error reading projects:", error);
-    return NextResponse.json({ error: "Failed to read projects" }, { status: 500 });
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const newProjects = await request.json();
-    
-    if (!Array.isArray(newProjects)) {
-      return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
-    }
-
-    await fs.writeFile(dataFilePath, JSON.stringify(newProjects, null, 2), 'utf8');
-    
-    return NextResponse.json({ success: true, message: "Projects updated successfully" });
-  } catch (error) {
-    console.error("Error saving projects:", error);
-    return NextResponse.json({ error: "Failed to save projects" }, { status: 500 });
-  }
+  const delErp = await proyectosDelErp()
+  if (delErp) return NextResponse.json(delErp)
+  const { data, error } = await supabase.from('projects').select('*').eq('is_visible', true).order('sort_order', { ascending: true })
+  if (error) return NextResponse.json({ error: 'No se pudieron leer los proyectos' }, { status: 500 })
+  return NextResponse.json(data)
 }
