@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { createClient } from '@supabase/supabase-js'
+import { datosPersonalesDelErp } from '@/lib/erp'
 import { rateLimit, RATE_LIMITS } from '@/lib/ratelimit'
 
 export const dynamic = 'force-dynamic'
@@ -12,9 +12,6 @@ const groq = process.env.GROQ_API_KEY
     })
   : null
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
 
 export async function POST(req) {
   try {
@@ -42,23 +39,10 @@ export async function POST(req) {
     const slicedMessages = messages.slice(-20)
 
    let dynamicContext = ''
-   if (supabase) {
-     try {
-       const { data: profileData } = await supabase.from('profile').select('*').limit(1).single()
-       if (profileData) {
-         dynamicContext = `
-Nombre: Jaime Tarazona
-Perfil: Ingeniero de Sistemas | Full-Stack Developer | Web Developer WP. +5 años de experiencia creando soluciones web profesionales.
-Email: ${profileData?.contact_email || 'jaimetr1309@gmail.com'}
-WhatsApp/Teléfono: ${profileData?.contact_phone || '+51 975646074'}
-Resumen: ${language === 'es' ? profileData?.about_me_paragraphs?.[0]?.es || '' : profileData?.about_me_paragraphs?.[0]?.en || ''}
-Proyectos Destacados: Más de ${profileData.stats_projects_completed || 300} proyectos completados.
-         `
-       }
-     } catch (e) {
-       console.warn('Could not fetch dynamic context', e)
-     }
-   }
+   try {
+     const { perfil: profileData, experiencia = [], habilidades = [] } = await datosPersonalesDelErp()
+     dynamicContext = 'Perfil: '+(language==='en'?profileData.hero_title_en:profileData.hero_title_es)+'\nResumen: '+JSON.stringify(profileData.about_me_paragraphs||[])+'\nExperiencia: '+experiencia.map(x=>x.cargo+' en '+x.empresaNombre+': '+x.descripcion).join('; ')+'\nHabilidades: '+habilidades.map(x=>x.nombre).join(', ')
+   } catch {}
 
     const systemPromptEs = `
 Eres "JaimeAI", el asistente virtual de Jaime Tarazona.

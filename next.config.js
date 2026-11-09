@@ -1,7 +1,7 @@
 const withMDX = require('@next/mdx')()
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://epmdauwektgtwujsisdh.supabase.co'
-const supabaseHostname = supabaseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
+const imageHost = process.env.SUPABASE_URL_ERP_IMAGENES || ''
+const imageHostname = imageHost.replace(/^https?:\/\//, '').split('/')[0]
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -17,7 +17,7 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: supabaseHostname,
+                hostname: imageHostname || "localhost",
                 port: '',
                 pathname: '/storage/**',
             },
@@ -58,7 +58,7 @@ const nextConfig = {
                     },
                     {
                         key: 'Content-Security-Policy',
-                        value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://${supabaseHostname} https://www.google-analytics.com; media-src 'self' blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' data: blob: https://${supabaseHostname} https://api.groq.com https://generativelanguage.googleapis.com https://api.openai.com https://www.google-analytics.com https://*.vercel-insights.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';`
+                        value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://${imageHostname || 'localhost'} https://www.google-analytics.com; media-src 'self' blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' data: blob: https://api.groq.com https://generativelanguage.googleapis.com https://api.openai.com https://www.google-analytics.com https://*.vercel-insights.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';`
                     },
                 ],
             },

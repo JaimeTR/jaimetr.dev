@@ -1,11 +1,11 @@
 import { ArticleCard } from '../ArticleCard'
 import { Container } from '../Container'
-import { getAllPostsMetadata } from '@/lib/mdx'
+import { articulosDelErp } from '@/lib/erp'
 import ArticlesHeader from '@/components/Articles/ArticlesHeader'
 import ArticlesFooterLink from '@/components/Articles/ArticlesFooterLink'
 
 export const Articles = async () => {
-    const allPosts = getAllPostsMetadata()
+    const allPosts = (await articulosDelErp('es')).map(p=>({...p,title:p.titulo,description:p.resumen,date:p.publicadoEn,cover:p.imagen,tags:p.etiquetas,is_featured:true}))
     
     // Filtrar los ocultos
     const posts = allPosts.filter(post => !post.is_hidden)

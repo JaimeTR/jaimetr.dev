@@ -274,3 +274,30 @@ body {
     background-color: #008fd4; /* No changes to pixel values */
     color: white; /* No changes to pixel values */
 }
+
+:root { --font-onest: 'Onest Variable'; }
+
+.article-content { font-size: 1.125rem; line-height: 1.85; color: #334155; }
+.dark .article-content { color: #cbd5e1; }
+.article-content h2, .article-content h3, .article-content h4 { margin: 2.25em 0 .7em; color: #0f172a; font-weight: 700; line-height: 1.25; scroll-margin-top: 6rem; }
+.dark .article-content h2, .dark .article-content h3, .dark .article-content h4 { color: #f8fafc; }
+.article-content h2 { font-size: 1.8rem; }
+.article-content h3 { font-size: 1.4rem; }
+.article-content p, .article-content ul, .article-content ol, .article-content blockquote { margin: 1.25em 0; }
+.article-content ul, .article-content ol { padding-left: 1.5em; }
+.article-content ul { list-style: disc; }
+.article-content ol { list-style: decimal; }
+.article-content a { color: #0284c7; text-decoration: underline; text-underline-offset: .2em; }
+.article-content blockquote { border-left: 4px solid #38bdf8; padding-left: 1em; color: #64748b; }
+.article-content pre { overflow-x: auto; margin: 1.5em 0; border-radius: .75rem; background: #0f172a; padding: 1.25rem; color: #e2e8f0; font-size: .9rem; line-height: 1.6; }
+.article-content code { border-radius: .25rem; background: rgb(148 163 184 / .18); padding: .12em .3em; font-size: .9em; }
+.article-content pre code { background: transparent; padding: 0; }
+.article-content table { display: block; width: 100%; overflow-x: auto; border-collapse: collapse; margin: 1.5em 0; }
+.article-content th, .article-content td { border: 1px solid #cbd5e1; padding: .6em .8em; text-align: left; }
+.dark .article-content th, .dark .article-content td { border-color: #475569; }
+.article-content th { background: rgb(148 163 184 / .15); font-weight: 700; }
+.article-content img { max-width: 100%; height: auto; border-radius: .75rem; }
+.article-content .hljs-keyword, .article-content .hljs-selector-tag { color: #c084fc; }
+.article-content .hljs-string, .article-content .hljs-attr { color: #86efac; }
+.article-content .hljs-number, .article-content .hljs-literal { color: #fda4af; }
+.article-content .hljs-comment { color: #94a3b8; font-style: italic; }

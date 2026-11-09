@@ -1,14 +1,8 @@
-import { Onest } from 'next/font/google'
 import { Navbar } from '@/components/Navbar'
-
-const onest = Onest({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-onest',
-})
 import { DarkModeProvider } from '@/app/providers/DarkModeProvider'
 import { LanguageProvider } from '@/app/providers/LanguageProvider'
 import '@/app/globals.css'
+import '@fontsource-variable/onest'
 import { Footer } from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/react'
@@ -87,10 +81,9 @@ export default async function RootLayout({ children, params }) {
             <head>
                 <meta name="google-site-verification" content="MlMRSjHtnqT7cbCEXeYCLPb8xbd-9Jsmf4VG7rl-94s" />
                 <meta name="msvalidate.01" content="6E674BE7C59CEA166AC23BB271E56771" />
-                <link rel="preconnect" href="https://epmdauwektgtwujsisdh.supabase.co" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://api.groq.com" crossOrigin="anonymous" />
             </head>
-            <body className={`${onest.variable} bg-dark-50 dark:bg-dark-950`}>
+            <body className="bg-dark-50 dark:bg-dark-950">
                 <JsonLd />
                 <LanguageProvider initialLang={lang}>
                     <DarkModeProvider>

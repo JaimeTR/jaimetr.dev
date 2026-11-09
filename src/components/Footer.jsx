@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { getProfile } from '@/lib/content'
 
 export const Footer = () => {
     const { language } = useLanguage()
@@ -13,7 +13,7 @@ export const Footer = () => {
     }, [])
 
     const fetchProfile = async () => {
-        const { data, error } = await supabase.from('profile').select('footer_text_es, footer_text_en, footer_links').limit(1).single()
+        const { data, error } = await getProfile()
         if (!error && data) {
             setProfile(data)
         }

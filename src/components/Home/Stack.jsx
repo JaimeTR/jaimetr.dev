@@ -5,7 +5,7 @@ import { SetStack } from '@/components/SetStack'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { content } from '@/lib/content'
 import { ICONS_MAP } from '@/helpers/iconsMap'
 import { FiCode } from 'react-icons/fi'
 import { FaBrain } from 'react-icons/fa'
@@ -26,19 +26,9 @@ export const Stack = () => {
     }, [])
 
     const fetchSkills = async () => {
-        const { data, error } = await supabase
-            .from('skills')
-            .select('*')
-            .order('sort_order', { ascending: true })
-        if (!error && data) {
-            const grouped = {
-                frontend: data.filter(s => s.category === 'frontend'),
-                backend: data.filter(s => s.category === 'backend'),
-                learning: data.filter(s => s.category === 'learning'),
-                tools: data.filter(s => s.category === 'tools')
-            }
-            setSkills(grouped)
-        }
+        const { habilidades = [] } = await (await fetch('/api/personal')).json()
+        const data=habilidades.map((x,i)=>({...x,id:i,category:x.categoria,icon_name:x.icono,level:x.nivel}))
+        setSkills({frontend:data.filter(x=>x.category==='frontend'),backend:data.filter(x=>x.category==='backend'),learning:data.filter(x=>x.category==='learning'),tools:data.filter(x=>x.category==='tools')})
     }
     
     if (!mounted) return null

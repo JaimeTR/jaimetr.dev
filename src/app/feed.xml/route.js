@@ -1,9 +1,9 @@
-import { getAllPostsMetadata } from '@/lib/mdx'
+import { articulosDelErp } from '@/lib/erp'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const posts = getAllPostsMetadata('es').filter(p => !p.is_hidden)
+  const posts = (await articulosDelErp('es')).map(p=>({...p,title:p.titulo,description:p.resumen,date:p.publicadoEn,tags:p.etiquetas}))
   const baseUrl = 'https://jaimetr.dev'
 
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
@@ -18,8 +18,8 @@ export async function GET() {
     ${posts.map(post => `
     <item>
       <title><![CDATA[${post.title || ''}]]></title>
-      <link>${baseUrl}/es/posts/${post.slug}</link>
-      <guid isPermaLink="true">${baseUrl}/es/posts/${post.slug}</guid>
+      <link>${baseUrl}/es/articulos/${post.slug}</link>
+      <guid isPermaLink="true">${baseUrl}/es/articulos/${post.slug}</guid>
       <description><![CDATA[${post.description || post.excerpt || ''}]]></description>
       <pubDate>${new Date(post.date || Date.now()).toUTCString()}</pubDate>
       ${(post.tags || []).map(tag => `<category>${tag}</category>`).join('\n      ')}

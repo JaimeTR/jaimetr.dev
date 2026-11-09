@@ -9,7 +9,7 @@ import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
-import { supabase } from '@/lib/supabase'
+import { getProfile } from '@/lib/content'
 import { SiTiktok } from 'react-icons/si'
 import { FaInstagram, FaFacebook } from 'react-icons/fa'
 import { FiFileText, FiLink, FiCode, FiBriefcase, FiLayers, FiUser } from 'react-icons/fi'
@@ -33,7 +33,7 @@ export const Banner = () => {
     }, [])
 
     const fetchProfile = async () => {
-        const { data, error } = await supabase.from('profile').select('*').limit(1).single()
+        const { data, error } = await getProfile()
         if (error) {
             console.warn('Banner: Error fetching profile from Supabase:', error.message)
             return

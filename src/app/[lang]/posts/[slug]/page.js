@@ -1,73 +1,55 @@
-import { notFound } from 'next/navigation'
-import { getPostBySlug, getPosts } from '@/lib/mdx'
-import { ArticleBody } from '@/components/ArticleBody'
+﻿import { notFound } from 'next/navigation'
+import { articuloDelErp } from '@/lib/erp'
 import { ArticleJsonLd } from '@/components/ArticleJsonLd'
 import Breadcrumbs from '@/components/Breadcrumbs'
 
-export async function generateStaticParams() {
-    const posts = getPosts()
-    return posts.map((slug) => ({ slug }))
-}
-export async function generateMetadata({ params }, parent) {
-    const { slug, lang } = await params
-    const post = await getPostBySlug(slug, lang)
-    if (!post) notFound()
-    const { frontmatter } = post
-    const previousImages = (await parent).openGraph?.images || []
-    const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : (typeof frontmatter.tags === 'string' ? [frontmatter.tags] : [])
-    const seoKeywords = tags.join(', ') || 'programacion, javascript, web development'
+export const revalidate = 600
 
-    return {
-        metadataBase: new URL('https://jaimetr.dev'),
-        title: `${frontmatter?.title} | Jaime Tarazona Rodriguez`,
-        description: frontmatter.description,
-        keywords: `${seoKeywords}, tutorial, guia, desarrollo web`,
-        authors: [{ name: 'Jaime Tarazona Rodriguez', url: 'https://jaimetr.dev' }],
-        alternates: {
-            canonical: `https://jaimetr.dev/${lang}/posts/${slug}`,
-            languages: {
-                es: `https://jaimetr.dev/es/posts/${slug}`,
-                en: `https://jaimetr.dev/en/posts/${slug}`,
-            },
-        },
-        openGraph: {
-            type: 'article',
-            title: frontmatter?.title,
-            description: frontmatter.description,
-            url: `https://jaimetr.dev/${lang}/posts/${slug}`,
-            images: frontmatter.cover ? [frontmatter.cover, ...previousImages] : previousImages,
-            authors: ['Jaime Tarazona Rodriguez'],
-            publishedTime: frontmatter.date,
-            tags: tags,
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: frontmatter?.title,
-            description: frontmatter.description,
-            images: frontmatter.cover ? [frontmatter.cover] : [],
-            creator: '@jaimetrdev',
-        },
-        robots: 'index, follow',
-    }
+export async function generateMetadata({ params }) {
+  const { slug, lang } = await params
+  const post = await articuloDelErp(slug)
+  if (!post) return {}
+  const path = lang === 'es' ? '/es/articulos/' : '/en/posts/'
+  return {
+    title: `${post.titulo} | Jaime Tarazona Rodriguez`,
+    description: post.resumen,
+    alternates: {
+      canonical: `https://jaimetr.dev${path}${slug}`,
+      languages: {
+        es: `https://jaimetr.dev/es/articulos/${post.traduccion?.idioma === 'es' ? post.traduccion.slug : slug}`,
+        en: `https://jaimetr.dev/en/posts/${post.traduccion?.idioma === 'en' ? post.traduccion.slug : slug}`,
+      },
+    },
+  }
+}
+
+function prepareArticleHtml(html = '') {
+  const headings = []
+  const content = html.replace(/<(h2|h3)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, (match, tag, attrs = '', inner) => {
+    const title = inner.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim()
+    const existingId = attrs.match(/\bid=["']([^"']+)["']/i)?.[1]
+    const id = existingId || title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    if (title) headings.push({ id, title, level: tag.toLowerCase() })
+    return existingId ? match : `<${tag}${attrs} id="${id}">${inner}</${tag}>`
+  })
+  return { content, headings }
 }
 
 export default async function PostPage({ params }) {
-    const { slug, lang } = await params
-    const post = await getPostBySlug(slug, lang)
-    if (!post) notFound()
-    const { content, frontmatter } = post
-    const t = lang === 'en' ? { home: 'Home', posts: 'Blog' } : { home: 'Inicio', posts: 'Blog' }
-    return (
-        <>
-            <ArticleJsonLd frontmatter={frontmatter} slug={slug} lang={lang} />
-            <div className="container mx-auto px-4 lg:px-8 max-w-4xl pt-24">
-                <Breadcrumbs items={[
-                    { name: t.home, url: `/${lang}` },
-                    { name: t.posts, url: `/${lang}/posts` },
-                    { name: frontmatter.title, url: `/${lang}/posts/${slug}` },
-                ]} />
-            </div>
-            <ArticleBody content={content} frontmatter={frontmatter} />
-        </>
-    )
+  const { slug, lang } = await params
+  const post = await articuloDelErp(slug)
+  if (!post) notFound()
+  const fm = { title: post.titulo, description: post.resumen, cover: post.imagen, date: post.publicadoEn, tags: post.etiquetas || [] }
+  const { content, headings } = prepareArticleHtml(post.contenido)
+  return <>
+    <ArticleJsonLd frontmatter={fm} slug={slug} lang={lang} />
+    <div className="container mx-auto max-w-4xl px-4 pt-24 lg:px-8">
+      <Breadcrumbs items={[{ name: lang === 'en' ? 'Home' : 'Inicio', url: `/${lang}` }, { name: 'Blog', url: lang === 'en' ? '/en/posts' : '/es/articulos' }, { name: post.titulo, url: '#' }]} />
+      {headings.length > 1 && <nav aria-label={lang === 'en' ? 'Table of contents' : 'Tabla de contenidos'} className="my-8 rounded-xl border border-dark-200 p-5 dark:border-dark-700">
+        <h2 className="mb-3 font-semibold">{lang === 'en' ? 'Contents' : 'Contenido'}</h2>
+        <ol className="space-y-2">{headings.map(item => <li key={item.id} className={item.level === 'h3' ? 'ml-5 text-sm' : ''}><a className="text-primary-700 hover:underline dark:text-primary-300" href={`#${item.id}`}>{item.title}</a></li>)}</ol>
+      </nav>}
+      <article className="article-content my-12" dangerouslySetInnerHTML={{ __html: content }} />
+    </div>
+  </>
 }

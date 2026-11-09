@@ -8,7 +8,7 @@ import { useTranslation } from '@/helpers/translations'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import CodeIcon from '@/components/icons/Code'
-import { supabase } from '@/lib/supabase'
+import { getProfile } from '@/lib/content'
 
 interface StatsCardProps {
   isEmbedded?: boolean;
@@ -26,7 +26,7 @@ export default function StatsCard({ isEmbedded = false }: StatsCardProps = {}) {
   const [bgImage, setBgImage] = useState('');
   const [titleEs, setTitleEs] = useState('PROYECTOS');
   const [titleEn, setTitleEn] = useState('PROJECTS');
-  const [descEs, setDescEs] = useState('Experiencia continua y evolución técnica constante en cada línea de código.');
+  const [descEs, setDescEs] = useState('Experiencia continua y evoluciÃ³n tÃ©cnica constante en cada lÃ­nea de cÃ³digo.');
   const [descEn, setDescEn] = useState('Continuous experience and constant technical evolution in every line of code.');
   const [btnTextEs, setBtnTextEs] = useState('Ver todos los proyectos');
   const [btnTextEn, setBtnTextEn] = useState('View all projects');
@@ -38,7 +38,7 @@ export default function StatsCard({ isEmbedded = false }: StatsCardProps = {}) {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const { data, error } = await supabase.from('profile').select('stats_projects_completed, stats_card_bg_image, stats_card_title_es, stats_card_title_en, stats_card_desc_es, stats_card_desc_en, stats_card_btn_text_es, stats_card_btn_text_en, stats_card_btn_link_es, stats_card_btn_link_en').single();
+      const { data, error } = await getProfile();
       if (!error && data) {
         if (data.stats_projects_completed) setTargetValue(data.stats_projects_completed);
         if (data.stats_card_bg_image) setBgImage(data.stats_card_bg_image);

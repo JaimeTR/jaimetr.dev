@@ -10,7 +10,7 @@ import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
 import Link from 'next/link'
 import Image from 'next/image'
-import { supabase } from '@/lib/supabase'
+import { getProfile } from '@/lib/content'
 
 export const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false)
@@ -21,7 +21,7 @@ export const Navbar = () => {
     
     useEffect(() => {
         const fetchProfile = async () => {
-            const { data } = await supabase.from('profile').select('*').limit(1).single()
+            const { data } = await getProfile()
             if (data) setProfile(data)
         }
         fetchProfile()

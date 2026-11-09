@@ -1,10 +1,11 @@
 export function ArticleJsonLd({ frontmatter, slug, lang = 'es' }) {
+    const articlePath = lang === 'es' ? `/es/articulos/${slug}` : `/en/posts/${slug}`
     const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : (typeof frontmatter.tags === 'string' ? [frontmatter.tags] : [])
     
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
-        '@id': `https://jaimetr.dev/${lang}/posts/${slug}#article`,
+        '@id': `https://jaimetr.dev${articlePath}#article`,
         headline: frontmatter.title,
         description: frontmatter.description || frontmatter.excerpt || '',
         image: frontmatter.cover ? `https://jaimetr.dev${frontmatter.cover}` : 'https://jaimetr.dev/images/og.webp',
@@ -27,7 +28,7 @@ export function ArticleJsonLd({ frontmatter, slug, lang = 'es' }) {
         },
         mainEntityOfPage: {
             '@type': 'WebPage',
-            '@id': `https://jaimetr.dev/${lang}/posts/${slug}`,
+            '@id': `https://jaimetr.dev${articlePath}`,
         },
         keywords: tags.join(', '),
         articleBody: frontmatter.description || '',

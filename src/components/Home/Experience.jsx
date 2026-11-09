@@ -5,7 +5,7 @@ import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { content } from '@/lib/content'
 
 export const Experience = () => {
     const [mounted, setMounted] = useState(false)
@@ -19,14 +19,8 @@ export const Experience = () => {
     }, [])
 
     const fetchExperiences = async () => {
-        const { data, error } = await supabase
-            .from('experience')
-            .select('*')
-            .eq('is_active', true)
-            .order('sort_order', { ascending: true })
-        if (!error && data) {
-            setExperiences(data)
-        }
+        const { experiencia = [] } = await (await fetch('/api/personal')).json()
+        setExperiences(experiencia.map((x,i)=>({...x,id:i,position:x.cargo,position_en:x.cargoEn,company:x.empresaNombre,company_en:x.empresaNombreEn,description:x.descripcion,description_en:x.descripcionEn,period:x.periodo,period_en:x.periodoEn,start_date:x.inicio,end_date:x.fin,is_current:x.actual})))
     }
     
     if (!mounted) return null

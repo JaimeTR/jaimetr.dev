@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { useTranslation } from '@/helpers/translations'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { getProfile } from '@/lib/content'
 import { motion } from 'framer-motion'
 export const About = () => {
     const [mounted, setMounted] = useState(false)
@@ -21,7 +21,7 @@ export const About = () => {
     }, [])
 
     const fetchProfile = async () => {
-        const { data, error } = await supabase.from('profile').select('*').limit(1).single()
+        const { data, error } = await getProfile()
         if (!error && data) {
             setProfile(data)
         }
@@ -86,7 +86,7 @@ export const About = () => {
                                     <span className="font-bold text-primary-700 dark:text-primary-400">
                                         {t('webDeveloper')}
                                     </span>{' '}
-                                    {t('experienciaAnios')} en el desarrollo de aplicaciones y páginas web. Actualmente, trabajo creando sitios web en WordPress, {' '}
+                                    {t('experienciaAnios')} en el desarrollo de aplicaciones y pÃ¡ginas web. Actualmente, trabajo creando sitios web en WordPress, {' '}
                                     <span className=" text-crusta-800 dark:text-crusta-300 font-bold">
                                         {t('desarrollando')}
                                     </span>{' '}
