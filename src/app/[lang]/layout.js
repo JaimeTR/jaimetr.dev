@@ -71,8 +71,11 @@ export async function generateMetadata({ params }) {
             telephone: false,
         },
         icons: {
-            icon: '/images/jaimetrdev.webp',
-            apple: '/images/jaimetrdev.webp',
+            icon: [
+                { url: '/favicon.ico', sizes: '48x48' },
+                { url: '/marca/jaimetr-isologo.svg', type: 'image/svg+xml' },
+            ],
+            apple: '/marca/jaimetr-apple-180.png',
         },
     }
 }

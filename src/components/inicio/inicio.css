@@ -125,11 +125,34 @@ header.inicio-barra {
     white-space: nowrap;
 }
 
-.inicio-marca i {
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
-    background: linear-gradient(135deg, var(--cian-soft), var(--pri-2));
+.inicio-marca img {
+    display: block;
+    width: auto;
+}
+
+.inicio-marca__largo {
+    display: none !important;
+    height: 30px;
+}
+
+.inicio-marca__corto {
+    height: 34px;
+}
+
+@media (min-width: 560px) {
+    .inicio-marca__largo {
+        display: block !important;
+    }
+    .inicio-marca__corto {
+        display: none !important;
+    }
+}
+
+.inicio-pie__logo {
+    display: block;
+    height: 44px;
+    width: auto;
+    margin: 3rem 0 0;
 }
 
 .inicio-nav {
