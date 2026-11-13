@@ -1,53 +1,31 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
-import { IoMdMoon, IoMdSunny } from 'react-icons/io'
+import { useLanguage } from '@/app/providers/LanguageProvider'
+import { FiMoon, FiSun } from 'react-icons/fi'
 
 export const ThemeSwitch = ({ show = true }) => {
-    const [mounted, setMounted] = useState(false)
-    const [checked, setChecked] = useState(false)
-    const { theme, setTheme, systemTheme } = useTheme()
+    const [montado, setMontado] = useState(false)
+    const { resolvedTheme, setTheme } = useTheme()
+    const { language } = useLanguage()
 
-    const handleThemeChange = () => {
-        if (theme === 'light') {
-            setTheme('dark')
-            setChecked(!checked)
-        }
-        if (theme === 'dark') {
-            setTheme('light')
-            setChecked(!checked)
-        }
-    }
-    const currentTheme = theme === 'system' ? systemTheme : theme
-    // useEffect only runs on the client, so now we can safely show the UI
-    useEffect(() => {
-        setMounted(true)
-        // if (currentTheme === 'dark') {
-        //     setChecked(true)
-        // }
-    }, [])
+    useEffect(() => setMontado(true), [])
 
-    if (!mounted) {
-        return null
-    }
+    // Reserva el espacio para que la barra no salte al hidratar.
+    if (!montado) return <span className={`block h-9 w-9 ${show ? '' : 'md:hidden'}`} aria-hidden="true" />
+
+    const oscuro = resolvedTheme !== 'light'
+    const etiqueta = oscuro ? (language === 'es' ? 'Cambiar a tema claro' : 'Switch to light theme') : (language === 'es' ? 'Cambiar a tema oscuro' : 'Switch to dark theme')
 
     return (
         <button
-            className={`bg-dark-300 dark:bg-dark-700 p-1 rounded-md  ${!show && 'md:hidden'}`}
-            title="Theme switcher button"
+            type="button"
+            onClick={() => setTheme(oscuro ? 'light' : 'dark')}
+            aria-label={etiqueta}
+            title={etiqueta}
+            className={`grid h-9 w-9 place-items-center text-ink-2 transition-colors hover:text-ink ${show ? '' : 'md:hidden'}`}
         >
-            {currentTheme === 'dark' ? (
-                <IoMdSunny
-                    size={20}
-                    className="text-dark-700 hover:text-dark-500 dark:text-dark-300 dark:hover:text-dark-500 transition-colors duration-300 cursor-pointer"
-                    onClick={() => setTheme('light')}
-                />
-            ) : (
-                <IoMdMoon
-                    className="text-dark-700 hover:text-dark-500 dark:text-dark-300 dark:hover:text-dark-700 transition-colors duration-300 cursor-pointer"
-                    onClick={() => setTheme('dark')}
-                />
-            )}
+            {oscuro ? <FiSun size={18} aria-hidden="true" /> : <FiMoon size={18} aria-hidden="true" />}
         </button>
     )
 }

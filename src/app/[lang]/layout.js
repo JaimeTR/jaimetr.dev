@@ -3,6 +3,8 @@ import { DarkModeProvider } from '@/app/providers/DarkModeProvider'
 import { LanguageProvider } from '@/app/providers/LanguageProvider'
 import '@/app/globals.css'
 import '@fontsource-variable/onest'
+import '@fontsource-variable/bricolage-grotesque'
+import { datosPersonalesDelErp } from '@/lib/erp'
 import { Footer } from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/react'
@@ -75,6 +77,7 @@ export async function generateMetadata({ params }) {
 
 export default async function RootLayout({ children, params }) {
     const { lang } = await params;
+    const { perfil } = await datosPersonalesDelErp()
     
     return (
         <html suppressHydrationWarning lang={lang} className="scroll-smooth dark">
@@ -83,14 +86,14 @@ export default async function RootLayout({ children, params }) {
                 <meta name="msvalidate.01" content="6E674BE7C59CEA166AC23BB271E56771" />
                 <link rel="preconnect" href="https://api.groq.com" crossOrigin="anonymous" />
             </head>
-            <body className="bg-dark-50 dark:bg-dark-950">
+            <body className="bg-bg font-sans text-ink antialiased">
                 <JsonLd />
                 <LanguageProvider initialLang={lang}>
                     <DarkModeProvider>
-                        <Navbar />
+                        <Navbar perfil={perfil} />
                         {children}
                         <ChatbotWrapper />
-                        <Footer />
+                        <Footer perfil={perfil} />
                         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
                         <Analytics />
                     </DarkModeProvider>

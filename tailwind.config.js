@@ -34,15 +34,20 @@ module.exports = {
                 'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
             },
             fontFamily: {
-                sans: ['var(--font-onest)', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-                heading: ['var(--font-onest)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                sans: ['Onest Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                display: ['Bricolage Grotesque Variable', 'Onest Variable', 'sans-serif'],
+                heading: ['Bricolage Grotesque Variable', 'Onest Variable', 'sans-serif'],
             },
             colors: {
-                background: '#050505',
-                card: '#111111',
-                foreground: '#FFFFFF',
-                muted: '#A1A1AA',
-                accent: '#00a8e8', // Using the primary-500 from the current site instead of the old accent
+                // Tokens del sitio (definidos en globals.css; cambian con el tema)
+                bg: 'var(--bg)',
+                raise: 'var(--raise)',
+                ink: 'var(--ink)',
+                'ink-2': 'var(--ink-2)',
+                'ink-3': 'var(--ink-3)',
+                rule: 'var(--rule)',
+                accent: 'var(--accent)',
+                'accent-ink': 'var(--accent-ink)',
 
                 primary: {
                     50: '#effaff',

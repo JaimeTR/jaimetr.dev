@@ -1,190 +1,94 @@
-/* eslint-disable @next/next/no-img-element */
 'use client'
-import { useState, useEffect, useCallback } from 'react'
-import { NavLink } from './NavLink'
-import { FaLinkedinIn, FaGithub, FaFacebook, FaInstagram } from 'react-icons/fa'
-import { SiTiktok } from 'react-icons/si'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useLanguage } from '@/app/providers/LanguageProvider'
 import { ThemeSwitch } from './ThemeSwitch'
 import { LanguageSwitch } from './LanguageSwitch'
-import { useLanguage } from '@/app/providers/LanguageProvider'
-import { useTranslation } from '@/helpers/translations'
-import Link from 'next/link'
-import Image from 'next/image'
-import { getProfile } from '@/lib/content'
 
-export const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false)
-    const [isScrolled, setIsScrolled] = useState(false)
-    const [profile, setProfile] = useState(null)
+const ENLACES_BASE = [
+    { id: 'proyectos', label_es: 'Proyectos', label_en: 'Projects', url_es: '/{lang}/proyectos', url_en: '/{lang}/projects' },
+    { id: 'experiencia', label_es: 'Experiencia', label_en: 'Experience', url_es: '/{lang}/#experience', url_en: '/{lang}/#experience' },
+    { id: 'blog', label_es: 'Artículos', label_en: 'Articles', url_es: '/{lang}/articulos', url_en: '/{lang}/posts' },
+]
+
+/** La barra no consulta nada: recibe el perfil ya resuelto por el servidor (sin parpadeo ni contenido vacio). */
+export const Navbar = ({ perfil }) => {
     const { language } = useLanguage()
-    const t = useTranslation(language)
-    
+    const [abierto, setAbierto] = useState(false)
+    const es = language === 'es'
+
+    const enlaces = (Array.isArray(perfil?.header_links) && perfil.header_links.length ? perfil.header_links : ENLACES_BASE).filter((l) => l.visible !== false)
+    const urlDe = (l) => ((es ? l.url_es : l.url_en) || '').replace('{lang}', language)
+    const nombreDe = (l) => (es ? l.label_es : l.label_en) || l.label_es || l.label_en
+
     useEffect(() => {
-        const fetchProfile = async () => {
-            const { data } = await getProfile()
-            if (data) setProfile(data)
+        if (!abierto) return
+        const cerrar = (e) => e.key === 'Escape' && setAbierto(false)
+        document.addEventListener('keydown', cerrar)
+        const previo = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.removeEventListener('keydown', cerrar)
+            document.body.style.overflow = previo
         }
-        fetchProfile()
-
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20)
-        }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
-
-    // El menu movil se abre y cierra solo con estado (antes se mutaba el DOM y se desincronizaba al redimensionar).
-    useEffect(() => {
-        if (!isOpen) return
-        const cerrarConEscape = (e) => e.key === 'Escape' && setIsOpen(false)
-        document.addEventListener('keydown', cerrarConEscape)
-        return () => document.removeEventListener('keydown', cerrarConEscape)
-    }, [isOpen])
-
-    const showNavBar = () => setIsOpen((abierto) => !abierto)
-    const cerrarMenu = () => setIsOpen(false)
-
-    const headerClass = `fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'top-0 sm:top-4 px-0 sm:px-4' : 'top-0 px-0'}`
-    const navClass = `container max-w-6xl mx-auto flex flex-wrap items-center justify-between transition-all duration-300 ${
-        isScrolled || isOpen
-            ? 'px-4 sm:px-6 py-3 sm:py-4 backdrop-blur-xl bg-white/80 dark:bg-dark-900/80 border-b sm:border border-dark-200/50 dark:border-dark-700/50 shadow-lg shadow-dark-900/5 sm:rounded-[2rem]'
-            : 'px-4 sm:px-6 py-4 sm:py-6 bg-transparent border-transparent'
-    }`
-
-    const headerLinks = profile?.header_links || [
-        { id: "link1", label_es: "Proyectos", label_en: "Projects", url_es: `/${language}/${t('rutaProyectos')}`, url_en: `/${language}/${t('rutaProyectos')}`, visible: true },
-        { id: "link2", label_es: "Experiencia", label_en: "Experience", url_es: `/${language}/#experience`, url_en: `/${language}/#experience`, visible: true },
-        { id: "link3", label_es: "Blog", label_en: "Blog", url_es: `/${language}/${t('rutaArticulos')}`, url_en: `/${language}/${t('rutaArticulos')}`, visible: true },
-        { id: "link4", label_es: "Servicios", label_en: "Services", url_es: "https://www.devmarkpe.com/", url_en: "https://www.devmarkpe.com/", visible: true }
-    ]
-
-    const getLinkUrl = (link) => {
-        const url = language === 'es' ? link.url_es : link.url_en;
-        return (url || '').replace('{lang}', language);
-    }
-
-    const renderSocialIcon = useCallback((network) => {
-        const iconClass = "text-dark-700 hover:text-dark-500 dark:text-dark-200 dark:hover:text-dark-50 transition-colors duration-300";
-        switch (network) {
-            case 'linkedin':
-                return (
-                    <li>
-                        <a href={profile?.linkedin_url || "https://www.linkedin.com/in/jaimetr/"} target="_blank" rel="noopener noreferrer" className={iconClass} aria-label="LinkedIn">
-                            <FaLinkedinIn />
-                        </a>
-                    </li>
-                )
-            case 'github':
-                return (
-                    <li>
-                        <a href={profile?.github_url || "https://github.com/JaimeTR"} target="_blank" rel="noopener noreferrer" className={iconClass} aria-label="GitHub">
-                            <FaGithub />
-                        </a>
-                    </li>
-                )
-            case 'facebook':
-                return profile?.facebook_url ? (
-                    <li>
-                        <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer" className={iconClass} aria-label="Facebook">
-                            <FaFacebook />
-                        </a>
-                    </li>
-                ) : null;
-            case 'instagram':
-                return profile?.instagram_url ? (
-                    <li>
-                        <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className={iconClass} aria-label="Instagram">
-                            <FaInstagram />
-                        </a>
-                    </li>
-                ) : null;
-            case 'tiktok':
-                return profile?.tiktok_url ? (
-                    <li>
-                        <a href={profile.tiktok_url} target="_blank" rel="noopener noreferrer" className={iconClass} aria-label="TikTok">
-                            <SiTiktok />
-                        </a>
-                    </li>
-                ) : null;
-            default:
-                return null;
-        }
-    }, [profile])
+    }, [abierto])
 
     return (
-        <header className={headerClass}>
-            <nav className={navClass}>
-                <Link
-                    href={`/${language}`}
-                    className="flex gap-2 items-center self-center text-3xl font-black whitespace-nowrap text-primary-600 dark:text-primary-400"
-                >
-                    {profile?.header_logo_url ? (
-                        <img src={profile.header_logo_url} alt="Logo" className="h-10 w-auto object-contain" />
+        <header className="sticky top-0 z-40 border-b border-rule bg-bg">
+            <nav className="wrap flex h-16 items-center justify-between" aria-label={es ? 'Principal' : 'Main'}>
+                <Link href={`/${language}`} className="display text-xl font-semibold tracking-tight no-underline" onClick={() => setAbierto(false)}>
+                    {perfil?.header_logo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={perfil.header_logo_url} alt="Jaime Tarazona" className="h-8 w-auto object-contain" />
                     ) : (
-                        'Portafolio'
+                        'Jaime Tarazona'
                     )}
                 </Link>
-                <div className="md:order-2">
-                    <ul className="hidden md:flex md:space-x-8 items-center ">
-                        {(profile?.header_show_linkedin !== false) && renderSocialIcon('linkedin')}
-                        {(profile?.header_show_github !== false) && renderSocialIcon('github')}
-                        {(profile?.header_show_facebook === true) && renderSocialIcon('facebook')}
-                        {(profile?.header_show_instagram === true) && renderSocialIcon('instagram')}
-                        {(profile?.header_show_tiktok === true) && renderSocialIcon('tiktok')}
-                        
-                        {profile?.is_theme_switch_visible !== false && (
-                            <li><ThemeSwitch /></li>
-                        )}
-                        {profile?.is_language_switch_visible !== false && (
-                            <li><LanguageSwitch /></li>
-                        )}
-                    </ul>
-                    <div className="flex items-center gap-2 md:hidden">
-                        {profile?.is_theme_switch_visible !== false && <ThemeSwitch show={false} />}
-                        {profile?.is_language_switch_visible !== false && <LanguageSwitch show={false} />}
-                        <button
-                            className="p-2 text-sm text-dark-700 dark:text-dark-200 rounded-lg"
-                            onClick={showNavBar}
-                            aria-label={isOpen ? t('cerrarMenu') : t('abrirMenu')}
-                            aria-expanded={isOpen}
-                            aria-controls="menu-principal"
-                        >
-                            {isOpen ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                                </svg>
-                            )}
-                        </button>
-                    </div>
-                </div>
-                <div
-                    id="menu-principal"
-                    className={`items-center justify-between w-full md:flex md:w-auto md:order-1 transition-all duration-500 ${isOpen ? 'flex' : 'hidden'}`}
-                >
-                    <ul className="flex flex-col gap-6 p-4 md:p-0 mt-4 font-medium md:flex-row md:mt-0 md:border-0">
-                        {headerLinks.filter(l => l.visible !== false).map((link, idx) => (
-                            <li key={link.id || idx} className="text-center">
-                                <NavLink 
-                                    label={language === 'es' ? link.label_es : link.label_en} 
-                                    link={getLinkUrl(link)} 
-                                    action={cerrarMenu} 
-                                />
+
+                <div className="hidden items-center gap-8 md:flex">
+                    <ul className="flex items-center gap-7 text-sm">
+                        {enlaces.map((l, i) => (
+                            <li key={l.id || i}>
+                                <Link href={urlDe(l)} className="text-ink-2 no-underline transition-colors hover:text-ink">
+                                    {nombreDe(l)}
+                                </Link>
                             </li>
                         ))}
                     </ul>
-                    <ul className="flex justify-center space-x-8 my-4 md:hidden">
-                        {(profile?.header_show_linkedin !== false) && renderSocialIcon('linkedin')}
-                        {(profile?.header_show_github !== false) && renderSocialIcon('github')}
-                        {(profile?.header_show_facebook === true) && renderSocialIcon('facebook')}
-                        {(profile?.header_show_instagram === true) && renderSocialIcon('instagram')}
-                        {(profile?.header_show_tiktok === true) && renderSocialIcon('tiktok')}
-                    </ul>
+                    <div className="flex items-center gap-2 border-l border-rule pl-6">
+                        {perfil?.is_language_switch_visible !== false && <LanguageSwitch />}
+                        {perfil?.is_theme_switch_visible !== false && <ThemeSwitch />}
+                    </div>
                 </div>
+
+                <button
+                    type="button"
+                    className="-mr-2 px-2 py-2 text-sm text-ink md:hidden"
+                    onClick={() => setAbierto((v) => !v)}
+                    aria-expanded={abierto}
+                    aria-controls="menu-principal"
+                >
+                    {abierto ? (es ? 'Cerrar' : 'Close') : es ? 'Menú' : 'Menu'}
+                </button>
             </nav>
+
+            {abierto && (
+                <div id="menu-principal" className="fixed inset-x-0 bottom-0 top-16 z-30 overflow-y-auto bg-bg md:hidden">
+                    <ul className="wrap flex flex-col pt-4">
+                        {enlaces.map((l, i) => (
+                            <li key={l.id || i} className="border-b border-rule">
+                                <Link href={urlDe(l)} onClick={() => setAbierto(false)} className="display display-m block py-5 no-underline">
+                                    {nombreDe(l)}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="wrap flex items-center gap-4 py-6">
+                        {perfil?.is_language_switch_visible !== false && <LanguageSwitch />}
+                        {perfil?.is_theme_switch_visible !== false && <ThemeSwitch />}
+                    </div>
+                </div>
+            )}
         </header>
     )
 }
