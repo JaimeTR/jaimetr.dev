@@ -1,12 +1,10 @@
-const withMDX = require('@next/mdx')()
-
 const imageHost = process.env.SUPABASE_URL_ERP_IMAGENES || 'nbvasmxtqfshgxjimzxq.supabase.co'
 const imageHostname = imageHost.replace(/^https?:\/\//, '').split('/')[0]
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     outputFileTracingRoot: __dirname,
-    pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+    pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
     compress: true,
     poweredByHeader: false,
     images: {
@@ -66,4 +64,4 @@ const nextConfig = {
     },
 }
 
-module.exports = withMDX(nextConfig)
+module.exports = nextConfig
