@@ -1,0 +1,695 @@
+/* V2 · Recorrido cinematografico. Aurora cian y azul electrico sobre negro azulado. */
+.theme-v2 {
+    --bg: #030712;
+    --ink: #eaf3ff;
+    --ink-2: #a8bdd6;
+    --ink-3: #7d93ad;
+    --line: rgba(255, 255, 255, 0.12);
+    --accent: #00a8e8;
+    --accent-2: #2f6bff;
+    --accent-soft: #75dbff;
+    --accent-ink: #021019;
+    --glass: rgba(255, 255, 255, 0.06);
+    --mx: 50%;
+    --my: 35%;
+    position: relative;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Onest Variable', ui-sans-serif, system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: clip;
+}
+
+.theme-v2 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.theme-v2 *::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+
+.theme-v2 :focus-visible {
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.v2-display {
+    font-family: 'Bricolage Grotesque Variable', 'Onest Variable', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 0.92;
+}
+
+.v2-wrap {
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 3.5vw, 3rem);
+}
+
+.v2-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* ---------- Aurora ---------- */
+.v2-aurora {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.v2-aurora i {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.55;
+    will-change: transform;
+}
+
+.v2-aurora i:nth-child(1) {
+    width: 62vmax;
+    height: 62vmax;
+    left: -20vmax;
+    top: -26vmax;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 65%);
+}
+
+.v2-aurora i:nth-child(2) {
+    width: 56vmax;
+    height: 56vmax;
+    right: -22vmax;
+    top: 6vmax;
+    background: radial-gradient(circle, var(--accent-2) 0%, transparent 65%);
+}
+
+.v2-aurora i:nth-child(3) {
+    width: 46vmax;
+    height: 46vmax;
+    left: 18vmax;
+    bottom: -24vmax;
+    background: radial-gradient(circle, #1a8cff 0%, transparent 65%);
+    opacity: 0.4;
+}
+
+.v2-aurora i:nth-child(4) {
+    width: 34vmax;
+    height: 34vmax;
+    right: 8vmax;
+    bottom: -12vmax;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 65%);
+    opacity: 0.22;
+}
+
+.v2-contenido {
+    position: relative;
+    z-index: 1;
+}
+
+.v2-progreso {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 2px;
+    z-index: 70;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+}
+
+/* ---------- Barra de vidrio ---------- */
+.v2-barra {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    z-index: 60;
+    transform: translateX(-50%);
+    width: min(1180px, calc(100% - 28px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0.55rem 0.45rem 1.2rem;
+    border-radius: 999px;
+    background: rgba(8, 16, 34, 0.55);
+    border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+}
+
+.v2-marca {
+    font-family: 'Bricolage Grotesque Variable', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.v2-nav {
+    display: none;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+}
+
+.v2-nav a {
+    padding: 0.6rem 0.9rem;
+    border-radius: 999px;
+    transition: background 0.25s, color 0.25s;
+}
+
+.v2-nav a:hover {
+    background: var(--glass);
+    color: var(--ink);
+}
+
+@media (min-width: 900px) {
+    .v2-nav {
+        display: flex;
+    }
+}
+
+.v2-lang {
+    display: flex;
+    font-size: 0.82rem;
+    color: var(--ink-3);
+}
+
+.v2-lang a {
+    padding: 0.7rem 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.v2-lang a[aria-current='true'] {
+    color: var(--accent-soft);
+}
+
+/* ---------- Botones de pastilla ---------- */
+.v2-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 48px;
+    padding: 0.8rem 1.6rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: box-shadow 0.35s ease, background 0.3s ease, border-color 0.3s ease;
+    will-change: transform;
+}
+
+.v2-btn--pri {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: #fff;
+    box-shadow: 0 0 0 0 rgba(0, 168, 232, 0), 0 10px 30px -10px rgba(47, 107, 255, 0.6);
+}
+
+.v2-btn--pri:hover {
+    box-shadow: 0 0 0 6px rgba(0, 168, 232, 0.16), 0 14px 40px -8px rgba(0, 168, 232, 0.75);
+}
+
+.v2-btn--vidrio {
+    background: var(--glass);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.v2-btn--vidrio:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(117, 219, 255, 0.55);
+}
+
+.v2-btn--chico {
+    min-height: 44px;
+    padding: 0.55rem 1.15rem;
+    font-size: 0.9rem;
+}
+
+.v2-btn svg {
+    flex: none;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.v2-btn:hover svg {
+    transform: translateX(5px);
+}
+
+.v2-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    align-items: center;
+}
+
+/* ---------- Hero ---------- */
+.v2-hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding-block: 7rem 4rem;
+}
+
+.v2-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(520px circle at var(--mx) var(--my), rgba(117, 219, 255, 0.12), transparent 70%);
+    pointer-events: none;
+}
+
+.v2-hero__nombre {
+    font-size: clamp(4rem, 15vw, 13.5rem);
+}
+
+.v2-hero__nombre .v2-fila {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.1em;
+    margin-bottom: -0.1em;
+}
+
+.v2-letra {
+    display: inline-block;
+    will-change: transform;
+}
+
+.v2-hero__roles {
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+    font-size: clamp(1.15rem, 2.2vw, 1.7rem);
+    color: var(--ink);
+    max-width: 38ch;
+    line-height: 1.25;
+}
+
+.v2-hero__roles span {
+    display: block;
+}
+
+.v2-hero__sub {
+    margin-top: 1rem;
+    max-width: 48ch;
+    color: var(--ink-2);
+    font-size: 1.05rem;
+    line-height: 1.55;
+}
+
+.v2-hero__fila {
+    display: grid;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+@media (min-width: 900px) {
+    .v2-hero__fila {
+        grid-template-columns: 1fr auto;
+        align-items: end;
+    }
+}
+
+.v2-scroll {
+    position: absolute;
+    left: 50%;
+    bottom: 1.5rem;
+    width: 1px;
+    height: 54px;
+    background: linear-gradient(to bottom, var(--accent-soft), transparent);
+    transform-origin: 50% 0;
+}
+
+/* ---------- Intro con palabras ---------- */
+.v2-intro {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding-block: 6rem;
+}
+
+.v2-intro p {
+    font-family: 'Bricolage Grotesque Variable', sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+    font-size: clamp(1.8rem, 4.4vw, 3.6rem);
+    max-width: 24ch;
+    max-width: 30ch;
+}
+
+.v2-palabra {
+    display: inline-block;
+    margin-right: 0.26em;
+    color: var(--ink);
+}
+
+/* ---------- Trayecto horizontal ---------- */
+.v2-tray {
+    position: relative;
+    overflow: hidden;
+}
+
+.v2-tray__titulo {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    padding-top: 5rem;
+}
+
+.v2-tray__pista {
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+    padding-block: 3rem 5rem;
+    position: relative;
+}
+
+.v2-cap {
+    position: relative;
+    min-height: 60vh;
+}
+
+.v2-cap__ano {
+    position: absolute;
+    top: -2rem;
+    left: 0;
+    font-family: 'Bricolage Grotesque Variable', sans-serif;
+    font-weight: 700;
+    font-size: clamp(7rem, 24vw, 20rem);
+    line-height: 0.8;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(117, 219, 255, 0.28);
+    pointer-events: none;
+    user-select: none;
+}
+
+.v2-cap__cuerpo {
+    position: relative;
+    padding-top: clamp(4rem, 14vw, 9rem);
+    max-width: 60ch;
+}
+
+.v2-cap__periodo {
+    color: var(--accent-soft);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.v2-cap__cargo {
+    margin-top: 0.75rem;
+    font-size: clamp(2rem, 4.6vw, 4rem);
+}
+
+.v2-cap__empresa {
+    margin-top: 1rem;
+    color: var(--ink-2);
+    font-size: 1.15rem;
+}
+
+.v2-cap__desc {
+    margin-top: 1.25rem;
+    color: var(--ink-2);
+    line-height: 1.65;
+}
+
+.v2-cap__dur {
+    margin-top: 1.25rem;
+    color: var(--ink-3);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 900px) {
+    .v2-tray {
+        height: 100svh;
+        min-height: 640px;
+    }
+
+    .v2-tray__marco {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .v2-tray__titulo {
+        padding-top: 6.5rem;
+    }
+
+    .v2-tray__pista {
+        flex-direction: row;
+        gap: 0;
+        padding: 0;
+        flex: 1;
+        width: max-content;
+        align-items: center;
+    }
+
+    .v2-cap {
+        flex: none;
+        width: 100vw;
+        min-height: 0;
+        padding-inline: clamp(1.25rem, 3.5vw, 3rem);
+        display: flex;
+        align-items: center;
+    }
+
+    .v2-cap__ano {
+        top: 50%;
+        left: clamp(1rem, 4vw, 4rem);
+        transform: translateY(-58%);
+    }
+
+    .v2-cap__cuerpo {
+        margin-left: clamp(3rem, 22vw, 20rem);
+        padding-top: 0;
+    }
+
+    .v2-via {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 5.2rem;
+        height: 1px;
+        background: var(--line);
+    }
+
+    .v2-via__fill {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transform-origin: 0 50%;
+        transform: scaleX(0);
+        box-shadow: 0 0 14px rgba(0, 168, 232, 0.9);
+    }
+
+    .v2-via__punto {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 14px;
+        height: 14px;
+        margin: -7px 0 0 -7px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        box-shadow: 0 0 0 6px rgba(117, 219, 255, 0.2), 0 0 24px 6px rgba(117, 219, 255, 0.8);
+    }
+
+    .v2-contador {
+        position: absolute;
+        left: clamp(1.25rem, 3.5vw, 3rem);
+        right: clamp(1.25rem, 3.5vw, 3rem);
+        bottom: 2.2rem;
+        display: flex;
+        justify-content: space-between;
+        color: var(--ink-3);
+        font-size: 0.9rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .v2-contador strong {
+        color: var(--ink);
+        font-weight: 600;
+    }
+}
+
+@media (max-width: 899px) {
+    .v2-via,
+    .v2-contador {
+        display: none;
+    }
+}
+
+/* ---------- Habilidades en filas que corren ---------- */
+.v2-hab {
+    padding-block: clamp(5rem, 12vh, 9rem);
+    overflow: hidden;
+}
+
+.v2-hab__titulo {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    margin-bottom: clamp(2rem, 5vh, 3.5rem);
+}
+
+.v2-fila-corre {
+    display: flex;
+    width: max-content;
+    gap: 0.75rem;
+    margin-block: 0.75rem;
+    will-change: transform;
+}
+
+.v2-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 56px;
+    padding: 0.6rem 1.6rem;
+    border-radius: 999px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    font-family: 'Bricolage Grotesque Variable', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1.15rem, 2.4vw, 1.7rem);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    transition: border-color 0.3s, background 0.3s;
+}
+
+.v2-fila-corre:hover .v2-chip {
+    border-color: rgba(117, 219, 255, 0.28);
+}
+
+.v2-lista-hab {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .v2-fila-corre {
+        width: auto;
+        flex-wrap: wrap;
+        padding-inline: clamp(1.25rem, 3.5vw, 3rem);
+    }
+}
+
+/* ---------- Trabajo reciente ---------- */
+.v2-trabajo {
+    padding-block: clamp(4rem, 10vh, 7rem);
+}
+
+.v2-trabajo__cab {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.v2-trabajo__titulo {
+    font-size: clamp(2rem, 4.6vw, 3.8rem);
+}
+
+.v2-trabajo__rejilla {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 900px) {
+    .v2-trabajo__rejilla {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+.v2-proy {
+    display: block;
+}
+
+.v2-proy__img {
+    position: relative;
+    aspect-ratio: 16 / 11;
+    overflow: hidden;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+}
+
+.v2-proy__img img {
+    object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.v2-proy:hover .v2-proy__img img {
+    transform: scale(1.06);
+}
+
+.v2-proy h3 {
+    margin-top: 0.8rem;
+    font-size: 1.2rem;
+}
+
+.v2-proy p {
+    color: var(--ink-3);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+
+/* ---------- Cierre ---------- */
+.v2-cierre {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 7rem 2rem;
+    position: relative;
+}
+
+.v2-cierre__titulo {
+    font-size: clamp(2.6rem, 8vw, 7.5rem);
+}
+
+.v2-correo {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-size: clamp(1.4rem, 4.4vw, 3.8rem);
+    overflow-wrap: anywhere;
+    transition: color 0.3s;
+}
+
+.v2-correo:hover {
+    color: var(--accent-soft);
+}
+
+.v2-pie {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-top: clamp(3rem, 9vh, 6rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: 0.9rem;
+}
+
+.v2-pie a {
+    padding: 0.5rem 0;
+}
+
+.v2-pie a:hover {
+    color: var(--accent-soft);
+}
