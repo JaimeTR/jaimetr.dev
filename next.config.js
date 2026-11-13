@@ -1,6 +1,6 @@
 const withMDX = require('@next/mdx')()
 
-const imageHost = process.env.SUPABASE_URL_ERP_IMAGENES || ''
+const imageHost = process.env.SUPABASE_URL_ERP_IMAGENES || 'nbvasmxtqfshgxjimzxq.supabase.co'
 const imageHostname = imageHost.replace(/^https?:\/\//, '').split('/')[0]
 
 /** @type {import('next').NextConfig} */

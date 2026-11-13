@@ -11,7 +11,7 @@ const ETIQUETA = {
 }
 
 export async function erpGet(path) {
-  const url = process.env.ERP_API_URL?.replace(/\/$/, '')
+  const url = (process.env.ERP_API_URL || 'https://api.devmarkpe.com').replace(/\/$/, '')
   const firma = process.env.SITIO_SIGNING_SECRET
   const slug = process.env.SITIO_SLUG || 'jaimetr-dev'
   if (!url || !firma) return null
