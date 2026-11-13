@@ -858,3 +858,86 @@ header.inicio-barra {
         display: none;
     }
 }
+
+/* ---------- Fondo de cuadricula y efecto de mouse ---------- */
+/* La cuadricula es suave y se desvanece hacia abajo. Con el mouse (clase fx-activo en <html>) se ilumina un
+   circulo de cuadricula y un resplandor alrededor del puntero. Las variables --mx / --my las escribe EfectoRaton. */
+.fx-malla {
+    --malla: rgba(117, 219, 255, 0.055);
+    --malla-viva: rgba(117, 219, 255, 0.26);
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(var(--malla) 1px, transparent 1px), linear-gradient(90deg, var(--malla) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 25%, #000 25%, transparent 100%);
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 25%, #000 25%, transparent 100%);
+}
+
+.fx-malla::before,
+.fx-malla::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+.fx-malla::before {
+    background-image: linear-gradient(var(--malla-viva) 1px, transparent 1px), linear-gradient(90deg, var(--malla-viva) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 100%);
+    mask-image: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), #000 0%, transparent 100%);
+}
+
+.fx-malla::after {
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 168, 232, 0.12), transparent 70%);
+}
+
+.fx-activo .fx-malla::before,
+.fx-activo .fx-malla::after {
+    opacity: 1;
+}
+
+/* La escena de inicio ya no tapa la cuadricula con un fondo solido (el color es el mismo del <body>). */
+.tema-inicio {
+    background: transparent;
+}
+
+/* Tarjetas, ventanas y banda: se iluminan en el punto donde esta el mouse. */
+.inicio-carta::after,
+.inicio-ventana::after,
+.inicio-proy__marco::after,
+.inicio-banda::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(320px circle at var(--bx, 50%) var(--by, 50%), rgba(117, 219, 255, 0.14), transparent 65%);
+}
+
+.inicio-proy__marco {
+    position: relative;
+}
+
+.inicio-carta:hover::after,
+.inicio-ventana:hover::after,
+.inicio-proy__marco:hover::after,
+.inicio-banda:hover::after {
+    opacity: 1;
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+    .fx-malla::before,
+    .fx-malla::after,
+    .inicio-carta::after,
+    .inicio-ventana::after,
+    .inicio-proy__marco::after,
+    .inicio-banda::after {
+        display: none;
+    }
+}

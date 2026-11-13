@@ -8,6 +8,7 @@ import '@fontsource-variable/schibsted-grotesk'
 import '@fontsource/instrument-serif/400-italic.css'
 import { datosPersonalesDelErp } from '@/lib/erp'
 import { Footer } from '@/components/Footer'
+import EfectoRaton from '@/components/fx/EfectoRaton'
 import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/react'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
@@ -93,6 +94,7 @@ export default async function RootLayout({ children, params }) {
             </head>
             <body className="bg-bg font-sans text-ink antialiased">
                 <JsonLd />
+                <EfectoRaton />
                 <LanguageProvider initialLang={lang}>
                     <DarkModeProvider>
                         <Navbar perfil={perfil} />
