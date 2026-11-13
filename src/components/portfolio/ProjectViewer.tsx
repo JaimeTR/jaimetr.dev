@@ -1,157 +1,52 @@
-"use client";
+'use client'
 
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useLanguage } from "@/app/providers/LanguageProvider";
-import { useTranslation } from "@/helpers/translations";
+import { useEffect, useRef, useState } from 'react'
 
-interface ProjectViewerProps {
-  url: string;
-  onClose: () => void;
-}
+interface ProjectViewerProps { url: string; lang: string; onClose: () => void }
 
-export default function ProjectViewer({ url, onClose }: ProjectViewerProps) {
-  const { language } = useLanguage();
-  const t = useTranslation(language);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  // null = still checking, true/false = server told us whether it can be framed
-  const [preflightEmbeddable, setPreflightEmbeddable] = useState<boolean | null>(null);
-
-  // Many of the sites shown here are WordPress installs that commonly send
-  // X-Frame-Options/CSP frame-ancestors, which used to mean a silent iframe
-  // that never fires onLoad until an 8s timeout. Ask the server to check the
-  // headers first so a known-blocked site skips straight to "open in a new
-  // tab" instead of making the visitor wait out a doomed load.
-  useEffect(() => {
-    let cancelled = false;
-    setPreflightEmbeddable(null);
-    fetch(`/api/check-embeddable?url=${encodeURIComponent(url)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (cancelled) return;
-        setPreflightEmbeddable(data.embeddable !== false);
-        if (data.embeddable === false) {
-          setIsLoading(false);
-          setHasError(true);
-        }
-      })
-      .catch(() => {
-        if (cancelled) return;
-        // Inconclusive check shouldn't block the attempt — behave as before.
-        setPreflightEmbeddable(true);
-      });
-    return () => { cancelled = true };
-  }, [url]);
+export default function ProjectViewer({ url, lang, onClose }: ProjectViewerProps) {
+  const [embeddable, setEmbeddable] = useState<boolean | null>(null)
+  const [failed, setFailed] = useState(false)
+  const english = lang === 'en'
+  const dialog = useRef<HTMLDivElement>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    if (preflightEmbeddable === false) return; // already short-circuited above
-    const timer = setTimeout(() => {
-      if (isLoading) {
-        setIsLoading(false);
-        setHasError(true);
-      }
-    }, 6000);
-    return () => clearTimeout(timer);
-  }, [url, isLoading, preflightEmbeddable]);
-
-  // Bloquear el scroll del body cuando el modal está abierto
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
+    const previousFocus = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeButton.current?.focus()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Tab' || !dialog.current) return
+      const focusable = [...dialog.current.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)')]
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    fetch(`/api/check-embeddable?url=${encodeURIComponent(url)}`).then(response => response.json()).then(data => {
+      setEmbeddable(data.embeddable !== false)
+    }).catch(() => setEmbeddable(true))
     return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+      previousFocus?.focus()
+    }
+  }, [url, onClose])
 
-  return (
-    <AnimatePresence>
-      <motion.div 
-        className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-6 lg:p-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Backdrop */}
-        <div 
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
-        />
-
-        {/* Browser Window */}
-        <motion.div 
-          className="relative w-[95vw] md:w-full md:rounded-2xl overflow-hidden bg-zinc-900 border border-white/20 shadow-2xl flex flex-col max-w-[95vw] md:max-w-6xl aspect-[3/4] sm:aspect-square md:aspect-video max-h-[85vh]"
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        >
-          {/* Modern Top Bar (Windows Style) */}
-          <div className="flex items-center justify-between px-4 py-3 bg-zinc-950/80 backdrop-blur-md border-b border-white/10 shrink-0">
-            
-            {/* Left: URL Bar */}
-            <div className="flex-1 max-w-md flex items-center bg-white/5 rounded-xl px-4 py-2 border border-white/10 text-xs text-gray-400 font-mono overflow-hidden">
-              <span className="truncate w-full">{url}</span>
-            </div>
-
-            {/* Right: Actions & Close */}
-            <div className="flex items-center gap-3 ml-4">
-              {isLoading && (
-                <RefreshCw className="w-4 h-4 text-accent animate-spin" />
-              )}
-              <a 
-                href={url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors"
-                title={t('abrirNuevaPestana')}
-                aria-label={t('abrirNuevaPestana')}
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-
-              <div className="w-px h-5 bg-white/20 mx-1 hidden sm:block" />
-
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white hover:bg-red-500/80 p-2 rounded-xl transition-colors group"
-                title={t('cerrar')}
-                aria-label={t('cerrar')}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Iframe Content */}
-          <div className="flex-1 relative bg-white overflow-hidden">
-            {hasError ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4 text-dark-600 dark:text-dark-400 p-8">
-                <p className="text-lg font-semibold">{t('previewNoDisponible')}</p>
-                <p className="text-sm text-center">{t('previewBloqueadoPorSitio')}</p>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-colors"
-                >
-                  {t('abrirNuevaPestana')}
-                </a>
-              </div>
-            ) : (
-              <iframe 
-                src={url}
-                className="absolute top-0 left-0 w-[calc(100%+20px)] h-full border-none"
-                title="Project Preview"
-                onLoad={() => setIsLoading(false)}
-                onError={() => { setIsLoading(false); setHasError(true); }}
-                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-              />
-            )}
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/90 p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+    <div ref={dialog} role="dialog" aria-modal="true" aria-label="Project preview" className="flex max-h-[90vh] w-full max-w-6xl flex-col border border-rule bg-bg">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-rule p-4">
+        <p className="max-w-[60ch] truncate text-sm text-ink-2">{url}</p>
+        <div className="flex items-center gap-5"><a className="link-line text-ink" href={url} target="_blank" rel="noopener noreferrer">{english ? 'Open in new tab' : 'Abrir en una pestaña nueva'}</a><button ref={closeButton} type="button" onClick={onClose} className="link-line text-ink">{english ? 'Close' : 'Cerrar'}</button></div>
+      </div>
+      <div className="relative min-h-[55vh] flex-1 bg-bg">
+        {embeddable === null && <p className="p-8 text-ink-2">{english ? 'Checking site preview…' : 'Comprobando la vista previa…'}</p>}
+        {(embeddable === false || failed) && <div className="flex h-full min-h-[55vh] flex-col items-start justify-center gap-4 p-8"><p className="text-ink-2">{english ? 'This site does not allow an embedded preview.' : 'Este sitio no permite una vista previa integrada.'}</p><a className="inline-flex min-h-12 items-center bg-accent px-5 text-accent-ink" href={url} target="_blank" rel="noopener noreferrer">{english ? 'Open the site' : 'Abrir el sitio'}</a></div>}
+        {embeddable && !failed && <iframe src={url} title={english ? 'Project preview' : 'Vista previa del proyecto'} className="absolute inset-0 h-full min-h-[55vh] w-full border-0" onError={() => setFailed(true)} sandbox="allow-same-origin allow-scripts allow-popups allow-forms" />}
+      </div>
+    </div>
+  </div>
 }

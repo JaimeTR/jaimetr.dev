@@ -19,19 +19,19 @@ export default function Breadcrumbs({ items = [] }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <nav aria-label="Breadcrumb" className="py-3">
-        <ol className="flex flex-wrap items-center gap-1 text-sm text-dark-500 dark:text-dark-400">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-3">
           {items.map((item, i) => (
             <li key={item.url} className="flex items-center gap-1">
               {i > 0 && <span className="mx-1">/</span>}
               {i < items.length - 1 ? (
                 <Link
                   href={item.url}
-                  className="hover:text-primary-600 dark:hover:text-primary-400 transition"
+                  className="transition-colors hover:text-ink"
                 >
                   {item.name}
                 </Link>
               ) : (
-                <span className="text-dark-900 dark:text-white font-medium truncate max-w-[200px] sm:max-w-xs">
+                <span className="truncate font-medium text-ink max-w-[200px] sm:max-w-xs">
                   {item.name}
                 </span>
               )}

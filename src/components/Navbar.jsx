@@ -19,7 +19,9 @@ export const Navbar = ({ perfil }) => {
 
     const enlaces = (Array.isArray(perfil?.header_links) && perfil.header_links.length ? perfil.header_links : ENLACES_BASE).filter((l) => l.visible !== false)
     const urlDe = (l) => ((es ? l.url_es : l.url_en) || '').replace('{lang}', language)
-    const nombreDe = (l) => (es ? l.label_es : l.label_en) || l.label_es || l.label_en
+    // En el perfil del ERP las etiquetas pueden venir en MAYUSCULAS: aqui se muestran con mayuscula inicial.
+    const normal = (t) => { const s = (t || '').toLocaleLowerCase(language); return s.charAt(0).toLocaleUpperCase(language) + s.slice(1) }
+    const nombreDe = (l) => normal((es ? l.label_es : l.label_en) || l.label_es || l.label_en)
 
     useEffect(() => {
         if (!abierto) return

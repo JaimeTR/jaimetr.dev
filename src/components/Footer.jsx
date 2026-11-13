@@ -17,6 +17,10 @@ export const Footer = ({ perfil }) => {
         p.is_instagram_visible === true && p.instagram_url && { nombre: 'Instagram', url: p.instagram_url },
     ].filter(Boolean)
     const enlaces = (Array.isArray(p.footer_links) ? p.footer_links : []).filter((l) => l.visible !== false)
+    // El texto del boton viene del perfil y puede estar en MAYUSCULAS: se muestra como oracion, conservando "CV".
+    const crudoCv = (es ? p.cv_btn_text_es : p.cv_btn_text_en) || (es ? 'Descargar CV' : 'Download CV')
+    const bajo = crudoCv.toLocaleLowerCase(language).replace(/\bcv\b/g, 'CV')
+    const etiquetaCv = bajo.charAt(0).toLocaleUpperCase(language) + bajo.slice(1)
     const texto = (es ? p.footer_text_es : p.footer_text_en) || (es ? 'Portafolio de Jaime Tarazona' : "Jaime Tarazona's portfolio")
 
     return (
@@ -25,14 +29,14 @@ export const Footer = ({ perfil }) => {
                 <h2 className="display display-m md:col-span-5">{es ? '¿Tienes un proyecto o una vacante? Hablemos.' : 'Have a project or an opening? Let’s talk.'}</h2>
                 <div className="md:col-span-6 md:col-start-7">
                     {correo && (
-                        <a href={`mailto:${correo}`} className="display display-l break-all text-ink no-underline transition-colors hover:text-accent" style={{ lineHeight: 1 }}>
+                        <a href={`mailto:${correo}`} className="display text-ink no-underline transition-colors hover:text-accent" style={{ fontSize: 'clamp(1.5rem, 3.1vw, 2.75rem)', lineHeight: 1.05, overflowWrap: 'anywhere' }}>
                             {correo}
                         </a>
                     )}
                     {cv && (
                         <p className="mt-8">
                             <a href={cv} target="_blank" rel="noopener noreferrer" className="link-line text-lg">
-                                {(es ? p.cv_btn_text_es : p.cv_btn_text_en) || (es ? 'Descargar CV' : 'Download CV')}
+                                {etiquetaCv}
                             </a>
                         </p>
                     )}
