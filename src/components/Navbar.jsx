@@ -36,9 +36,7 @@ export const Navbar = ({ perfil }) => {
     return (
         <header className="inicio-barra">
             <Link href={`/${language}`} className="inicio-marca" aria-label="Jaime Tarazona" onClick={() => setAbierto(false)}>
-                {/* Con espacio: imagotipo completo; en pantallas chicas, solo el isologo. */}
-                <img src="/marca/jaimetr-imagotipo-fondo-oscuro-sin-lema.svg" alt="JAIMETR" className="inicio-marca__largo" height="30" />
-                <img src="/marca/jaimetr-isologo.svg" alt="JAIMETR" className="inicio-marca__corto" width="34" height="34" />
+                <img src="/marca/jaimetr-isologo-web.svg" alt="JAIMETR" width="36" height="36" />
             </Link>
 
             <nav className="inicio-nav" aria-label={es ? 'Principal' : 'Main'}>

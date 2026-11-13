@@ -73,7 +73,7 @@ export async function generateMetadata({ params }) {
         icons: {
             icon: [
                 { url: '/favicon.ico', sizes: '48x48' },
-                { url: '/marca/jaimetr-isologo.svg', type: 'image/svg+xml' },
+                { url: '/marca/jaimetr-isologo-web.svg', type: 'image/svg+xml' },
             ],
             apple: '/marca/jaimetr-apple-180.png',
         },

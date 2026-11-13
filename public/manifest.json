@@ -9,9 +9,9 @@
   "scope": "/",
   "lang": "es",
   "icons": [
-    { "src": "/marca/jaimetr-isologo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/marca/jaimetr-isologo-web.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/marca/jaimetr-icono-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/marca/jaimetr-isologo-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/marca/jaimetr-isologo-web-512.png", "sizes": "512x512", "type": "image/png" }
   ],
   "categories": ["productivity", "developer tools"]
 }

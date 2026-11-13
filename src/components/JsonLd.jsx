@@ -7,7 +7,7 @@ export default function JsonLd() {
                 name: 'Jaime Tarazona Rodriguez',
                 url: 'https://jaimetr.dev',
                 image: 'https://jaimetr.dev/images/Jaime_tarazona.webp',
-                logo: 'https://jaimetr.dev/marca/jaimetr-isologo-512.png',
+                logo: 'https://jaimetr.dev/marca/jaimetr-isologo-web-512.png',
                 jobTitle: 'Ingeniero de Sistemas | Full-Stack Developer',
                 description: 'Ingeniero de Sistemas y Desarrollador FullStack con mas de 5 anos de experiencia en desarrollo web, aplicaciones y automatizaciones con IA.',
                 email: 'jaimetr1309@gmail.com',

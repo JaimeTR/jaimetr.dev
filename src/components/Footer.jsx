@@ -53,7 +53,7 @@ export const Footer = ({ perfil }) => {
                     </div>
                 </div>
                 <Link href={`/${language}`} aria-label="JAIMETR" style={{ display: 'inline-block' }}>
-                    <img src="/marca/jaimetr-imagotipo-fondo-oscuro.svg" alt="JAIMETR, Full-Stack Developer" className="inicio-pie__logo" height="44" />
+                    <img src="/marca/jaimetr-isologo-web.svg" alt="JAIMETR" className="inicio-pie__logo" width="48" height="48" />
                 </Link>
                 <div className="inicio-pie">
                     <p>

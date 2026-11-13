@@ -127,31 +127,14 @@ header.inicio-barra {
 
 .inicio-marca img {
     display: block;
-    width: auto;
-}
-
-.inicio-marca__largo {
-    display: none !important;
-    height: 30px;
-}
-
-.inicio-marca__corto {
-    height: 34px;
-}
-
-@media (min-width: 560px) {
-    .inicio-marca__largo {
-        display: block !important;
-    }
-    .inicio-marca__corto {
-        display: none !important;
-    }
+    width: 36px;
+    height: 36px;
 }
 
 .inicio-pie__logo {
     display: block;
-    height: 44px;
-    width: auto;
+    width: 48px;
+    height: 48px;
     margin: 3rem 0 0;
 }
 
