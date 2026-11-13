@@ -12,7 +12,7 @@
     "@fontsource-variable/onest": "^5.1.0",
     "@tsparticles/react": "^4.2.1",
     "@tsparticles/slim": "^4.2.1",
-    "@vercel/analytics": "^1.4.1",
+    "@vercel/analytics": "^2.0.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.0.0",
