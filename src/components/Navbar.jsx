@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { FiMenu, FiX } from 'react-icons/fi'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { LanguageSwitch } from './LanguageSwitch'
 
@@ -54,8 +55,8 @@ export const Navbar = ({ perfil }) => {
                         {es ? 'Hablemos' : "Let's talk"}
                     </a>
                 )}
-                <button type="button" className="inicio-menu" onClick={() => setAbierto((v) => !v)} aria-expanded={abierto} aria-controls="menu-principal">
-                    {abierto ? (es ? 'Cerrar' : 'Close') : es ? 'Menú' : 'Menu'}
+                <button type="button" className="inicio-menu" onClick={() => setAbierto((v) => !v)} aria-expanded={abierto} aria-controls="menu-principal" aria-label={abierto ? (es ? 'Cerrar menú' : 'Close menu') : es ? 'Abrir menú' : 'Open menu'}>
+                    {abierto ? <FiX aria-hidden="true" size={22} /> : <FiMenu aria-hidden="true" size={22} />}
                 </button>
             </div>
 
