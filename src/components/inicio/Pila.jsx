@@ -24,7 +24,7 @@ export default function Pila({ items, ahora, lang }) {
         const mm = gsap.matchMedia()
         const ctx = gsap.context(() => {
             mm.add('(min-width: 900px)', () => {
-                const cartas = gsap.utils.toArray('.v3-carta', raiz.current)
+                const cartas = gsap.utils.toArray('.inicio-carta', raiz.current)
                 cartas.forEach((carta, i) => {
                     const siguiente = cartas[i + 1]
                     if (!siguiente) return
@@ -36,8 +36,8 @@ export default function Pila({ items, ahora, lang }) {
                     })
                 })
             })
-            gsap.utils.toArray('.v3-carta', raiz.current).forEach((carta) => {
-                gsap.from(carta.querySelectorAll('.v3-mini__barra'), { scaleX: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: carta, start: 'top 80%', once: true } })
+            gsap.utils.toArray('.inicio-carta', raiz.current).forEach((carta) => {
+                gsap.from(carta.querySelectorAll('.inicio-mini__barra'), { scaleX: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: carta, start: 'top 80%', once: true } })
             })
         }, raiz)
         return () => {
@@ -49,13 +49,13 @@ export default function Pila({ items, ahora, lang }) {
     if (!items.length) return null
 
     return (
-        <div className="v3-pila" ref={raiz}>
+        <div className="inicio-pila" ref={raiz}>
             {items.map((x, i) => (
-                <article key={x.id} className="v3-carta" style={{ '--i': i }}>
-                    <div className="v3-carta__fila">
+                <article key={x.id} className="inicio-carta" style={{ '--i': i }}>
+                    <div className="inicio-carta__fila">
                         <div>
-                            {x.periodo && <p className="v3-carta__periodo">{x.periodo}</p>}
-                            <h3 className="v3-titulo v3-carta__cargo">
+                            {x.periodo && <p className="inicio-carta__periodo">{x.periodo}</p>}
+                            <h3 className="inicio-titulo inicio-carta__cargo">
                                 {x.cargo.map((c) => (
                                     <span key={c} style={{ display: 'block' }}>
                                         {c}
@@ -63,7 +63,7 @@ export default function Pila({ items, ahora, lang }) {
                                 ))}
                             </h3>
                             {x.empresa.length > 0 && (
-                                <p className="v3-carta__empresa">
+                                <p className="inicio-carta__empresa">
                                     {x.empresa.map((c) => (
                                         <span key={c} style={{ display: 'block' }}>
                                             {c}
@@ -71,18 +71,18 @@ export default function Pila({ items, ahora, lang }) {
                                     ))}
                                 </p>
                             )}
-                            {x.descripcion && <p className="v3-carta__desc">{x.descripcion}</p>}
+                            {x.descripcion && <p className="inicio-carta__desc">{x.descripcion}</p>}
                         </div>
                         {x.inicio && (
-                            <div className="v3-mini" aria-hidden="true">
-                                <div className="v3-mini__eje">
-                                    <div className="v3-mini__barra" style={{ left: `${pct(x.inicio)}%`, width: `${Math.max(2, pct(x.fin) - pct(x.inicio))}%` }} />
+                            <div className="inicio-mini" aria-hidden="true">
+                                <div className="inicio-mini__eje">
+                                    <div className="inicio-mini__barra" style={{ left: `${pct(x.inicio)}%`, width: `${Math.max(2, pct(x.fin) - pct(x.inicio))}%` }} />
                                 </div>
-                                <div className="v3-mini__anos">
+                                <div className="inicio-mini__anos">
                                     <span>{a0}</span>
                                     <span>{a1}</span>
                                 </div>
-                                <p className="v3-mini__dur">
+                                <p className="inicio-mini__dur">
                                     {FECHA(x.inicio, lang)} – {x.enCurso ? (es ? 'hoy' : 'present') : FECHA(x.fin, lang)} · {duracion(x.inicio, x.fin, lang)}
                                 </p>
                             </div>

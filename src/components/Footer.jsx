@@ -1,12 +1,11 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { FiDownload, FiMail } from 'react-icons/fi'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 
-/** Cierre real de la pagina: la accion (escribir) a gran tamano, y debajo las redes y los enlaces. */
+/** Cierre global: banda con la llamada a escribir (como las bandas "Hablemos" de DEVMARK) y pie con redes y enlaces. */
 export const Footer = ({ perfil }) => {
     const { language } = useLanguage()
-    const pathname = usePathname()
     const es = language === 'es'
     const p = perfil || {}
 
@@ -25,48 +24,52 @@ export const Footer = ({ perfil }) => {
     const etiquetaCv = bajo.charAt(0).toLocaleUpperCase(language) + bajo.slice(1)
     const texto = (es ? p.footer_text_es : p.footer_text_en) || (es ? 'Portafolio de Jaime Tarazona' : "Jaime Tarazona's portfolio")
 
-    if (['v1', 'v2', 'v3'].includes((pathname || '').split('/')[2])) return null
-
     return (
-        <footer id="contacto" className="mt-32 border-t border-rule">
-            <div className="wrap grid gap-12 py-20 md:grid-cols-12 md:gap-8">
-                <h2 className="display display-m md:col-span-5">{es ? '¿Tienes un proyecto o una vacante? Hablemos.' : 'Have a project or an opening? Let’s talk.'}</h2>
-                <div className="md:col-span-6 md:col-start-7">
+        <footer id="contacto" className="mt-24">
+            <div className="inicio-wrap">
+                <div className="inicio-banda">
+                    <h2 className="inicio-titulo">
+                        {es ? 'Trabajemos ' : "Let's build "}
+                        <em>{es ? 'juntos' : 'together'}</em>
+                    </h2>
                     {correo && (
-                        <a href={`mailto:${correo}`} className="display text-ink no-underline transition-colors hover:text-accent" style={{ fontSize: 'clamp(1.5rem, 3.1vw, 2.75rem)', lineHeight: 1.05, overflowWrap: 'anywhere' }}>
+                        <a href={`mailto:${correo}`} className="inicio-banda__correo">
                             {correo}
                         </a>
                     )}
-                    {cv && (
-                        <p className="mt-8">
-                            <a href={cv} target="_blank" rel="noopener noreferrer" className="link-line text-lg">
+                    <div className="inicio-acciones" style={{ marginTop: '2rem' }}>
+                        {correo && (
+                            <a href={`mailto:${correo}`} className="inicio-btn inicio-btn--blanco">
+                                <FiMail aria-hidden="true" />
+                                {es ? 'Escríbeme' : 'Write to me'}
+                            </a>
+                        )}
+                        {cv && (
+                            <a href={cv} target="_blank" rel="noopener noreferrer" className="inicio-btn inicio-btn--vidrio">
+                                <FiDownload aria-hidden="true" />
                                 {etiquetaCv}
                             </a>
-                        </p>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div className="border-t border-rule">
-                <div className="wrap flex flex-col gap-6 py-6 text-sm text-ink-3 md:flex-row md:items-center md:justify-between">
+                <div className="inicio-pie">
                     <p>
-                        <Link href={`/${language}`} className="no-underline hover:text-ink">
+                        <Link href={`/${language}`} style={{ textDecoration: 'none' }}>
                             {texto}
                         </Link>{' '}
-                        <span className="tabular">· {new Date().getFullYear()}</span>
+                        · {new Date().getFullYear()}
                     </p>
-                    <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                    <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '0 1.5rem', listStyle: 'none', padding: 0 }}>
                         {redes.map((r) => (
                             <li key={r.nombre}>
-                                <a href={r.url} target="_blank" rel="noopener noreferrer" className="no-underline transition-colors hover:text-ink">
+                                <a href={r.url} target="_blank" rel="noopener noreferrer">
                                     {r.nombre}
                                 </a>
                             </li>
                         ))}
                         {enlaces.map((l, i) => (
                             <li key={l.id || i}>
-                                <Link href={(es ? l.url_es : l.url_en) || '/'} className="no-underline transition-colors hover:text-ink">
-                                    {es ? l.label_es : l.label_en}
-                                </Link>
+                                <Link href={(es ? l.url_es : l.url_en) || '/'}>{es ? l.label_es : l.label_en}</Link>
                             </li>
                         ))}
                     </ul>

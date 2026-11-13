@@ -6,30 +6,18 @@
  * Tokens del sitio. El oscuro es la identidad; el claro es papel calido con tinta.
  * Todo color de la interfaz sale de estas variables (ver tailwind.config.js: bg, raise, ink, ink-2, ink-3, rule, accent).
  */
-:root {
-    color-scheme: light;
-    --bg: oklch(0.972 0.008 85);
-    --raise: oklch(0.945 0.01 85);
-    --ink: oklch(0.2 0.02 255);
-    --ink-2: oklch(0.36 0.02 255);
-    --ink-3: oklch(0.47 0.02 255);
-    --rule: oklch(0.85 0.01 85);
-    --accent: oklch(0.5 0.14 238);
-    --accent-ink: oklch(0.985 0.005 90);
-    --code-bg: oklch(0.935 0.01 85);
-}
-
+:root,
 .dark {
     color-scheme: dark;
-    --bg: oklch(0.155 0.012 255);
-    --raise: oklch(0.2 0.013 255);
-    --ink: oklch(0.955 0.006 85);
-    --ink-2: oklch(0.77 0.01 255);
-    --ink-3: oklch(0.64 0.012 255);
-    --rule: oklch(0.3 0.012 255);
-    --accent: oklch(0.82 0.14 215);
-    --accent-ink: oklch(0.18 0.02 240);
-    --code-bg: oklch(0.2 0.013 255);
+    --bg: #061320;
+    --raise: #0a1e33;
+    --ink: #ebf7ff;
+    --ink-2: #aac9e2;
+    --ink-3: #87a9c6;
+    --rule: rgba(117, 219, 255, 0.16);
+    --accent: #00a8e8;
+    --accent-ink: #031420;
+    --code-bg: #0a1e33;
 }
 
 html {
@@ -40,9 +28,28 @@ html {
 body {
     background: var(--bg);
     color: var(--ink);
-    font-family: 'Onest Variable', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Schibsted Grotesk Variable', 'Onest Variable', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+/* Resplandor azul fijo detras de todo el sitio */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(900px 600px at 82% -8%, rgba(0, 120, 190, 0.42), transparent 62%), radial-gradient(700px 520px at 6% 12%, rgba(0, 168, 232, 0.14), transparent 60%), radial-gradient(800px 600px at 50% 112%, rgba(0, 90, 160, 0.35), transparent 60%);
+}
+
+/* Cursiva serif para la palabra de enfasis de un titular */
+.display em,
+.prose-ed h2 em {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
 }
 
 /* Lo que el navegador dibuja por su cuenta tambien lleva el diseno. */
@@ -91,10 +98,10 @@ a {
 
 /* ---------- Tipografia de titulos ---------- */
 .display {
-    font-family: 'Bricolage Grotesque Variable', 'Onest Variable', sans-serif;
-    font-weight: 600;
+    font-family: 'Schibsted Grotesk Variable', 'Onest Variable', sans-serif;
+    font-weight: 500;
     letter-spacing: -0.035em;
-    line-height: 0.92;
+    line-height: 1.02;
     text-wrap: balance;
 }
 
@@ -176,7 +183,7 @@ a {
 .prose-ed h2,
 .prose-ed h3,
 .prose-ed h4 {
-    font-family: 'Bricolage Grotesque Variable', 'Onest Variable', sans-serif;
+    font-family: 'Schibsted Grotesk Variable', 'Onest Variable', sans-serif;
     color: var(--ink);
     letter-spacing: -0.025em;
     line-height: 1.1;

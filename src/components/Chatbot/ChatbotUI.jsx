@@ -405,9 +405,9 @@ export default function ChatbotUI() {
                 <div className="flex justify-start">
                   <div className="bg-white dark:bg-dark-800 border border-dark-100 dark:border-dark-700 p-4 rounded-2xl rounded-tl-sm shadow-sm">
                     <div className="flex gap-1.5">
-                      <span className="w-2 h-2 bg-dark-400 dark:bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                      <span className="w-2 h-2 bg-dark-400 dark:bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                      <span className="w-2 h-2 bg-dark-400 dark:bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      <span className="w-2 h-2 bg-dark-400 dark:bg-dark-500 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></span>
+                      <span className="w-2 h-2 bg-dark-400 dark:bg-dark-500 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-2 h-2 bg-dark-400 dark:bg-dark-500 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></span>
                     </div>
                   </div>
                 </div>

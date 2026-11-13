@@ -21,12 +21,12 @@ export default function Escena({ items, habilidades, correo, foto, es, lang }) {
         if (reducirMovimiento()) return
         const mm = gsap.matchMedia()
         const ctx = gsap.context(() => {
-            gsap.from('.v3-ventana', { opacity: 0, y: 50, duration: 1.1, ease: 'power3.out', stagger: 0.15, delay: 0.2 })
-            gsap.from('.v3-barras__barra', { scaleX: 0, duration: 1.2, ease: 'expo.out', stagger: 0.12, delay: 0.7 })
-            gsap.fromTo('.v3-stack span', { opacity: 0.35 }, { opacity: 1, duration: 0.7, stagger: { each: 0.18, repeat: -1, yoyo: true }, ease: 'sine.inOut' })
+            gsap.from('.inicio-ventana', { opacity: 0, y: 50, duration: 1.1, ease: 'power3.out', stagger: 0.15, delay: 0.2 })
+            gsap.from('.inicio-barras__barra', { scaleX: 0, duration: 1.2, ease: 'expo.out', stagger: 0.12, delay: 0.7 })
+            gsap.fromTo('.inicio-stack span', { opacity: 0.35 }, { opacity: 1, duration: 0.7, stagger: { each: 0.18, repeat: -1, yoyo: true }, ease: 'sine.inOut' })
 
             mm.add('(min-width: 1024px)', () => {
-                const v = gsap.utils.toArray('.v3-ventana', raiz.current)
+                const v = gsap.utils.toArray('.inicio-ventana', raiz.current)
                 gsap.set(v[0], { rotateY: -13, rotateX: 6, rotateZ: 1.5 })
                 gsap.set(v[1], { rotateY: -10, rotateX: 5, rotateZ: -2 })
                 gsap.set(v[2], { rotateY: -8, rotateX: 4, rotateZ: 1 })
@@ -58,57 +58,57 @@ export default function Escena({ items, habilidades, correo, foto, es, lang }) {
     }, [])
 
     return (
-        <div className="v3-escena" ref={raiz} role="group" aria-label={es ? 'Resumen visual de la trayectoria' : 'Visual summary of the career'}>
-            <div className="v3-plano" ref={plano}>
-                <div className="v3-ventana v3-ventana--tray">
-                    <div className="v3-ventana__barra">
+        <div className="inicio-escena" ref={raiz} role="group" aria-label={es ? 'Resumen visual de la trayectoria' : 'Visual summary of the career'}>
+            <div className="inicio-plano" ref={plano}>
+                <div className="inicio-ventana inicio-ventana--tray">
+                    <div className="inicio-ventana__barra">
                         <i />
                         <i />
                         <i />
                         <span>{es ? 'Trayectoria' : 'Career'}</span>
                     </div>
-                    <div className="v3-barras">
+                    <div className="inicio-barras">
                         {filas.map((x) => (
-                            <div key={x.id} className="v3-barras__fila">
-                                <span className="v3-barras__txt">{x.empresa[0] || x.cargo[0]}</span>
-                                <div className="v3-barras__pista" title={duracion(x.inicio, x.fin, lang)}>
-                                    <div className="v3-barras__barra" style={{ width: `${Math.max(8, (meses(x) / maximo) * 100)}%` }} />
+                            <div key={x.id} className="inicio-barras__fila">
+                                <span className="inicio-barras__txt">{x.empresa[0] || x.cargo[0]}</span>
+                                <div className="inicio-barras__pista" title={duracion(x.inicio, x.fin, lang)}>
+                                    <div className="inicio-barras__barra" style={{ width: `${Math.max(8, (meses(x) / maximo) * 100)}%` }} />
                                 </div>
                             </div>
                         ))}
                     </div>
                     {desde && (
-                        <p className="v3-barras__pie">
+                        <p className="inicio-barras__pie">
                             {items.length} {es ? 'cargos desde' : 'roles since'} {desde}
                         </p>
                     )}
                 </div>
 
-                <div className="v3-ventana v3-ventana--stack">
-                    <div className="v3-ventana__barra">
+                <div className="inicio-ventana inicio-ventana--stack">
+                    <div className="inicio-ventana__barra">
                         <i />
                         <i />
                         <i />
                         <span>Stack</span>
                     </div>
-                    <div className="v3-stack">
+                    <div className="inicio-stack">
                         {habilidades.slice(0, 9).map((n) => (
                             <span key={n}>{n}</span>
                         ))}
                     </div>
                 </div>
 
-                <div className="v3-ventana v3-ventana--chat">
-                    <div className="v3-ventana__barra">
+                <div className="inicio-ventana inicio-ventana--chat">
+                    <div className="inicio-ventana__barra">
                         <i />
                         <i />
                         <i />
                         <span>{es ? 'Disponible' : 'Available'}</span>
                     </div>
-                    <div className="v3-chat">
-                        <div className="v3-chat__fila">
+                    <div className="inicio-chat">
+                        <div className="inicio-chat__fila">
                             {foto && (
-                                <div className="v3-chat__foto">
+                                <div className="inicio-chat__foto">
                                     <Image src={foto} alt="" fill sizes="40px" />
                                 </div>
                             )}
@@ -119,10 +119,10 @@ export default function Escena({ items, habilidades, correo, foto, es, lang }) {
                         </div>
                         {correo && (
                             <>
-                                <a href={`mailto:${correo}`} className="v3-chat__correo">
+                                <a href={`mailto:${correo}`} className="inicio-chat__correo">
                                     {correo}
                                 </a>
-                                <a href={`mailto:${correo}`} className="v3-btn v3-btn--pri v3-btn--chico">
+                                <a href={`mailto:${correo}`} className="inicio-btn inicio-btn--pri inicio-btn--chico">
                                     <FiMail aria-hidden="true" />
                                     {es ? 'Escribir' : 'Write'}
                                 </a>
