@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 import { ThemeSwitch } from './ThemeSwitch'
 import { LanguageSwitch } from './LanguageSwitch'
@@ -14,6 +15,7 @@ const ENLACES_BASE = [
 /** La barra no consulta nada: recibe el perfil ya resuelto por el servidor (sin parpadeo ni contenido vacio). */
 export const Navbar = ({ perfil }) => {
     const { language } = useLanguage()
+    const pathname = usePathname()
     const [abierto, setAbierto] = useState(false)
     const es = language === 'es'
 
@@ -34,6 +36,9 @@ export const Navbar = ({ perfil }) => {
             document.body.style.overflow = previo
         }
     }, [abierto])
+
+    // Las versiones de prueba del inicio (/es/v1, /es/v2, /es/v3) traen su propia cabecera.
+    if (['v1', 'v2', 'v3'].includes((pathname || '').split('/')[2])) return null
 
     return (
         <header className="sticky top-0 z-40 border-b border-rule bg-bg">

@@ -1,10 +1,12 @@
 'use client'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useLanguage } from '@/app/providers/LanguageProvider'
 
 /** Cierre real de la pagina: la accion (escribir) a gran tamano, y debajo las redes y los enlaces. */
 export const Footer = ({ perfil }) => {
     const { language } = useLanguage()
+    const pathname = usePathname()
     const es = language === 'es'
     const p = perfil || {}
 
@@ -22,6 +24,8 @@ export const Footer = ({ perfil }) => {
     const bajo = crudoCv.toLocaleLowerCase(language).replace(/\bcv\b/g, 'CV')
     const etiquetaCv = bajo.charAt(0).toLocaleUpperCase(language) + bajo.slice(1)
     const texto = (es ? p.footer_text_es : p.footer_text_en) || (es ? 'Portafolio de Jaime Tarazona' : "Jaime Tarazona's portfolio")
+
+    if (['v1', 'v2', 'v3'].includes((pathname || '').split('/')[2])) return null
 
     return (
         <footer id="contacto" className="mt-32 border-t border-rule">
